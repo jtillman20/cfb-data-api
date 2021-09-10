@@ -75,9 +75,11 @@ class SportsReferenceScraper(object):
         rows = soup.find(id='standings').find('tbody').find_all('tr')
 
         for row in rows:
-            # Header rows have a class attribute so skip them
-            if row.get('class') is not None:
-                continue
+            # Header rows have a thead class attribute so skip them
+            row_class = row.get('class')
+            if row_class is not None:
+                if 'thead' in row_class:
+                    continue
 
             row_data = row.find_all('td')
             team = row_data[0].a.text
