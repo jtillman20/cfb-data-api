@@ -42,6 +42,13 @@ class Conference(db.Model):
             filter(lambda membership: year in membership.years, self.teams)
         ))
 
+    def serialize(self, year: int) -> dict:
+        return {
+            'id': self.id,
+            'name': self.name,
+            'teams': self.get_teams(year=year)
+        }
+
 
 class ConferenceMembership(db.Model):
     __tablename__ = 'conference_membership'

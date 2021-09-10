@@ -52,3 +52,10 @@ class Team(db.Model):
             lambda membership: year in membership.years,
             self.conferences
         )).conference.name
+
+    def serialize(self, year: int) -> dict:
+        return {
+            'id': self.id,
+            'name': self.name,
+            'conference': self.get_conference(year=year)
+        }
