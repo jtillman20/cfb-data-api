@@ -6,7 +6,7 @@ from requests import Session
 
 class SportsReferenceScraper(object):
     BASE_URL = 'https://sports-reference.com/cfb/years'
-    CONFERENCE_NAME_PATTERN = r'([A-Za-z0-9- ]+) \([A-Za-z]+\)'
+    CONFERENCE_NAME_PATTERN = r'([A-Za-z0-9\- ]+)(?: \([A-Za-z]+\))?'
 
     # Conference names that are modified from how they appear on Sports
     # Reference to how to store them in the database
@@ -77,15 +77,14 @@ class SportsReferenceScraper(object):
         for row in rows:
             # Header rows have a thead class attribute so skip them
             row_class = row.get('class')
-            if row_class is not None:
-                if 'thead' in row_class:
-                    continue
+            if row_class is not None and 'thead' in row_class:
+                continue
 
             row_data = row.find_all('td')
             team = row_data[0].a.text
 
-            result = re.findall(cls.CONFERENCE_NAME_PATTERN, row_data[1].text)
-            conference = result[0].strip() if result else row_data[1].text
+            result = re.match(cls.CONFERENCE_NAME_PATTERN, row_data[1].text)
+            conference = result.groups()[0].strip()
 
             team = cls.TEAMS_NAMES.get(team) or team
             conference = cls.CONFERENCES_NAMES.get(conference) or conference
