@@ -106,7 +106,7 @@ class ConferenceMembership(db.Model):
                 conference_id = Conference.query.filter_by(
                     name=conference).first().id
 
-                db.session.add(ConferenceMembership(
+                db.session.add(cls(
                     team_id=team_id,
                     conference_id=conference_id,
                     years=years
