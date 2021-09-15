@@ -1,4 +1,7 @@
+from sqlalchemy import or_
+
 from app import db
+from scraper import SportsReferenceScraper
 
 
 class Game(db.Model):
@@ -12,6 +15,38 @@ class Game(db.Model):
     home_score = db.Column(db.Integer, nullable=False)
     away_team = db.Column(db.String(100), nullable=False)
     away_score = db.Column(db.Integer, nullable=False)
+
+    @classmethod
+    def add_games(cls, start_year: int, end_year: int) -> None:
+        """
+        Get all FBS games for the given years and add them to the
+        database.
+
+        Args:
+            start_year (int): Year to begin adding games
+            end_year (int): Year to stop adding games
+        """
+        scraper = SportsReferenceScraper()
+
+        for year in range(start_year, end_year + 1):
+            print(f'Adding games for {year}')
+            html_content = scraper.get_html_data(path=f'{year}-schedule.html')
+            game_data = scraper.parse_schedule_html_data(
+                html_content=html_content)
+
+            for game in game_data:
+                db.session.add(cls(
+                    year=year,
+                    week=game['week'],
+                    date=game['date'],
+                    neutral_site=game['neutral_site'],
+                    home_team=game['home_team'],
+                    home_score=game['home_score'],
+                    away_team=game['away_team'],
+                    away_score=game['away_score']
+                ))
+
+        db.session.commit()
 
     def __getstate__(self) -> dict:
         return {
