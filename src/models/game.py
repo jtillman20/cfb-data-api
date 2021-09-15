@@ -17,6 +17,27 @@ class Game(db.Model):
     away_score = db.Column(db.Integer, nullable=False)
 
     @classmethod
+    def get_games(cls, year: int, team: str = None) -> list['Game']:
+        """
+        Get FBS games for the given year. If team is provided, only
+        get that team's games.
+
+        Args:
+            year (int): Year to get games
+            team (str): Team for which to get games
+
+        Returns:
+            list[Game]: All games or only a team's games
+        """
+        query = cls.query.filter_by(year=year)
+
+        if team is not None:
+            query = query.filter(
+                or_(cls.home_team == team, cls.away_team == team))
+
+        return query.all()
+
+    @classmethod
     def add_games(cls, start_year: int, end_year: int) -> None:
         """
         Get all FBS games for the given years and add them to the
