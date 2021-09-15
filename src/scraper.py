@@ -1,16 +1,14 @@
-import re
-
+import dateutil
 from bs4 import BeautifulSoup
 from requests import Session
 
 
 class SportsReferenceScraper(object):
     BASE_URL = 'https://sports-reference.com/cfb/years'
-    CONFERENCE_NAME_PATTERN = r'([A-Za-z0-9\- ]+)(?: \([A-Za-z]+\))?'
 
     # Conference names that are modified from how they appear on Sports
     # Reference to how to store them in the database
-    CONFERENCES_NAMES = {
+    CONFERENCE_NAMES = {
         'ACC': 'Atlantic Coast',
         'American': 'American Athletic',
         'BIAA': 'Border',
@@ -28,7 +26,7 @@ class SportsReferenceScraper(object):
 
     # Team names that are modified from how they appear on Sports
     # Reference to how to store them in the database
-    TEAMS_NAMES = {
+    TEAM_NAMES = {
         'Bowling Green State': 'Bowling Green',
         'California-Santa Barbara': 'UCSB',
         'Louisiana': 'Louisiana-Lafayette',
@@ -80,13 +78,10 @@ class SportsReferenceScraper(object):
             if row_class is not None and 'thead' in row_class:
                 continue
 
-            row_data = row.find_all('td')
-            team = row_data[0].a.text
+            team = row.find(attrs={'data-stat': 'school_name'}).text
+            conference = row.find(attrs={'data-stat': 'conf_abbr'}).a.text
 
-            result = re.match(cls.CONFERENCE_NAME_PATTERN, row_data[1].text)
-            conference = result.groups()[0].strip()
-
-            team = cls.TEAMS_NAMES.get(team) or team
-            conference = cls.CONFERENCES_NAMES.get(conference) or conference
+            team = cls.TEAM_NAMES.get(team) or team
+            conference = cls.CONFERENCE_NAMES.get(conference) or conference
 
             yield team, conference
