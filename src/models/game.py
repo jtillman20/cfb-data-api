@@ -2,6 +2,7 @@ from sqlalchemy import or_
 
 from app import db
 from scraper import SportsReferenceScraper
+from .team import Team
 
 
 class Game(db.Model):
@@ -15,6 +16,24 @@ class Game(db.Model):
     home_score = db.Column(db.Integer, nullable=False)
     away_team = db.Column(db.String(100), nullable=False)
     away_score = db.Column(db.Integer, nullable=False)
+
+    def determine_result(self, team: str) -> str:
+        """
+        Determine the result of the game for the given team.
+
+        Args:
+            team (str): Team for which to determine the result
+
+        Returns:
+            str: Game result as 'win', 'loss', or 'tie'
+        """
+        if self.home_score == self.away_score:
+            return 'tie'
+
+        if self.home_team == team:
+            return 'win' if self.home_score > self.away_score else 'loss'
+        else:
+            return 'win' if self.away_score > self.home_score else 'loss'
 
     @classmethod
     def get_games(cls, year: int, team: str = None) -> list['Game']:
