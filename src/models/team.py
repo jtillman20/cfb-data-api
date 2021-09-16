@@ -1,3 +1,5 @@
+from typing import Union
+
 from app import db
 
 
@@ -38,9 +40,10 @@ class Team(db.Model):
             ), teams
         ))
 
-    def get_conference(self, year: int) -> str:
+    def get_conference(self, year: int) -> Union[str, None]:
         """
-        Get the conference a team belongs to for the given year.
+        Get the conference a team belongs to for the given year, if the
+        team was in FBS for the given year.
 
         Args:
             year (int): Year to get the team's conference
@@ -48,10 +51,13 @@ class Team(db.Model):
         Returns:
             str: Conference name
         """
-        return next(filter(
-            lambda membership: year in membership.years,
-            self.conferences
-        )).conference.name
+        try:
+            return next(filter(
+                lambda membership: year in membership.years,
+                self.conferences
+            )).conference.name
+        except StopIteration:
+            return None
 
     def serialize(self, year: int) -> dict:
         return {
