@@ -9,6 +9,8 @@ class Team(db.Model):
     name = db.Column(db.String(100), nullable=False)
     nickname = db.Column(db.String(100), nullable=True)
 
+    record = db.relationship('Record', backref='team', lazy=True)
+
     @classmethod
     def get_teams(cls, year: int, conference: str = None) -> list['Team']:
         """
