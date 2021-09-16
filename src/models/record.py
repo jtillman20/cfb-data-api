@@ -1,4 +1,6 @@
 from app import db
+from .game import Game
+from .team import Team
 
 
 class Record(db.Model):
@@ -54,6 +56,67 @@ class Record(db.Model):
         self.conference_ties += other.conference_ties
 
         return self
+
+    @classmethod
+    def add_records(cls) -> None:
+        """
+        Get win-loss records for all teams for every year and add them
+        to the database.
+        """
+        query = Game.query.with_entities(Game.year).distinct()
+        years = [year.year for year in query]
+
+        for year in years:
+            print(f'Adding records for {year}')
+            cls.add_records_for_one_year(year=year)
+
+    @classmethod
+    def add_records_for_one_year(cls, year: int) -> None:
+        """
+        Get win-loss records for all teams for one year and add them
+        to the database.
+
+        Args:
+            year (int): Year to add records
+        """
+        teams = Team.get_teams(year=year)
+
+        for team in teams:
+            record = cls(
+                team_id=team.id,
+                year=year,
+                wins=0,
+                losses=0,
+                ties=0,
+                conference_wins=0,
+                conference_losses=0,
+                conference_ties=0
+            )
+
+            for game in Game.get_games(year=year, team=team.name):
+                result = game.determine_result(team=team.name)
+
+                if result == 'win':
+                    record.wins += 1
+
+                    if game.is_conference_game():
+                        record.conference_wins += 1
+
+                elif result == 'loss':
+                    record.losses += 1
+
+                    if game.is_conference_game():
+                        record.conference_losses += 1
+
+                elif result == 'tie':
+                    record.ties += 1
+
+                    if game.is_conference_game():
+                        record.conference_ties += 1
+
+            db.session.add(record)
+
+        db.session.commit()
 
     def __getstate__(self) -> dict:
         return {
