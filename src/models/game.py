@@ -35,6 +35,30 @@ class Game(db.Model):
         else:
             return 'win' if self.away_score > self.home_score else 'loss'
 
+    def is_conference_game(self) -> bool:
+        """
+        Determine if a game was played between teams from the same
+        conference for the given year, ignoring if the conference
+        is Independent.
+
+        Returns:
+            bool: Whether the game was played between teams from the
+                same conference
+        """
+        home_team = Team.query.filter_by(name=self.home_team).first()
+        away_team = Team.query.filter_by(name=self.away_team).first()
+
+        if home_team is not None and away_team is not None:
+            home_conference = home_team.get_conference(year=self.year)
+            away_conference = away_team.get_conference(year=self.year)
+        else:
+            return False
+
+        if home_conference == 'Independent':
+            return False
+
+        return home_conference == away_conference
+
     @classmethod
     def get_games(cls, year: int, team: str = None) -> list['Game']:
         """
