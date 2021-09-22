@@ -1,10 +1,9 @@
 from flask import request
 from flask_restful import Resource
 
+from exceptions import InvalidRequestError
 from models import Conference
 from utils import flask_response
-
-from exceptions import InvalidRequestError
 
 
 class ConferenceRoute(Resource):
