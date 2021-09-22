@@ -159,7 +159,7 @@ class Record(db.Model):
         db.session.commit()
 
     def __getstate__(self) -> dict:
-        return {
+        data = {
             'id': self.id,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
@@ -174,3 +174,8 @@ class Record(db.Model):
             'conference_ties': self.conference_ties,
             'conference_win_pct': self.conference_win_pct
         }
+
+        if hasattr(self, 'rank'):
+            data['rank'] = self.rank
+
+        return data
