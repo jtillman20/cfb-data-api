@@ -42,6 +42,37 @@ class Team(db.Model):
             ), teams
         ))
 
+    @classmethod
+    def get_qualifying_teams(cls, start_year: int, end_year: int) -> list[str]:
+        """
+        Get teams that qualify for records and stats for the given years.
+        The criteria is that the teams must be in FBS for the end year
+        and at least 50% of the years.
+
+        Args:
+            start_year (int): Start year
+            end_year (int): End year
+
+        Returns:
+            list[str]: Qualifying teams
+        """
+        min_years = (end_year - start_year + 1) / 2
+        teams = Team.get_teams(year=end_year)
+        qualifying_teams = []
+
+        for team in teams:
+            years = [year for membership in team.conferences
+                     for year in membership.years]
+
+            active_years = list(filter(
+                lambda year: year in range(start_year, end_year + 1), years
+            ))
+
+            if len(active_years) >= min_years:
+                qualifying_teams.append(team.name)
+
+        return qualifying_teams
+
     def get_conference(self, year: int) -> Union[str, None]:
         """
         Get the conference a team belongs to for the given year, if the
