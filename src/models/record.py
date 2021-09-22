@@ -1,3 +1,5 @@
+from typing import Union
+
 from app import db
 from .game import Game
 from .team import Team
@@ -56,6 +58,44 @@ class Record(db.Model):
         self.conference_ties += other.conference_ties
 
         return self
+
+    @classmethod
+    def get_records(cls, start_year: int, end_year: int = None,
+                    team: str = None) -> Union['Record', list['Record']]:
+        """
+        Get win-loss records for qualifying teams for the given years.
+        If team is provided, only get records for that team.
+
+        Args:
+            start_year (int): Year to start getting win-loss records
+            end_year (int): Year to stop getting win-loss records
+            team (str): Team for which to get win-loss record
+
+        Returns:
+            Union[Record, list[Record]]: Win-loss records for qualifying
+                teams or only the win-loss records for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            records = query.filter(team == Team.name).all()
+            return sum(records[1:], records[0])
+
+        records = {}
+        for team_name in qualifying_teams:
+            team_record = query.filter(team_name == Team.name).all()
+
+            if team_record:
+                records[team_name] = sum(team_record[1:], team_record[0])
+
+        return [records[team] for team in sorted(records.keys())]
 
     @classmethod
     def add_records(cls) -> None:
