@@ -39,3 +39,54 @@ def flask_response(function) -> Response:
         )
 
     return wrapper
+
+
+def rank(data: list[any], attr: str) -> list[any]:
+    """
+    Add `rank` attribute to each object in the list based on the value
+    of the sorted attribute.
+
+    Args:
+        data (List): Data being sorted
+        attr (str): Attribute to sort by
+
+    Returns:
+        list: Data with `rank` attribute added to each object
+    """
+    for index, team in enumerate(data):
+        if not index:
+            team.rank = 1
+            continue
+
+        current_team = data[index]
+        current_value = getattr(current_team, attr)
+
+        previous_team = data[index - 1]
+        previous_value = getattr(previous_team, attr)
+
+        if current_value != previous_value:
+            team.rank = index + 1
+        else:
+            team.rank = previous_team.rank
+
+    return data
+
+
+def sort(data: list[any], attrs: list[str], reverses: list[bool]) -> list[any]:
+    """
+    Sort a list based on the attributes (attrs) and the sort order
+    property for each attribute (reverses).
+
+    Args:
+        data (list[any]): List to sort
+        attrs (list[str]): List of attrbibutes to sort by
+        reverses (list[bool]): Sort order property for each attribute
+            to determine if reverse should be set to True or False
+
+    Returns:
+        list: Sorted list
+    """
+    for attr, reverse in zip(attrs, reverses):
+        data = sorted(data, key=lambda obj: getattr(obj, attr), reverse=reverse)
+
+    return data
