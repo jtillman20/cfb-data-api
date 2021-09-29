@@ -58,7 +58,7 @@ class Team(db.Model):
             list[str]: Qualifying teams
         """
         min_years = (end_year - start_year + 1) / 2
-        teams = Team.get_teams(year=end_year)
+        teams = cls.get_teams(year=end_year)
         qualifying_teams = []
 
         for team in teams:
