@@ -29,6 +29,38 @@ class Conference(db.Model):
             ), cls.query.all()
         ))
 
+    @classmethod
+    def get_qualifying_conferences(cls, start_year: int,
+                                   end_year: int) -> list[str]:
+        """
+        Get conferences that qualify for records and stats for the given years.
+        The criteria is that the teams must be in FBS for the end year
+        and at least 50% of the years.
+
+        Args:
+            start_year (int): Start year
+            end_year (int): End year
+
+        Returns:
+            list[str]: Qualifying conferences
+        """
+        min_years = (end_year - start_year + 1) / 2
+        conferences = cls.query.all()
+        qualifying_conferences = []
+
+        for conference in conferences:
+            years = set([year for membership in conference.teams
+                         for year in membership.years])
+
+            active_years = list(filter(
+                lambda year: year in range(start_year, end_year + 1), years
+            ))
+
+            if len(active_years) >= min_years:
+                qualifying_conferences.append(conference.name)
+
+        return qualifying_conferences
+
     def get_teams(self, year: int) -> list[str]:
         """
         Get the teams that belong to the conference for the given year.
