@@ -24,7 +24,7 @@ class Record(db.Model):
     @property
     def win_pct(self):
         if self.games:
-            return round((self.wins + self.ties * 0.5) / self.games, 4)
+            return (self.wins + self.ties * 0.5) / self.games
         return 0.0
 
     @property
@@ -35,8 +35,8 @@ class Record(db.Model):
     @property
     def conference_win_pct(self):
         if self.conference_games:
-            return round((self.conference_wins + self.conference_ties * 0.5)
-                         / self.conference_games, 4)
+            return (self.conference_wins + self.conference_ties * 0.5) \
+                   / self.conference_games
         return 0.0
 
     def __add__(self, other: 'Record') -> 'Record':
@@ -167,12 +167,12 @@ class Record(db.Model):
             'wins': self.wins,
             'losses': self.losses,
             'ties': self.ties,
-            'win_pct': self.win_pct,
+            'win_pct': round(self.win_pct, 4),
             'conference_games': self.conference_games,
             'conference_wins': self.conference_wins,
             'conference_losses': self.conference_losses,
             'conference_ties': self.conference_ties,
-            'conference_win_pct': self.conference_win_pct
+            'conference_win_pct': round(self.conference_win_pct, 4)
         }
 
         if hasattr(self, 'rank'):
