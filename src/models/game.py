@@ -81,6 +81,39 @@ class Game(db.Model):
         return query.all()
 
     @classmethod
+    def get_fcs_games(cls, year: int) -> list['Game']:
+        """
+        Get FBS vs. FCS games for the given year.
+
+        Args:
+            year (int): Year to get games
+
+        Returns:
+            list[Game]: All games vs. FCS teams
+        """
+        games = []
+        all_games = cls.query.filter_by(year=year).all()
+
+        for game in all_games:
+            home_team = Team.query.filter_by(name=game.home_team).first()
+            away_team = Team.query.filter_by(name=game.away_team).first()
+
+            if home_team is not None:
+                home_conference = home_team.get_conference(year=year)
+            else:
+                home_conference = None
+
+            if away_team is not None:
+                away_conference = away_team.get_conference(year=year)
+            else:
+                away_conference = None
+
+            if home_conference is None or away_conference is None:
+                games.append(game)
+
+        return games
+
+    @classmethod
     def add_games(cls, start_year: int, end_year: int) -> None:
         """
         Get all FBS games for the given years and add them to the
