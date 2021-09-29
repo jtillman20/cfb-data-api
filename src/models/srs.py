@@ -1,6 +1,7 @@
 from typing import Union
 
 from app import db
+from .conference import Conference
 from .game import Game
 from .record import Record
 from .team import Team
@@ -323,6 +324,55 @@ class ConferenceSRS(db.Model):
         self.ties += other.ties
 
         return self
+
+    @classmethod
+    def add_srs_ratings(cls) -> None:
+        """
+        Get SRS ratings for all conferences for every year and add
+        them to the database.
+        """
+        query = SRS.query.with_entities(SRS.year).distinct()
+        years = [year.year for year in query]
+
+        for year in years:
+            print(f'Adding conference SRS ratings for {year}')
+            cls.add_srs_ratings_for_one_year(year=year)
+
+    @classmethod
+    def add_srs_ratings_for_one_year(cls, year: int) -> None:
+        """
+        Get conference SRS ratings for all teams for one year and add
+        them to the database.
+
+        Args:
+            year (int): Year to add conference SRS ratings
+        """
+        conferences = Conference.get_conferences(year=year)
+
+        for conference in conferences:
+            conference_srs = cls(
+                year=year,
+                scoring_margin=0,
+                opponent_rating=0,
+                wins=0,
+                losses=0,
+                ties=0
+            )
+            teams = conference.get_teams(year=year)
+
+            for team in teams:
+                rating = SRS.query.filter_by(year=year).join(Team).filter(
+                    Team.name == team).first()
+
+                conference_srs.scoring_margin += rating.scoring_margin
+                conference_srs.opponent_rating += rating.opponent_rating
+                conference_srs.wins += rating.wins
+                conference_srs.losses += rating.losses
+                conference_srs.ties += rating.ties
+
+            db.session.add(conference_srs)
+
+        db.session.commit()
 
     def __getstate__(self) -> dict:
         data = {
