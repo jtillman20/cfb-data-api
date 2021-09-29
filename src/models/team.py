@@ -10,6 +10,7 @@ class Team(db.Model):
     nickname = db.Column(db.String(100), nullable=True)
 
     record = db.relationship('Record', backref='team', lazy=True)
+    srs = db.relationship('SRS', backref='team', lazy=True)
 
     @classmethod
     def get_teams(cls, year: int, conference: str = None) -> list['Team']:
