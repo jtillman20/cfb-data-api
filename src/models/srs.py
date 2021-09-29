@@ -326,6 +326,47 @@ class ConferenceSRS(db.Model):
         return self
 
     @classmethod
+    def get_srs_ratings(cls, start_year: int, end_year: int = None,
+                        conference: str = None) -> Union['ConferenceSRS',
+                                                         list['ConferenceSRS']]:
+        """
+        Get SRS ratings for all conferences for the given years.
+        If conference is provided, only get ratings for that conference.
+
+        Args:
+            start_year (int): Year to start getting ratings
+            end_year (int): Year to stop getting ratings
+            conference (str): Conference for which to get ratings
+
+        Returns:
+            Union[ConferenceSRS, list[ConferenceSRS]]: SRS ratings for
+                all conferences or only the SRS rating for one conference
+        """
+        if end_year is None:
+            end_year = start_year
+
+        conferences = Conference.get_qualifying_conferences(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Conference).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if conference is not None:
+            ratings = query.filter(conference == Conference.name).all()
+            return sum(ratings[1:], ratings[0])
+
+        ratings = {}
+        for conference in conferences:
+            conference_rating = query.filter(
+                conference == Conference.name).all()
+
+            if conference_rating:
+                ratings[conference] = sum(
+                    conference_rating[1:], conference_rating[0])
+
+        return [ratings[conference] for conference in sorted(ratings.keys())]
+
+    @classmethod
     def add_srs_ratings(cls) -> None:
         """
         Get SRS ratings for all conferences for every year and add
