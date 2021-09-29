@@ -418,7 +418,7 @@ class ConferenceSRS(db.Model):
     def __getstate__(self) -> dict:
         data = {
             'id': self.id,
-            'team': self.team.serialize(year=self.year),
+            'conference': self.conference.serialize(year=self.year),
             'year': self.year,
             'srs': round(self.srs, 2),
             'sos': round(self.sos, 2),
