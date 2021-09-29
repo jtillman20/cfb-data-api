@@ -10,6 +10,8 @@ class Conference(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
 
+    srs = db.relationship('ConferenceSRS', backref='conference', lazy=True)
+
     @classmethod
     def get_conferences(cls, year: int) -> list['Conference']:
         """
