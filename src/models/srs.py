@@ -14,9 +14,9 @@ class SRS(db.Model):
     year = db.Column(db.Integer, nullable=False)
     scoring_margin = db.Column(db.Integer, nullable=False)
     opponent_rating = db.Column(db.Integer, nullable=False)
-    wins = db.Column(db.Integer, nullable=True)
-    losses = db.Column(db.Integer, nullable=True)
-    ties = db.Column(db.Integer, nullable=True)
+    wins = db.Column(db.Integer, nullable=False)
+    losses = db.Column(db.Integer, nullable=False)
+    ties = db.Column(db.Integer, nullable=False)
 
     @property
     def avg_scoring_margin(self) -> float:
