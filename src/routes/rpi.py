@@ -17,7 +17,7 @@ class RPIRoute(Resource):
 
         Returns:
             Union[RPI, list[RPI]]: RPI ratings for all teams or only
-                the SRS rating for one team
+                the RPI rating for one team
         """
         sort_attr = request.args.get('sort', 'rpi')
 
