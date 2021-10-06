@@ -392,6 +392,7 @@ class ConferenceSRS(db.Model):
 
         for conference in conferences:
             conference_srs = cls(
+                conference_id=conference.id,
                 year=year,
                 scoring_margin=0,
                 opponent_rating=0,
