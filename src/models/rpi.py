@@ -1,3 +1,5 @@
+from typing import Union
+
 from app import db
 from .game import Game
 from .record import Record
@@ -65,6 +67,44 @@ class RPI(db.Model):
         self.opponent_games += other.opponent_games
 
         return self
+
+    @classmethod
+    def get_rpi_ratings(cls, start_year: int, end_year: int = None,
+                        team: str = None) -> Union['RPI', list['RPI']]:
+        """
+        Get RPI ratings for qualifying teams for the given years.
+        If team is provided, only get ratings for that team.
+
+        Args:
+            start_year (int): Year to start getting ratings
+            end_year (int): Year to stop getting ratings
+            team (str): Team for which to get ratings
+
+        Returns:
+            Union[RPI, list[RPI]]: RPI ratings for qualifying teams or
+                only the RPI rating for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            ratings = query.filter(team == Team.name).all()
+            return sum(ratings[1:], ratings[0])
+
+        ratings = {}
+        for team_name in qualifying_teams:
+            team_rating = query.filter(team_name == Team.name).all()
+
+            if team_rating:
+                ratings[team_name] = sum(team_rating[1:], team_rating[0])
+
+        return [ratings[team] for team in sorted(ratings.keys())]
 
     @classmethod
     def add_rpi_ratings(cls) -> None:
