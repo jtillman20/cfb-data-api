@@ -1,3 +1,5 @@
+import re
+
 import dateutil
 from bs4 import BeautifulSoup
 from requests import Session
@@ -24,9 +26,7 @@ class SportsReferenceScraper(object):
         'WAC': 'Western Athletic'
     }
 
-    # Team names from the standings page that are modified from how they
-    # appear on Sports Reference to how to store them in the database
-    STANDINGS_TEAM_NAMES = {
+    TEAM_NAMES = {
         'Bowling Green State': 'Bowling Green',
         'California-Santa Barbara': 'UCSB',
         'Louisiana': 'Louisiana-Lafayette',
@@ -34,34 +34,35 @@ class SportsReferenceScraper(object):
         'Middle Tennessee State': 'Middle Tennessee',
         'Nevada-Las Vegas': 'UNLV',
         'North Carolina State': 'NC State',
-        'Ole Miss': 'Mississippi',
-        'Pitt': 'Pittsburgh',
         'Texas Christian': 'TCU',
         'Virginia Military Institute': 'VMI'
     }
 
+    # Team names from the standings and polls page that are modified
+    # from how they appear on Sports Reference to how to store them
+    # in the database
+    STANDINGS_TEAM_NAMES = {
+        **TEAM_NAMES,
+        'Ole Miss': 'Mississippi',
+        'Pitt': 'Pittsburgh',
+    }
+    RANKINGS_TEAM_NAMES = STANDINGS_TEAM_NAMES
+
     # Team names from the schedule page that are modified from how they
     # appear on Sports Reference to how to store them in the database
     SCHEDULE_TEAM_NAMES = {
+        **TEAM_NAMES,
         'Alabama-Birmingham': 'UAB',
+        'Brigham Young': 'BYU',
         'California-Davis': 'UC Davis',
         'California-Riverside': 'UC Riverside',
-        'California-Santa Barbara': 'UCSB',
-        'Bowling Green State': 'Bowling Green',
-        'Brigham Young': 'BYU',
         'Central Florida': 'UCF',
-        'Louisiana': 'Louisiana-Lafayette',
         'Louisiana State': 'LSU',
         'Massachusetts': 'UMass',
-        'Middle Tennessee State': 'Middle Tennessee',
-        'Nevada-Las Vegas': 'UNLV',
-        'North Carolina State': 'NC State',
         'Southern California': 'USC',
         'Southern Methodist': 'SMU',
-        'Texas Christian': 'TCU',
         'Texas-El Paso': 'UTEP',
         'Texas-San Antonio': 'UTSA',
-        'Virginia Military Institute': 'VMI'
     }
 
     def __init__(self):
@@ -176,4 +177,69 @@ class SportsReferenceScraper(object):
                 'home_score': home_score,
                 'away_team': away_team,
                 'away_score': away_score
+            }
+
+    @classmethod
+    def parse_ap_rankings_data(cls, html_content: str) -> dict:
+        """
+        Parse the HTML data to get information for every AP Poll
+        ranking.
+
+        Args:
+            html_content (str): Web page HTML data
+
+        Returns:
+            dict: AP Poll ranking information
+        """
+        # Remove any comments
+        html_content = html_content.replace('<!--', '').replace('-->', '')
+
+        soup = BeautifulSoup(html_content, 'lxml')
+        rows = soup.find(id='ap').find('tbody').find_all('tr')
+
+        # Get the final week to get every team's record for that poll
+        # because Sports Reference doesn't have it before 2010
+        final_week = int(rows[0].find('th').text)
+
+        for row in rows:
+            # Header rows have a thead class attribute so skip them
+            row_class = row.get('class')
+            if row_class is not None and 'thead' in row_class:
+                continue
+
+            team_data = row.find(attrs={'data-stat': 'school_name'}).text
+            pattern = r'([A-Za-z &]+(\([A-Z]+\))?)\s?(\((\d+)-(\d+)-?(\d+)?\))?'
+            team_data = re.findall(pattern, team_data)[0]
+
+            team = team_data[0].strip()
+            team = cls.RANKINGS_TEAM_NAMES.get(team) or team
+
+            wins = team_data[3] or 0
+            losses = team_data[4] or 0
+            ties = team_data[5] or 0
+
+            week = int(row.find('th').text)
+            rank = int(row.find(attrs={'data-stat': 'rank'}).text)
+
+            first_place_votes = row.find(
+                attrs={'data-stat': 'votes_first'}).text
+            first_place_votes = int(first_place_votes) \
+                if first_place_votes else 0
+
+            previous_rank = row.find(attrs={'data-stat': 'rank_prev'}).text
+            try:
+                previous_rank = int(previous_rank)
+            except ValueError:
+                previous_rank = None
+
+            yield {
+                'final_week': final_week,
+                'week': week,
+                'rank': rank,
+                'team': team,
+                'first_place_votes': first_place_votes,
+                'previous_rank': previous_rank,
+                'wins': int(wins),
+                'losses': int(losses),
+                'ties': int(ties)
             }
