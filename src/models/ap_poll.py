@@ -19,6 +19,33 @@ class APPollRanking(db.Model):
     ties = db.Column(db.Integer, nullable=False)
 
     @classmethod
+    def get_rankings(cls, year: int, week: int = None,
+                     team: str = None) -> list['APPollRanking']:
+        """
+        Get AP Poll rankings for a given year. If week is provided,
+        only get rankings for that week. If team is provided, only get
+        rankings for that team.
+
+        Args:
+            year (int): Year to get rankings
+            week (int): Week to get rankings
+            team (str): Team for which to get rankings
+
+        Returns:
+            list[APPollRanking]: AP Poll rankings for one year, rankings
+                for one week, and/or rankings for one team
+        """
+        query = cls.query.filter_by(year=year)
+
+        if week is not None:
+            query = query.filter_by(week=week)
+
+        if team is not None:
+            query = query.join(Team).filter_by(name=team)
+
+        return query.all()
+
+    @classmethod
     def add_rankings(cls, start_year: int, end_year: int) -> None:
         """
         Get weekly AP Poll rankings for every week for the given
