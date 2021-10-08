@@ -23,11 +23,10 @@ class Conference(db.Model):
         Returns:
             list[Conference]: All conferences
         """
-        return list(filter(
-            lambda conference: any(
-                year in membership.years for membership in conference.teams
-            ), cls.query.all()
-        ))
+        return [
+            conference for conference in cls.query.all()
+            if any(year in membership.years for membership in conference.teams)
+        ]
 
     @classmethod
     def get_qualifying_conferences(cls, start_year: int,
@@ -49,12 +48,15 @@ class Conference(db.Model):
         qualifying_conferences = []
 
         for conference in conferences:
-            years = set([year for membership in conference.teams
-                         for year in membership.years])
+            years = set([
+                year for membership in conference.teams
+                for year in membership.years
+            ])
 
-            active_years = list(filter(
-                lambda year: year in range(start_year, end_year + 1), years
-            ))
+            active_years = [
+                year for year in years
+                if year in range(start_year, end_year + 1)
+            ]
 
             if len(active_years) >= min_years:
                 qualifying_conferences.append(conference.name)
@@ -71,10 +73,10 @@ class Conference(db.Model):
         Returns:
             list[str]: Teams who belong to the conference
         """
-        return list(map(
-            lambda membership: membership.team.name,
-            filter(lambda membership: year in membership.years, self.teams)
-        ))
+        return [
+            membership.team.name for membership in self.teams
+            if year in membership.years
+        ]
 
     def serialize(self, year: int) -> dict:
         return {

@@ -31,20 +31,19 @@ class Team(db.Model):
         teams = cls.query.all()
 
         if conference is not None:
-            return list(filter(
-                lambda team: any(
+            return [
+                team for team in teams
+                if any(
                     year in membership.years and
                     conference == membership.conference.name
                     for membership in team.conferences
-                ), teams
-            ))
+                )
+            ]
 
-        return list(filter(
-            lambda team: any(
-                year in membership.years
-                for membership in team.conferences
-            ), teams
-        ))
+        return [
+            team for team in teams
+            if any(year in membership.years for membership in team.conferences)
+        ]
 
     @classmethod
     def get_qualifying_teams(cls, start_year: int, end_year: int) -> list[str]:
@@ -65,12 +64,15 @@ class Team(db.Model):
         qualifying_teams = []
 
         for team in teams:
-            years = [year for membership in team.conferences
-                     for year in membership.years]
+            years = [
+                year for membership in team.conferences
+                for year in membership.years
+            ]
 
-            active_years = list(filter(
-                lambda year: year in range(start_year, end_year + 1), years
-            ))
+            active_years = [
+                year for year in years
+                if year in range(start_year, end_year + 1)
+            ]
 
             if len(active_years) >= min_years:
                 qualifying_teams.append(team.name)
@@ -89,9 +91,9 @@ class Team(db.Model):
             str: Conference name
         """
         try:
-            return next(filter(
-                lambda membership: year in membership.years,
-                self.conferences
+            return next((
+                membership for membership in self.conferences
+                if year in membership.years
             )).conference.name
         except StopIteration:
             return None
