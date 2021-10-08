@@ -130,6 +130,44 @@ class APPoll(db.Model):
         return self
 
     @classmethod
+    def get_ap_poll_data(cls, start_year: int, end_year: int = None,
+                         team: str = None) -> Union['APPoll', list['APPoll']]:
+        """
+        Get AP Poll data for the given years. If team is provided, then
+        only get data for that team.
+
+        Args:
+            start_year (int): Year to start getting poll data
+            end_year (int): Year to stop getting poll data
+            team (str): Team for which to get poll data
+
+        Returns:
+            Union[APPoll, list[APPoll]]: AP Poll data for all
+                teams or only poll data for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            ap_poll = query.filter(team == Team.name).all()
+            return sum(ap_poll[1:], ap_poll[0])
+
+        ap_poll = {}
+        for team_name in qualifying_teams:
+            team_ap_poll = query.filter(team_name == Team.name).all()
+
+            if team_ap_poll:
+                ap_poll[team_name] = sum(team_ap_poll[1:], team_ap_poll[0])
+
+        return [ap_poll[team] for team in sorted(ap_poll.keys())]
+
+    @classmethod
     def add_poll_data(cls) -> None:
         """
         Get AP Poll ranking data for every team in the rankings for
