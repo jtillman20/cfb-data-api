@@ -1,4 +1,4 @@
-from .ap_poll import APPollRanking
+from .ap_poll import APPoll, APPollRanking
 from .conference import Conference, ConferenceMembership
 from .game import Game
 from .record import Record
