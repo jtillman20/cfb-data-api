@@ -9,6 +9,7 @@ class Team(db.Model):
     name = db.Column(db.String(100), nullable=False)
     nickname = db.Column(db.String(100), nullable=True)
 
+    ap_poll = db.relationship('APPoll', backref='team', lazy=True)
     ap_poll_ranking = db.relationship(
         'APPollRanking', backref='team', lazy=True)
     rpi = db.relationship('RPI', backref='team', lazy=True)
