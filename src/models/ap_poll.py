@@ -129,6 +129,74 @@ class APPoll(db.Model):
 
         return self
 
+    @classmethod
+    def add_poll_data(cls) -> None:
+        """
+        Get AP Poll ranking data for every team in the rankings for
+        each year and add them to the database.
+        """
+        query = APPollRanking.query.with_entities(APPollRanking.year).distinct()
+        years = [year.year for year in query]
+
+        for year in years:
+            print(f'Adding AP Poll data for {year}')
+            cls.add_poll_data_for_one_year(year=year)
+
+    @classmethod
+    def add_poll_data_for_one_year(cls, year: int) -> None:
+        """
+        Get AP Poll ranking data for every team in the rankings for
+        each year and add them to the database.
+
+        Args:
+            year (int): Year to add AP Poll rankings data
+        """
+        ap_poll = {}
+        rankings = APPollRanking.get_rankings(year=year)
+
+        for ranking in rankings:
+            team_name = ranking.team.name
+            rank = ranking.rank
+
+            if ranking.team.name not in ap_poll:
+                team_ap_poll = cls(
+                    team_id=ranking.team_id,
+                    year=year,
+                    weeks=0,
+                    weeks_top_ten=0,
+                    weeks_top_five=0,
+                    weeks_number_one=0,
+                    score=0
+                )
+                ap_poll[team_name] = team_ap_poll
+
+            else:
+                team_ap_poll = ap_poll[team_name]
+
+            team_ap_poll.weeks += 1
+
+            if rank <= 10:
+                team_ap_poll.weeks_top_ten += 1
+
+                if rank <= 5:
+                    team_ap_poll.weeks_top_five += 1
+
+                    if rank == 1:
+                        team_ap_poll.weeks_number_one += 1
+
+            if ranking.week == 1:
+                team_ap_poll.preseason_ranking = [rank]
+
+            final_week = APPollRanking.get_final_week(year=year)
+            if ranking.week == final_week:
+                team_ap_poll.score = 26 - rank
+                team_ap_poll.final_ranking = [rank]
+
+        for item in sorted(ap_poll):
+            db.session.add(ap_poll[item])
+
+        db.session.commit()
+
     def __getstate__(self) -> dict:
         avg_preseason = round(self.avg_preseason, 2) \
             if self.avg_preseason is not None else self.avg_preseason
