@@ -82,12 +82,12 @@ class SRS(db.Model):
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
-            ratings = query.filter(team == Team.name).all()
+            ratings = query.filter_by(name=team).all()
             return sum(ratings[1:], ratings[0])
 
         ratings = {}
         for team_name in qualifying_teams:
-            team_rating = query.filter(team_name == Team.name).all()
+            team_rating = query.filter_by(name=team_name).all()
 
             if team_rating:
                 ratings[team_name] = sum(team_rating[1:], team_rating[0])
@@ -403,8 +403,8 @@ class ConferenceSRS(db.Model):
             teams = conference.get_teams(year=year)
 
             for team in teams:
-                rating = SRS.query.filter_by(year=year).join(Team).filter(
-                    Team.name == team).first()
+                rating = SRS.query.filter_by(year=year).join(Team).filter_by(
+                    name=team).first()
 
                 conference_srs.scoring_margin += rating.scoring_margin
                 conference_srs.opponent_rating += rating.opponent_rating

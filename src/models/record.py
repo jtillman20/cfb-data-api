@@ -85,12 +85,12 @@ class Record(db.Model):
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
-            records = query.filter(team == Team.name).all()
+            records = query.filter_by(name=team).all()
             return sum(records[1:], records[0])
 
         records = {}
         for team_name in qualifying_teams:
-            team_record = query.filter(team_name == Team.name).all()
+            team_record = query.filter_by(name=team_name).all()
 
             if team_record:
                 records[team_name] = sum(team_record[1:], team_record[0])

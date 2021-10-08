@@ -94,12 +94,12 @@ class RPI(db.Model):
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
-            ratings = query.filter(team == Team.name).all()
+            ratings = query.filter_by(name=team).all()
             return sum(ratings[1:], ratings[0])
 
         ratings = {}
         for team_name in qualifying_teams:
-            team_rating = query.filter(team_name == Team.name).all()
+            team_rating = query.filter_by(name=team_name).all()
 
             if team_rating:
                 ratings[team_name] = sum(team_rating[1:], team_rating[0])

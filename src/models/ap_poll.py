@@ -155,12 +155,12 @@ class APPoll(db.Model):
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
-            ap_poll = query.filter(team == Team.name).all()
+            ap_poll = query.filter_by(name=team).all()
             return sum(ap_poll[1:], ap_poll[0])
 
         ap_poll = {}
         for team_name in qualifying_teams:
-            team_ap_poll = query.filter(team_name == Team.name).all()
+            team_ap_poll = query.filter_by(name=team_name).all()
 
             if team_ap_poll:
                 ap_poll[team_name] = sum(team_ap_poll[1:], team_ap_poll[0])
