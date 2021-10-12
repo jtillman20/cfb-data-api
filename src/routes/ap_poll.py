@@ -18,8 +18,8 @@ class APPollRoute(Resource):
     @flask_response
     def get(self) -> Union[APPoll, list[APPoll]]:
         """
-        GET request to get AP Poll ranking data for one year. If team
-        is provided only get poll data for that team.
+        GET request to get AP Poll ranking data for the given years.
+        If team is provided only get poll data for that team.
 
         Returns:
           Union[APPoll, list[APPoll]]: Poll data for all teams
