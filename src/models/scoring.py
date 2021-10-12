@@ -52,6 +52,50 @@ class Scoring(db.Model):
         return self
 
     @classmethod
+    def get_scoring(cls, side_of_ball: str, start_year: int,
+                    end_year: int = None, team: str = None
+                    ) -> Union['Scoring', list['Scoring']]:
+        """
+        Get scoring offense or defense for qualifying teams for the
+        given years. If team is provided, only get scoring data for
+        that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting scoring data
+            end_year (int): Year to stop getting scoring data
+            team (str): Team for which to get scoring data
+
+        Returns:
+            Union[Scoring, list[Scoring]]: Scoring offense or defense
+                for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            scoring = query.filter_by(name=team).all()
+            return sum(scoring[1:], scoring[0])
+
+        scoring = {}
+        for team_name in qualifying_teams:
+            team_scoring = query.filter_by(name=team_name).all()
+
+            if team_scoring:
+                scoring[team_name] = sum(team_scoring[1:], team_scoring[0])
+
+        return [scoring[team] for team in sorted(scoring.keys())]
+
+    @classmethod
     def add_scoring(cls, start_year: int, end_year: int) -> None:
         """
         Get scoring offense and defense stats for all teams for the
