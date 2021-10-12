@@ -14,6 +14,7 @@ class Team(db.Model):
         'APPollRanking', backref='team', lazy=True)
     rpi = db.relationship('RPI', backref='team', lazy=True)
     record = db.relationship('Record', backref='team', lazy=True)
+    scoring = db.relationship('Scoring', backref='team', lazy=True)
     srs = db.relationship('SRS', backref='team', lazy=True)
 
     @classmethod
