@@ -224,6 +224,7 @@ class Scoring(db.Model):
             'id': self.id,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
+            'side_of_ball': self.side_of_ball,
             'games': self.games,
             'points': self.points,
             'points_per_game': round(self.points_per_game, 1),
