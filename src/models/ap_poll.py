@@ -285,7 +285,7 @@ class APPollRanking(db.Model):
     ties = db.Column(db.Integer, nullable=False)
 
     @classmethod
-    def get_final_week(cls, year: int) -> list[int]:
+    def get_final_week(cls, year: int) -> int:
         """
         Get the final week numbers for the rankings for the given year.
 
@@ -293,7 +293,7 @@ class APPollRanking(db.Model):
             year (int): Year to get final week
 
         Returns:
-            list[int]: Final week number
+            int: Final week number
         """
         query = cls.query.filter_by(year=year).with_entities(
             cls.week).distinct()
