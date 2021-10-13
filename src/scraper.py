@@ -242,3 +242,33 @@ class SportsReferenceScraper(object):
                 int(losses),
                 int(ties)
             )
+
+
+class CFBStatsScraper(object):
+    BASE_URL = 'http://cfbstats.com'
+
+    TEAM_NAMES = {
+        'Hawai\'i': 'Hawaii',
+        'Massachusetts': 'UMass',
+        'Miami (Florida)': 'Miami (FL)',
+        'Miami (Ohio)': 'Miami (OH)',
+        'North Carolina State': 'NC State',
+    }
+
+    def __init__(self, year: int):
+        self.session = Session()
+        self.base_url = f'{self.BASE_URL}/{year}/leader/national/team'
+
+    def get_html_data(self, side_of_ball: str, category: str) -> str:
+        """
+        Get HTML data from a CFB Stats web page for team stats.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            category (str): Number to determine the stat
+
+        Returns:
+            str: HTML data
+        """
+        url = f'{self.base_url}/{side_of_ball}/split01/category{category}/sort01.html'
+        return self.session.get(url).content.decode('utf-8')
