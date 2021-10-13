@@ -272,3 +272,28 @@ class CFBStatsScraper(object):
         """
         url = f'{self.base_url}/{side_of_ball}/split01/category{category}/sort01.html'
         return self.session.get(url).content.decode('utf-8')
+
+    @classmethod
+    def parse_html_data(cls, html_content: str) -> tuple:
+        """
+        Parse the HTML data to get every team's stats.
+
+        Args:
+            html_content (str): Web page HTML data
+
+        Returns:
+            tuple: Team stats
+        """
+        soup = BeautifulSoup(html_content, 'lxml')
+        rows = soup.find('table').find_all('tr')
+
+        for row in rows:
+            row_data = row.find_all('td')
+
+            if not row_data:
+                continue
+
+            data = [item.text for item in row_data]
+            data[1] = cls.TEAM_NAMES.get(data[1]) or data[1]
+
+            yield tuple(data)
