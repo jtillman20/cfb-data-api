@@ -134,13 +134,13 @@ class Game(db.Model):
             for game in game_data:
                 db.session.add(cls(
                     year=year,
-                    week=game['week'],
-                    date=game['date'],
-                    neutral_site=game['neutral_site'],
-                    home_team=game['home_team'],
-                    home_score=game['home_score'],
-                    away_team=game['away_team'],
-                    away_score=game['away_score']
+                    week=game[0],
+                    date=game[1],
+                    neutral_site=game[2],
+                    home_team=game[3],
+                    home_score=game[4],
+                    away_team=game[5],
+                    away_score=game[6]
                 ))
 
         db.session.commit()

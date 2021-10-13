@@ -356,25 +356,27 @@ class APPollRanking(db.Model):
         ranking_data = scraper.parse_ap_rankings_data(html_content=html_content)
 
         for ranking in ranking_data:
-            team = Team.query.filter_by(name=ranking['team']).first()
+            team = Team.query.filter_by(name=ranking[3]).first()
+            final_week = ranking[0]
+            week = ranking[1]
 
-            if ranking['week'] == ranking['final_week'] and year < 2010:
+            if week == final_week and year < 2010:
                 record = Record.get_records(start_year=year, team=team.name)
                 wins = record.wins
                 losses = record.losses
                 ties = record.ties
             else:
-                wins = ranking['wins']
-                losses = ranking['losses']
-                ties = ranking['ties']
+                wins = ranking[6]
+                losses = ranking[7]
+                ties = ranking[8]
 
             rankings.append(cls(
                 year=year,
                 team_id=team.id,
-                week=ranking['week'],
-                rank=ranking['rank'],
-                first_place_votes=ranking['first_place_votes'],
-                previous_rank=ranking['previous_rank'],
+                week=week,
+                rank=ranking[2],
+                first_place_votes=ranking[4],
+                previous_rank=ranking[5],
                 wins=wins,
                 losses=losses,
                 ties=ties

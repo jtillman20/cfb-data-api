@@ -112,7 +112,7 @@ class SportsReferenceScraper(object):
             yield team, conference
 
     @classmethod
-    def parse_schedule_html_data(cls, html_content: str) -> dict:
+    def parse_schedule_html_data(cls, html_content: str) -> tuple:
         """
         Parse the HTML data to get information for every game.
 
@@ -120,7 +120,7 @@ class SportsReferenceScraper(object):
             html_content (str): Web page HTML data
 
         Returns:
-            dict: Game information
+            tuple: Game information
         """
         soup = BeautifulSoup(html_content, 'lxml')
         rows = soup.find(id='schedule').find('tbody').find_all('tr')
@@ -168,19 +168,18 @@ class SportsReferenceScraper(object):
             home_team = cls.SCHEDULE_TEAM_NAMES.get(home_team) or home_team
             away_team = cls.SCHEDULE_TEAM_NAMES.get(away_team) or away_team
 
-            yield {
-                'year': year,
-                'week': week,
-                'date': date,
-                'neutral_site': neutral_site,
-                'home_team': home_team,
-                'home_score': home_score,
-                'away_team': away_team,
-                'away_score': away_score
-            }
+            yield (
+                week,
+                date,
+                neutral_site,
+                home_team,
+                home_score,
+                away_team,
+                away_score
+            )
 
     @classmethod
-    def parse_ap_rankings_data(cls, html_content: str) -> dict:
+    def parse_ap_rankings_data(cls, html_content: str) -> tuple:
         """
         Parse the HTML data to get information for every AP Poll
         ranking.
@@ -189,7 +188,7 @@ class SportsReferenceScraper(object):
             html_content (str): Web page HTML data
 
         Returns:
-            dict: AP Poll ranking information
+            tuple: AP Poll ranking information
         """
         # Remove any comments
         html_content = html_content.replace('<!--', '').replace('-->', '')
@@ -232,14 +231,14 @@ class SportsReferenceScraper(object):
             except ValueError:
                 previous_rank = None
 
-            yield {
-                'final_week': final_week,
-                'week': week,
-                'rank': rank,
-                'team': team,
-                'first_place_votes': first_place_votes,
-                'previous_rank': previous_rank,
-                'wins': int(wins),
-                'losses': int(losses),
-                'ties': int(ties)
-            }
+            yield (
+                final_week,
+                week,
+                rank,
+                team,
+                first_place_votes,
+                previous_rank,
+                int(wins),
+                int(losses),
+                int(ties)
+            )
