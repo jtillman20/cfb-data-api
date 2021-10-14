@@ -1,4 +1,8 @@
+from operator import attrgetter
+
 from app import db
+from scraper import CFBStatsScraper
+from .team import Team
 
 
 class Passing(db.Model):
@@ -93,6 +97,58 @@ class Passing(db.Model):
         self.ints += other.ints
 
         return self
+
+    @classmethod
+    def add_passing(cls, start_year: int, end_year: int) -> None:
+        """
+        Get passing offense and defense stats for all teams for the
+        given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start getting passing stats
+            end_year (int): Year to stop getting passing stats
+        """
+        for year in range(start_year, end_year + 1):
+            print(f'Adding passing stats for {year}')
+            cls.add_passing_for_one_year(year=year)
+
+    @classmethod
+    def add_passing_for_one_year(cls, year: int) -> None:
+        """
+        Get passing offense and defense stats for all teams
+        for one year and add them to the database.
+
+        Args:
+            year (int): Year to get passing stats
+        """
+        scraper = CFBStatsScraper(year=year)
+
+        for side_of_ball in ['offense', 'defense']:
+            passing = []
+
+            html_content = scraper.get_html_data(
+                side_of_ball=side_of_ball, category='02')
+            passing_data = scraper.parse_html_data(
+                html_content=html_content)
+
+            for item in passing_data:
+                team = Team.query.filter_by(name=item[1]).first()
+                passing.append(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=item[2],
+                    attempts=item[3],
+                    completions=item[4],
+                    yards=item[6],
+                    tds=item[8],
+                    ints=item[9]
+                ))
+
+            for team_passing in sorted(passing, key=attrgetter('team_id')):
+                db.session.add(team_passing)
+
+        db.session.commit()
 
     def __getstate__(self) -> dict:
         data = {
