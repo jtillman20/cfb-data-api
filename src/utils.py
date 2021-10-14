@@ -1,4 +1,5 @@
 from functools import wraps
+from operator import attrgetter
 
 from flask import request, Response
 from jsonpickle import encode
@@ -87,6 +88,6 @@ def sort(data: list[any], attrs: list[str], reverses: list[bool]) -> list[any]:
         list: Sorted list
     """
     for attr, reverse in zip(attrs, reverses):
-        data = sorted(data, key=lambda obj: getattr(obj, attr), reverse=reverse)
+        data = sorted(data, key=attrgetter(attr), reverse=reverse)
 
     return data
