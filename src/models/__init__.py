@@ -4,6 +4,7 @@ from .game import Game
 from .passing import Passing
 from .record import Record
 from .rpi import RPI
+from .rushing import Rushing
 from .scoring import Scoring
 from .srs import ConferenceSRS, SRS
 from .team import Team
