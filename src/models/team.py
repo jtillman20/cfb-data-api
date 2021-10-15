@@ -12,6 +12,7 @@ class Team(db.Model):
     ap_poll = db.relationship('APPoll', backref='team', lazy=True)
     ap_poll_ranking = db.relationship(
         'APPollRanking', backref='team', lazy=True)
+    passing = db.relationship('Passing', backref='team', lazy=True)
     rpi = db.relationship('RPI', backref='team', lazy=True)
     record = db.relationship('Record', backref='team', lazy=True)
     scoring = db.relationship('Scoring', backref='team', lazy=True)
