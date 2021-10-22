@@ -63,6 +63,7 @@ class SportsReferenceScraper(object):
         'Massachusetts': 'UMass',
         'Southern California': 'USC',
         'Southern Methodist': 'SMU',
+        'St. Francis (Pennsylvania)': 'St. Francis (PA)',
         'Texas-El Paso': 'UTEP',
         'Texas-San Antonio': 'UTSA',
     }
