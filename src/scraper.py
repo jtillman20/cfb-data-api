@@ -1,12 +1,14 @@
 import re
+from typing import Iterator
 
 import dateutil
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 from requests import Session
 
 
 class SportsReferenceScraper(object):
-    BASE_URL = 'https://sports-reference.com/cfb/years'
+    BASE_URL = 'https://sports-reference.com/cfb'
 
     # Conference names that are modified from how they appear on Sports
     # Reference to how to store them in the database
@@ -65,6 +67,25 @@ class SportsReferenceScraper(object):
         'Texas-San Antonio': 'UTSA',
     }
 
+    # Team names that are modified from how they are stored in the
+    # database to how they appear in the Sports Reference URLs
+    URL_TEAM_NAMES = {
+        'Bowling Green': 'Bowling Green State',
+        'BYU': 'Brigham Young',
+        'LSU': 'Louisiana State',
+        'Middle Tennessee': 'Middle Tennessee State',
+        'NC State': 'North Carolina State',
+        'SMU': 'Southern Methodist',
+        'TCU': 'Texas Christian',
+        'UAB': 'Alabama Birmingham',
+        'UCF': 'Central Florida',
+        'UMass': 'Massachusetts',
+        'UNLV': 'Nevada-Las Vegas',
+        'USC': 'Southern California',
+        'UTEP': 'Texas-El Paso',
+        'UTSA': 'Texas-San Antonio'
+    }
+
     def __init__(self):
         self.session = Session()
 
@@ -79,7 +100,7 @@ class SportsReferenceScraper(object):
         Returns:
             str: HTML data
         """
-        url = f'{self.BASE_URL}/{path}'
+        url = f'{self.BASE_URL}/years/{path}'
         return self.session.get(url).content.decode('latin-1')
 
     @classmethod
@@ -242,6 +263,148 @@ class SportsReferenceScraper(object):
                 int(losses),
                 int(ties)
             )
+
+    def get_game_log_html_data(self, team: str, year: int) -> str:
+        """
+        Get HTML data from Sports Reference page for the game logs.
+
+        Args:
+            team (str): Team for which to get game stats
+            year (int): Year to get game stats
+
+        Returns:
+            str: HTML data
+        """
+        team = self.URL_TEAM_NAMES.get(team) or team
+        for char in ['&', '(', ')']:
+            team = team.replace(char, '')
+        team = team.replace(' ', '-').lower()
+
+        url = f'{self.BASE_URL}/schools/{team}/{year}/gamelog/'
+        return self.session.get(url).content.decode('latin-1')
+
+    @classmethod
+    def parse_game_log_data(cls, html_content: str, side_of_ball: str) -> tuple:
+        """
+        Parse the HTML data to get game stats, such as passing and
+        rushing offense/defense, firsts downs, turnovers, etc.
+
+        Args:
+            html_content (str): Web page HTML data
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            tuple: Game stats
+        """
+        # Remove any comments
+        html_content = html_content.replace('<!--', '').replace('-->', '')
+
+        soup = BeautifulSoup(html_content, 'lxml')
+        rows = soup.find(id=side_of_ball).find('tbody').find_all('tr')
+
+        for row in rows:
+            date = dateutil.parser.parse(row.find(
+                attrs={'data-stat': 'date_game'}).text)
+            opponent = row.find(
+                attrs={'data-stat': 'opp_name'}).text.replace('*', '')
+            opponent = cls.SCHEDULE_TEAM_NAMES.get(opponent) or opponent
+
+            passing = list(cls.get_passing_game_log_data(
+                tag=row, side_of_ball=side_of_ball))
+
+            rushing = list(cls.get_rushing_game_log_data(
+                tag=row, side_of_ball=side_of_ball))
+
+            first_downs = list(cls.get_first_down_game_log_data(
+                tag=row, side_of_ball=side_of_ball))
+
+            penalties = int(cls.get_attr_data(
+                tag=row, attr='penalty', side_of_ball=side_of_ball))
+            penalty_yards = int(cls.get_attr_data(
+                tag=row, attr='penalty_yds', side_of_ball=side_of_ball))
+            fumbles = int(cls.get_attr_data(
+                tag=row, attr='fumbles_lost', side_of_ball=side_of_ball))
+
+            yield (
+                date,
+                opponent,
+                *passing,
+                *rushing,
+                *first_downs,
+                penalties,
+                penalty_yards,
+                fumbles
+            )
+
+    @classmethod
+    def get_passing_game_log_data(
+            cls, tag: Tag, side_of_ball: str) -> Iterator[str]:
+        """
+        Get passing data from the game log web page.
+
+        Args:
+            tag (Tag): HTML tag
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            str: Passing data
+        """
+        attrs = ['att', 'cmp', 'yds', 'td', 'int']
+        for attr in attrs:
+            yield cls.get_attr_data(
+                tag=tag, attr=f'pass_{attr}', side_of_ball=side_of_ball)
+
+    @classmethod
+    def get_rushing_game_log_data(
+            cls, tag: Tag, side_of_ball: str) -> Iterator[str]:
+        """
+        Get rushing data from the game log web page.
+
+        Args:
+            tag (Tag): HTML tag
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            str: Rushing data
+        """
+        attrs = ['att', 'yds', 'td']
+        for attr in attrs:
+            yield cls.get_attr_data(
+                tag=tag, attr=f'rush_{attr}', side_of_ball=side_of_ball)
+
+    @classmethod
+    def get_first_down_game_log_data(
+            cls, tag: Tag, side_of_ball: str) -> Iterator[str]:
+        """
+        Get first down data from the game log web page.
+
+        Args:
+            tag (Tag): HTML tag
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            str: First down data
+        """
+        attrs = ['pass', 'rush', 'penalty']
+        for attr in attrs:
+            yield cls.get_attr_data(
+                tag=tag, attr=f'first_down_{attr}', side_of_ball=side_of_ball)
+
+    @classmethod
+    def get_attr_data(cls, tag: Tag, attr: str, side_of_ball: str) -> str:
+        """
+        Get the data for the given attribute from the given HTML tag.
+
+        Args:
+            tag (Tag): HTML tag
+            attr (str): Attribute name
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            str: Attribute data
+        """
+        attr = f'opp_{attr}' if side_of_ball == 'defense' else attr
+        return tag.find(attrs={'data-stat': attr}).text
 
 
 class CFBStatsScraper(object):
