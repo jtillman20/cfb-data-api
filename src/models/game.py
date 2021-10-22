@@ -19,6 +19,8 @@ class Game(db.Model):
     away_team = db.Column(db.String(100), nullable=False)
     away_score = db.Column(db.Integer, nullable=False)
 
+    stats = db.relationship('GameStats', backref='game', lazy=True)
+
     def determine_result(self, team: str) -> str:
         """
         Determine the result of the game for the given team.
