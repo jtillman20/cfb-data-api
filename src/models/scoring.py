@@ -196,26 +196,17 @@ class Scoring(db.Model):
 
                 if opponent_query.first() is not None:
                     side_of_ball = team_scoring.side_of_ball
+                    opposite_side_of_ball = 'defense' \
+                        if side_of_ball == 'offense' else 'offense'
 
-                    if side_of_ball == 'offense':
-                        opponent_defense = cls.query.filter_by(
-                            year=year, side_of_ball='defense').join(
-                            Team).filter_by(name=opponent_name).first()
+                    opponent_defense = cls.query.filter_by(
+                        year=year, side_of_ball=opposite_side_of_ball).join(
+                        Team).filter_by(name=opponent_name).first()
 
-                        opponent_points = opponent_defense.points - points
-                        team_scoring.opponents_points += opponent_points
-                        opponent_games = opponent_defense.games
-                        team_scoring.opponents_games += opponent_games - 1
-
-                    else:
-                        opponent_offense = cls.query.filter_by(
-                            year=year, side_of_ball='offense').join(
-                            Team).filter_by(name=opponent_name).first()
-
-                        opponent_points = opponent_offense.points - points
-                        team_scoring.opponents_points += opponent_points
-                        opponent_games = opponent_offense.games
-                        team_scoring.opponents_games += opponent_games - 1
+                    opponent_points = opponent_defense.points - points
+                    team_scoring.opponents_points += opponent_points
+                    opponent_games = opponent_defense.games
+                    team_scoring.opponents_games += opponent_games - 1
 
         db.session.commit()
 
