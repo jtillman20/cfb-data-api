@@ -1,4 +1,6 @@
-from sqlalchemy import or_
+from operator import itemgetter
+
+from sqlalchemy import and_, or_
 
 from app import db
 from scraper import SportsReferenceScraper
@@ -225,3 +227,90 @@ class GameStats(db.Model):
     @property
     def away_turnovers(self) -> int:
         return self.away_fumbles + self.away_ints
+
+    @classmethod
+    def add_game_stats(cls, start_year: int, end_year: int) -> None:
+        """
+        Get stats for all FBS games for the given years and add them
+        to the database.
+
+        Args:
+            start_year (int): Year to begin adding game stats
+            end_year (int): Year to stop adding game stats
+        """
+        game_stats = {}
+        scraper = SportsReferenceScraper()
+
+        for year in range(start_year, end_year + 1):
+            print(f'Adding game stats for {year}')
+            teams = Team.get_teams(year=year)
+
+            for team in teams:
+                html_content = scraper.get_game_log_html_data(
+                    team=team.name, year=year)
+                offense_stats = scraper.parse_game_log_data(
+                    html_content=html_content, side_of_ball='offense')
+                defense_stats = scraper.parse_game_log_data(
+                    html_content=html_content, side_of_ball='defense')
+
+                for offense, defense in zip(offense_stats, defense_stats):
+                    opponent = offense[1]
+
+                    query = Game.query.filter(Game.date == offense[0].date())
+                    game = query.filter(or_(
+                        and_(
+                            Game.home_team == team.name,
+                            Game.away_team == opponent
+                        ),
+                        and_(
+                            Game.away_team == team.name,
+                            Game.home_team == opponent
+                        )
+                    )).first()
+
+                    if game.id in game_stats:
+                        continue
+
+                    if team.name == game.home_team:
+                        home = offense
+                        away = defense
+                    else:
+                        home = defense
+                        away = offense
+
+                    game_stats[game.id] = cls(
+                        game_id=game.id,
+                        home_passing_attempts=home[2],
+                        home_completions=home[3],
+                        home_passing_yards=home[4],
+                        home_passing_tds=home[5],
+                        home_rushing_attempts=home[7],
+                        home_rushing_yards=home[8],
+                        home_rushing_tds=home[9],
+                        home_passing_first_downs=home[10],
+                        home_rushing_first_downs=home[11],
+                        home_penalty_first_downs=home[12],
+                        home_penalties=home[13],
+                        home_penalty_yards=home[14],
+                        home_fumbles=home[15],
+                        home_ints=home[6],
+                        away_passing_attempts=away[2],
+                        away_completions=away[3],
+                        away_passing_yards=away[4],
+                        away_passing_tds=away[5],
+                        away_rushing_attempts=away[7],
+                        away_rushing_yards=away[8],
+                        away_rushing_tds=away[9],
+                        away_passing_first_downs=away[10],
+                        away_rushing_first_downs=away[11],
+                        away_penalty_first_downs=away[12],
+                        away_penalties=away[13],
+                        away_penalty_yards=away[14],
+                        away_fumbles=away[15],
+                        away_ints=away[6]
+                    )
+
+        for game_id, game in sorted(game_stats.items(), key=itemgetter(0)):
+            db.session.add(game)
+
+        db.session.commit()
