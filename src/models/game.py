@@ -157,3 +157,71 @@ class Game(db.Model):
             'away_team': self.away_team,
             'away_score': self.away_score
         }
+
+
+class GameStats(db.Model):
+    __tablename__ = 'game_stats'
+    id = db.Column(db.Integer, primary_key=True)
+    game_id = db.Column(db.Integer, db.ForeignKey('game.id'), nullable=False)
+    home_passing_attempts = db.Column(db.Integer, nullable=False)
+    home_completions = db.Column(db.Integer, nullable=False)
+    home_passing_yards = db.Column(db.Integer, nullable=False)
+    home_passing_tds = db.Column(db.Integer, nullable=False)
+    home_rushing_attempts = db.Column(db.Integer, nullable=False)
+    home_rushing_yards = db.Column(db.Integer, nullable=False)
+    home_rushing_tds = db.Column(db.Integer, nullable=False)
+    home_passing_first_downs = db.Column(db.Integer, nullable=False)
+    home_rushing_first_downs = db.Column(db.Integer, nullable=False)
+    home_penalty_first_downs = db.Column(db.Integer, nullable=False)
+    home_penalties = db.Column(db.Integer, nullable=False)
+    home_penalty_yards = db.Column(db.Integer, nullable=False)
+    home_fumbles = db.Column(db.Integer, nullable=False)
+    home_ints = db.Column(db.Integer, nullable=False)
+    away_passing_attempts = db.Column(db.Integer, nullable=False)
+    away_completions = db.Column(db.Integer, nullable=False)
+    away_passing_yards = db.Column(db.Integer, nullable=False)
+    away_passing_tds = db.Column(db.Integer, nullable=False)
+    away_rushing_attempts = db.Column(db.Integer, nullable=False)
+    away_rushing_yards = db.Column(db.Integer, nullable=False)
+    away_rushing_tds = db.Column(db.Integer, nullable=False)
+    away_passing_first_downs = db.Column(db.Integer, nullable=False)
+    away_rushing_first_downs = db.Column(db.Integer, nullable=False)
+    away_penalty_first_downs = db.Column(db.Integer, nullable=False)
+    away_penalties = db.Column(db.Integer, nullable=False)
+    away_penalty_yards = db.Column(db.Integer, nullable=False)
+    away_fumbles = db.Column(db.Integer, nullable=False)
+    away_ints = db.Column(db.Integer, nullable=False)
+
+    @property
+    def home_plays(self) -> int:
+        return self.home_passing_attempts + self.home_rushing_attempts
+
+    @property
+    def home_total_yards(self) -> int:
+        return self.home_passing_yards + self.home_rushing_yards
+
+    @property
+    def home_first_downs(self) -> int:
+        return self.home_passing_first_downs + self.home_rushing_first_downs \
+               + self.home_penalty_first_downs
+
+    @property
+    def home_turnovers(self) -> int:
+        return self.home_fumbles + self.home_ints
+
+    @property
+    def away_plays(self) -> int:
+        return self.away_passing_attempts + self.away_rushing_attempts
+
+    @property
+    def away_total_yards(self) -> int:
+        return self.away_passing_yards + self.away_rushing_yards
+
+    @property
+    def away_first_downs(self) -> int:
+        return self.away_passing_first_downs + self.away_rushing_first_downs \
+               + self.away_penalty_first_downs
+
+    @property
+    def away_turnovers(self) -> int:
+        return self.away_fumbles + self.away_ints
