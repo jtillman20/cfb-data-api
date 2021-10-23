@@ -8,3 +8,4 @@ from .rushing import Rushing
 from .scoring import Scoring
 from .srs import ConferenceSRS, SRS
 from .team import Team
+from .total import Total
