@@ -79,9 +79,9 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
         tuple: Secondary sort attribute and sort order
     """
     if attr == 'points_per_game':
-        secondary_attr = 'points'
+        secondary_attr = 'games'
 
-    elif attr == 'points' or attr == 'relative_points_per_game':
+    elif attr in ['points', 'relative_points_per_game']:
         secondary_attr = 'points_per_game'
 
     else:
