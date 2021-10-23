@@ -244,7 +244,7 @@ class Total(db.Model):
             'year': self.year,
             'side_of_ball': self.side_of_ball,
             'games': self.games,
-            'plays': self.attempts,
+            'plays': self.plays,
             'plays_per_game': round(self.plays, 1),
             'yards': self.yards,
             'yards_per_play': round(self.yards_per_play, 2),
