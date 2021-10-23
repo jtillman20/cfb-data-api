@@ -18,6 +18,7 @@ class Team(db.Model):
     rushing = db.relationship('Rushing', backref='team', lazy=True)
     scoring = db.relationship('Scoring', backref='team', lazy=True)
     srs = db.relationship('SRS', backref='team', lazy=True)
+    total = db.relationship('Total', backref='team', lazy=True)
 
     @classmethod
     def get_teams(cls, year: int, conference: str = None) -> list['Team']:
