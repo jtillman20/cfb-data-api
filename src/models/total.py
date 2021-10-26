@@ -222,17 +222,17 @@ class Total(db.Model):
                     opposite_side_of_ball = 'defense' \
                         if side_of_ball == 'offense' else 'offense'
 
-                    opponent_defense = cls.query.filter_by(
+                    opponent_stats = cls.query.filter_by(
                         year=year, side_of_ball=opposite_side_of_ball).join(
                         Team).filter_by(name=opponent_name).first()
 
-                    opponent_games = opponent_defense.games
+                    opponent_games = opponent_stats.games
                     team_total.opponents_games += opponent_games - 1
 
-                    opponent_plays = opponent_defense.plays - plays
+                    opponent_plays = opponent_stats.plays - plays
                     team_total.opponents_plays += opponent_plays
 
-                    opponent_yards = opponent_defense.yards - yards
+                    opponent_yards = opponent_stats.yards - yards
                     team_total.opponents_yards += opponent_yards
 
         db.session.commit()
