@@ -1,8 +1,7 @@
-from operator import attrgetter
 from typing import Union
 
 from app import db
-from scraper import CFBStatsScraper
+from .game import Game
 from .team import Team
 
 
@@ -18,6 +17,12 @@ class Passing(db.Model):
     yards = db.Column(db.Integer, nullable=False)
     tds = db.Column(db.Integer, nullable=False)
     ints = db.Column(db.Integer, nullable=False)
+    opponents_games = db.Column(db.Integer, nullable=False)
+    opponents_attempts = db.Column(db.Integer, nullable=False)
+    opponents_completions = db.Column(db.Integer, nullable=False)
+    opponents_yards = db.Column(db.Integer, nullable=False)
+    opponents_tds = db.Column(db.Integer, nullable=False)
+    opponents_ints = db.Column(db.Integer, nullable=False)
 
     @property
     def attempts_per_game(self) -> float:
@@ -80,6 +85,44 @@ class Passing(db.Model):
                     * 330 - self.ints * 200) / self.attempts
         return 0.0
 
+    @property
+    def opponents_yards_per_attempt(self) -> float:
+        if self.opponents_attempts:
+            return self.opponents_yards / self.opponents_attempts
+        return 0.0
+
+    @property
+    def opponents_yards_per_game(self) -> float:
+        if self.opponents_games:
+            return self.opponents_yards / self.opponents_games
+        return 0.0
+
+    @property
+    def opponents_rating(self) -> float:
+        if self.opponents_attempts:
+            return (self.opponents_yards * 8.4 + self.opponents_completions
+                    * 100 + self.opponents_tds * 330 - self.opponents_ints
+                    * 200) / self.opponents_attempts
+        return 0.0
+
+    @property
+    def relative_yards_per_attempt(self) -> float:
+        if self.opponents_yards_per_attempt:
+            return (self.yards_per_attempt / self.opponents_yards_per_attempt) \
+                   * 100
+
+    @property
+    def relative_yards_per_game(self) -> float:
+        if self.opponents_yards_per_game:
+            return (self.yards_per_game / self.opponents_yards_per_game) * 100
+        return 0.0
+
+    @property
+    def relative_rating(self) -> float:
+        if self.opponents_rating:
+            return (self.rating / self.opponents_rating) * 100
+        return 0.0
+
     def __add__(self, other: 'Passing') -> 'Passing':
         """
         Add two Passing objects to combine multiple years of data.
@@ -96,6 +139,12 @@ class Passing(db.Model):
         self.yards += other.yards
         self.tds += other.tds
         self.ints += other.ints
+        self.opponents_games += other.opponents_games
+        self.opponents_attempts += other.opponents_attempts
+        self.opponents_completions += other.opponents_completions
+        self.opponents_yards += other.opponents_yards
+        self.opponents_tds += other.opponents_tds
+        self.opponents_ints += other.opponents_ints
 
         return self
 
@@ -144,18 +193,27 @@ class Passing(db.Model):
         return [passing[team] for team in sorted(passing.keys())]
 
     @classmethod
-    def add_passing(cls, start_year: int, end_year: int) -> None:
+    def add_passing(cls, start_year: int = None, end_year: int = None) -> None:
         """
         Get passing offense and defense stats for all teams for the
         given years and add them to the database.
 
         Args:
-            start_year (int): Year to start getting passing stats
-            end_year (int): Year to stop getting passing stats
+            start_year (int): Year to start adding passing stats
+            end_year (int): Year to stop adding passing stats
         """
-        for year in range(start_year, end_year + 1):
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
             print(f'Adding passing stats for {year}')
             cls.add_passing_for_one_year(year=year)
+            cls.add_opponent_passing(year=year)
 
     @classmethod
     def add_passing_for_one_year(cls, year: int) -> None:
@@ -166,32 +224,115 @@ class Passing(db.Model):
         Args:
             year (int): Year to get passing stats
         """
-        scraper = CFBStatsScraper(year=year)
+        teams = Team.get_teams(year=year)
 
-        for side_of_ball in ['offense', 'defense']:
-            passing = []
+        for team in teams:
+            games = Game.get_games(year=year, team=team.name)
+            game_stats = [game.stats[0] for game in games]
 
-            html_content = scraper.get_html_data(
-                side_of_ball=side_of_ball, category='02')
-            passing_data = scraper.parse_html_data(
-                html_content=html_content)
+            for side_of_ball in ['offense', 'defense']:
+                attempts = 0
+                completions = 0
+                yards = 0
+                tds = 0
+                ints = 0
 
-            for item in passing_data:
-                team = Team.query.filter_by(name=item[1]).first()
-                passing.append(cls(
+                for stats in game_stats:
+                    home_team = stats.game.home_team
+
+                    if side_of_ball == 'offense':
+                        side = 'home' if home_team == team.name else 'away'
+                    else:
+                        side = 'away' if home_team == team.name else 'home'
+
+                    attempts += getattr(stats, f'{side}_passing_attempts')
+                    completions += getattr(stats, f'{side}_completions')
+                    yards += getattr(stats, f'{side}_passing_yards')
+                    tds += getattr(stats, f'{side}_passing_tds')
+                    ints += getattr(stats, f'{side}_ints')
+
+                db.session.add(cls(
                     team_id=team.id,
                     year=year,
                     side_of_ball=side_of_ball,
-                    games=item[2],
-                    attempts=item[3],
-                    completions=item[4],
-                    yards=item[6],
-                    tds=item[8],
-                    ints=item[9]
+                    games=len(games),
+                    attempts=attempts,
+                    completions=completions,
+                    yards=yards,
+                    tds=tds,
+                    ints=ints,
+                    opponents_games=0,
+                    opponents_attempts=0,
+                    opponents_completions=0,
+                    opponents_yards=0,
+                    opponents_tds=0,
+                    opponents_ints=0
                 ))
 
-            for team_passing in sorted(passing, key=attrgetter('team_id')):
-                db.session.add(team_passing)
+        db.session.commit()
+
+    @classmethod
+    def add_opponent_passing(cls, year: int) -> None:
+        """
+        Get passing offense and defense for all team's opponents
+        and add them to the database.
+
+        Args:
+            year (int): Year to get passing stats
+        """
+        passing = cls.query.filter_by(year=year).all()
+
+        for team_passing in passing:
+            team = team_passing.team.name
+            schedule = Game.get_games(year=year, team=team)
+
+            for game in schedule:
+                game_stats = game.stats[0]
+
+                if team == game.away_team:
+                    opponent_name = game.home_team
+                    attempts = game_stats.away_passing_attempts
+                    completions = game_stats.away_completions
+                    yards = game_stats.away_passing_yards
+                    tds = game_stats.away_passing_tds
+                    ints = game_stats.away_ints
+                else:
+                    opponent_name = game.away_team
+                    attempts = game_stats.home_passing_attempts
+                    completions = game_stats.home_completions
+                    yards = game_stats.home_passing_yards
+                    tds = game_stats.home_passing_tds
+                    ints = game_stats.home_ints
+
+                opponent_query = cls.query.filter_by(year=year).join(
+                    Team).filter_by(name=opponent_name)
+
+                if opponent_query.first() is not None:
+                    side_of_ball = team_passing.side_of_ball
+                    opposite_side_of_ball = 'defense' \
+                        if side_of_ball == 'offense' else 'offense'
+
+                    opponent_stats = cls.query.filter_by(
+                        year=year, side_of_ball=opposite_side_of_ball).join(
+                        Team).filter_by(name=opponent_name).first()
+
+                    opponent_games = opponent_stats.games
+                    team_passing.opponents_games += opponent_games - 1
+
+                    opponent_attempts = opponent_stats.attempts - attempts
+                    team_passing.opponents_attempts += opponent_attempts
+
+                    opponent_completions = opponent_stats.completions - completions
+                    team_passing.opponents_completions += opponent_completions
+
+                    opponent_yards = opponent_stats.yards - yards
+                    team_passing.opponents_yards += opponent_yards
+
+                    opponent_tds = opponent_stats.tds - tds
+                    team_passing.opponents_tds += opponent_tds
+
+                    opponent_ints = opponent_stats.ints - ints
+                    team_passing.opponents_ints += opponent_ints
 
         db.session.commit()
 
@@ -216,7 +357,11 @@ class Passing(db.Model):
             'ints': self.ints,
             'int_pct': round(self.int_pct, 2),
             'td_int_ratio': round(self.td_int_ratio, 2),
-            'rating': round(self.rating, 2)
+            'rating': round(self.rating, 2),
+            'relative_yards_per_attempt': round(
+                self.relative_yards_per_attempt, 1),
+            'relative_yards_per_game': round(self.relative_yards_per_game, 1),
+            'relative_rating': round(self.relative_rating, 1)
         }
 
         if hasattr(self, 'rank'):
