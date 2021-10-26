@@ -107,13 +107,23 @@ class RPI(db.Model):
         return [ratings[team] for team in sorted(ratings.keys())]
 
     @classmethod
-    def add_rpi_ratings(cls) -> None:
+    def add_rpi_ratings(cls, start_year: int = None,
+                        end_year: int = None) -> None:
         """
         Get RPI ratings for all teams for every year and add them
         to the database.
+
+        Args:
+            start_year (int): Year to start adding ratings
+            end_year (int): Year to stop adding ratings
         """
-        query = Game.query.with_entities(Game.year).distinct()
-        years = [year.year for year in query]
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding RPI ratings for {year}')

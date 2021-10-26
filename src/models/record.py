@@ -49,7 +49,6 @@ class Record(db.Model):
         Returns:
             Record: self
         """
-        self.year = other.year
         self.wins += other.wins
         self.losses += other.losses
         self.ties += other.ties
@@ -98,13 +97,22 @@ class Record(db.Model):
         return [records[team] for team in sorted(records.keys())]
 
     @classmethod
-    def add_records(cls) -> None:
+    def add_records(cls, start_year: int = None, end_year: int = None) -> None:
         """
         Get win-loss records for all teams for every year and add them
         to the database.
+
+        Args:
+            start_year (int): Year to start adding win-loss records
+            end_year (int): Year to stop adding win-loss records
         """
-        query = Game.query.with_entities(Game.year).distinct()
-        years = [year.year for year in query]
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding records for {year}')

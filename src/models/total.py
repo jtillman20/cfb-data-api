@@ -129,16 +129,24 @@ class Total(db.Model):
         return [total[team] for team in sorted(total.keys())]
 
     @classmethod
-    def add_total(cls, start_year: int, end_year: int) -> None:
+    def add_total(cls, start_year: int = None, end_year: int = None) -> None:
         """
         Get total offense and defense stats for all teams for the
         given years and add them to the database.
 
         Args:
-            start_year (int): Year to start getting total stats
-            end_year (int): Year to stop getting total stats
+            start_year (int): Year to start adding total stats
+            end_year (int): Year to stop adding total stats
         """
-        for year in range(start_year, end_year + 1):
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
             print(f'Adding total stats for {year}')
             cls.add_total_for_one_year(year=year)
             cls.add_opponent_total(year=year)
