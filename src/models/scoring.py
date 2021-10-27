@@ -125,7 +125,7 @@ class Scoring(db.Model):
         for one year and add them to the database.
 
         Args:
-            year (int): Year to get scoring stats
+            year (int): Year to add scoring stats
         """
         scoring = {}
         teams = Team.get_teams(year=year)

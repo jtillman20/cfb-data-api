@@ -158,7 +158,7 @@ class Total(db.Model):
         for one year and add them to the database.
 
         Args:
-            year (int): Year to get total stats
+            year (int): Year to add total stats
         """
         teams = Team.get_teams(year=year)
 

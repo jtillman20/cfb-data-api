@@ -278,7 +278,7 @@ class Passing(db.Model):
         and add them to the database.
 
         Args:
-            year (int): Year to get passing stats
+            year (int): Year to add passing stats
         """
         passing = cls.query.filter_by(year=year).all()
 

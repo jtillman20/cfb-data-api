@@ -212,7 +212,7 @@ class Rushing(db.Model):
         and add them to the database.
 
         Args:
-            year (int): Year to get rushing stats
+            year (int): Year to add rushing stats
         """
         rushing = cls.query.filter_by(year=year).all()
 
