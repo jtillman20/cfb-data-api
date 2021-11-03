@@ -1,4 +1,7 @@
 from app import db
+from .game import Game
+from .team import Team
+from .total import Total
 
 
 class FirstDowns(db.Model):
@@ -64,6 +67,77 @@ class FirstDowns(db.Model):
         self.plays += other.plays
 
         return self
+
+    @classmethod
+    def add_first_downs(cls, start_year: int = None,
+                        end_year: int = None) -> None:
+        """
+        Get first down offense and defense stats for all teams for the
+        given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start adding first down stats
+            end_year (int): Year to stop adding first down stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding first down stats for {year}')
+            cls.add_first_downs_for_one_year(year=year)
+
+    @classmethod
+    def add_first_downs_for_one_year(cls, year: int) -> None:
+        """
+        Get first down offense and defense stats for all teams
+        for one year and add them to the database.
+
+        Args:
+            year (int): Year to add first down stats
+        """
+        teams = Team.get_teams(year=year)
+
+        for team in teams:
+            games = Game.get_games(year=year, team=team.name)
+            game_stats = [game.stats[0] for game in games]
+
+            for side_of_ball in ['offense', 'defense']:
+                passing = 0
+                rushing = 0
+                penalty = 0
+
+                for stats in game_stats:
+                    home_team = stats.game.home_team
+
+                    if side_of_ball == 'offense':
+                        side = 'home' if home_team == team.name else 'away'
+                    else:
+                        side = 'away' if home_team == team.name else 'home'
+
+                    passing += getattr(stats, f'{side}_passing_first_downs')
+                    rushing += getattr(stats, f'{side}_rushing_first_downs')
+                    penalty += getattr(stats, f'{side}_penalty_first_downs')
+
+                total = Total.get_total(
+                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+
+                db.session.add(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=len(games),
+                    passing=passing,
+                    rushing=rushing,
+                    penalty=penalty,
+                    plays=total.plays,
+                ))
+
+        db.session.commit()
 
     def __getstate__(self) -> dict:
         data = {
