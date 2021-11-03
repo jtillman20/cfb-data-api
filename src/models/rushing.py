@@ -1,6 +1,7 @@
 from typing import Union
 
 from app import db
+from .first_downs import FirstDowns
 from .game import Game
 from .team import Team
 
@@ -15,10 +16,10 @@ class Rushing(db.Model):
     attempts = db.Column(db.Integer, nullable=False)
     yards = db.Column(db.Integer, nullable=False)
     tds = db.Column(db.Integer, nullable=False)
+    first_downs = db.Column(db.Integer, nullable=False)
     opponents_games = db.Column(db.Integer, nullable=False)
     opponents_attempts = db.Column(db.Integer, nullable=False)
     opponents_yards = db.Column(db.Integer, nullable=False)
-    opponents_tds = db.Column(db.Integer, nullable=False)
 
     @property
     def attempts_per_game(self) -> float:
@@ -42,6 +43,12 @@ class Rushing(db.Model):
     def td_pct(self) -> float:
         if self.attempts:
             return self.tds / self.attempts * 100
+        return 0.0
+
+    @property
+    def first_down_pct(self) -> float:
+        if self.attempts:
+            return self.first_downs / self.attempts * 100
         return 0.0
 
     @property
@@ -189,6 +196,9 @@ class Rushing(db.Model):
                     yards += getattr(stats, f'{side}_rushing_yards')
                     tds += getattr(stats, f'{side}_rushing_tds')
 
+                first_downs = FirstDowns.get_first_downs(
+                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+
                 db.session.add(cls(
                     team_id=team.id,
                     year=year,
@@ -197,10 +207,10 @@ class Rushing(db.Model):
                     attempts=attempts,
                     yards=yards,
                     tds=tds,
+                    first_downs=first_downs.rushing,
                     opponents_games=0,
                     opponents_attempts=0,
-                    opponents_yards=0,
-                    opponents_tds=0
+                    opponents_yards=0
                 ))
 
         db.session.commit()
@@ -227,12 +237,10 @@ class Rushing(db.Model):
                     opponent_name = game.home_team
                     attempts = game_stats.away_rushing_attempts
                     yards = game_stats.away_rushing_yards
-                    tds = game_stats.away_rushing_tds
                 else:
                     opponent_name = game.away_team
                     attempts = game_stats.home_rushing_attempts
                     yards = game_stats.home_rushing_yards
-                    tds = game_stats.home_rushing_tds
 
                 opponent_query = cls.query.filter_by(year=year).join(
                     Team).filter_by(name=opponent_name)
@@ -255,9 +263,6 @@ class Rushing(db.Model):
                     opponent_yards = opponent_stats.yards - yards
                     team_rushing.opponents_yards += opponent_yards
 
-                    opponent_tds = opponent_stats.tds - tds
-                    team_rushing.opponents_tds += opponent_tds
-
         db.session.commit()
 
     def __getstate__(self) -> dict:
@@ -274,6 +279,7 @@ class Rushing(db.Model):
             'yards_per_game': round(self.yards_per_game, 1),
             'tds': self.tds,
             'td_pct': round(self.td_pct, 2),
+            'first_down_pct': round(self.first_down_pct, 1),
             'relative_yards_per_attempt': round(
                 self.relative_yards_per_attempt, 1),
             'relative_yards_per_game': round(self.relative_yards_per_game, 1)

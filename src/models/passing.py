@@ -1,6 +1,7 @@
 from typing import Union
 
 from app import db
+from .first_downs import FirstDowns
 from .game import Game
 from .team import Team
 
@@ -17,6 +18,7 @@ class Passing(db.Model):
     yards = db.Column(db.Integer, nullable=False)
     tds = db.Column(db.Integer, nullable=False)
     ints = db.Column(db.Integer, nullable=False)
+    first_downs = db.Column(db.Integer, nullable=False)
     opponents_games = db.Column(db.Integer, nullable=False)
     opponents_attempts = db.Column(db.Integer, nullable=False)
     opponents_completions = db.Column(db.Integer, nullable=False)
@@ -83,6 +85,12 @@ class Passing(db.Model):
         if self.attempts:
             return (self.yards * 8.4 + self.completions * 100 + self.tds
                     * 330 - self.ints * 200) / self.attempts
+        return 0.0
+
+    @property
+    def first_down_pct(self) -> float:
+        if self.attempts:
+            return self.first_downs / self.attempts * 100
         return 0.0
 
     @property
@@ -251,6 +259,9 @@ class Passing(db.Model):
                     tds += getattr(stats, f'{side}_passing_tds')
                     ints += getattr(stats, f'{side}_ints')
 
+                first_downs = FirstDowns.get_first_downs(
+                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+
                 db.session.add(cls(
                     team_id=team.id,
                     year=year,
@@ -261,6 +272,7 @@ class Passing(db.Model):
                     yards=yards,
                     tds=tds,
                     ints=ints,
+                    first_downs=first_downs.passing,
                     opponents_games=0,
                     opponents_attempts=0,
                     opponents_completions=0,
@@ -358,6 +370,7 @@ class Passing(db.Model):
             'int_pct': round(self.int_pct, 2),
             'td_int_ratio': round(self.td_int_ratio, 2),
             'rating': round(self.rating, 2),
+            'first_down_pct': round(self.first_down_pct, 1),
             'relative_yards_per_attempt': round(
                 self.relative_yards_per_attempt, 1),
             'relative_yards_per_game': round(self.relative_yards_per_game, 1),
