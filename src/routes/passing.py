@@ -107,4 +107,9 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
     else:
         reverse = side_of_ball == 'defense'
 
-    return [secondary_attr, attr], [reverse] * 2
+    if secondary_attr not in ASC_SORT_ATTRS:
+        secondary_reverse = side_of_ball == 'offense'
+    else:
+        secondary_reverse = side_of_ball == 'defense'
+
+    return [secondary_attr, attr], [secondary_reverse, reverse]
