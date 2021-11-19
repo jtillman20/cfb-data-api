@@ -20,4 +20,6 @@ api.add_resource(ConferenceSRSRoute, f'{API_BASE}/conference_srs_ratings')
 api.add_resource(PassingRoute, f'{API_BASE}/passing/<string:side_of_ball>')
 api.add_resource(RushingRoute, f'{API_BASE}/rushing/<string:side_of_ball>')
 api.add_resource(ScoringRoute, f'{API_BASE}/scoring/<string:side_of_ball>')
+api.add_resource(
+    ScrimmagePlaysRoute, f'{API_BASE}/scrimmage_plays/<string:side_of_ball>')
 api.add_resource(TotalRoute, f'{API_BASE}/total/<string:side_of_ball>')
