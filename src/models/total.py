@@ -1,6 +1,8 @@
+from operator import attrgetter
 from typing import Union
 
 from app import db
+from scraper import CFBStatsScraper
 from .game import Game
 from .team import Team
 
@@ -363,6 +365,77 @@ class ScrimmagePlays(db.Model):
         self.plays += other.plays
 
         return self
+
+    @classmethod
+    def add_scrimmage_plays(cls, start_year: int = None,
+                            end_year: int = None) -> None:
+        """
+        Get scrimmage plays and opponent scrimmage plays for all teams
+        for the given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start adding scrimmage play stats
+            end_year (int): Year to stop adding scrimmage play stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            end_year = max([year.year for year in query])
+            years = range(2010, end_year + 1)
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding scrimmage play stats for {year}')
+            cls.add_scrimmage_plays_for_one_year(year=year)
+
+    @classmethod
+    def add_scrimmage_plays_for_one_year(cls, year: int) -> None:
+        """
+        Get scrimmage plays and opponent scrimmage plays for all teams
+        for one year and add them to the database.
+
+        Args:
+            year (int): Year to add scrimmage play stats
+        """
+        scraper = CFBStatsScraper(year=year)
+
+        for side_of_ball in ['offense', 'defense']:
+            scrimmage_plays = []
+
+            html_content = scraper.get_html_data(
+                side_of_ball=side_of_ball, category='30')
+            scrimmage_play_data = scraper.parse_html_data(
+                html_content=html_content)
+
+            for item in scrimmage_play_data:
+                team = Team.query.filter_by(name=item[1]).first()
+                total = Total.get_total(
+                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+
+                scrimmage_plays.append(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=item[2],
+                    ten=item[3],
+                    twenty=item[4],
+                    thirty=item[5],
+                    forty=item[6],
+                    fifty=item[7],
+                    sixty=item[8],
+                    seventy=item[9],
+                    eighty=item[10],
+                    ninety=item[11],
+                    plays=total.plays
+                ))
+
+            for team_scrimmage_plays in sorted(
+                    scrimmage_plays, key=attrgetter('team_id')):
+                db.session.add(team_scrimmage_plays)
+
+        db.session.commit()
 
     def __getstate__(self) -> dict:
         data = {
