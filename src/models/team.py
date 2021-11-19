@@ -18,6 +18,8 @@ class Team(db.Model):
     rpi = db.relationship('RPI', backref='team', lazy=True)
     rushing = db.relationship('Rushing', backref='team', lazy=True)
     scoring = db.relationship('Scoring', backref='team', lazy=True)
+    scrimmage_plays = db.relationship(
+        'ScrimmagePlays', backref='team', lazy=True)
     srs = db.relationship('SRS', backref='team', lazy=True)
     total = db.relationship('Total', backref='team', lazy=True)
 
