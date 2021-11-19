@@ -367,6 +367,53 @@ class ScrimmagePlays(db.Model):
         return self
 
     @classmethod
+    def get_scrimmage_plays(cls, side_of_ball: str, start_year: int,
+                            end_year: int = None, team: str = None
+                            ) -> Union['ScrimmagePlays', list['ScrimmagePlays']]:
+        """
+        Get scrimmage plays or opponent scrimmage plays for qualifying
+        teams for the given years. If team is provided, only get
+        scrimmage plays data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting scrimmage play data
+            end_year (int): Year to stop getting scrimmage play data
+            team (str): Team for which to get scrimmage play data
+
+        Returns:
+            Union[ScrimmagePlays, list[ScrimmagePlays]]: Scrimmage plays
+                or opponent scrimmage plays for all teams or only for
+                one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            scrimmage_plays = query.filter_by(name=team).all()
+            return sum(scrimmage_plays[1:], scrimmage_plays[0])
+
+        scrimmage_plays = {}
+        for team_name in qualifying_teams:
+            team_scrimmage_plays = query.filter_by(name=team_name).all()
+
+            if team_scrimmage_plays:
+                scrimmage_plays[team_name] = sum(
+                    team_scrimmage_plays[1:], team_scrimmage_plays[0])
+
+        return [scrimmage_plays[team] for team in
+                sorted(scrimmage_plays.keys())]
+
+    @classmethod
     def add_scrimmage_plays(cls, start_year: int = None,
                             end_year: int = None) -> None:
         """
