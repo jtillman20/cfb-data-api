@@ -4,7 +4,7 @@ from flask import request
 from flask_restful import Resource
 
 from exceptions import InvalidRequestError
-from models import Passing
+from models import Passing, PassingPlays
 from utils import flask_response, rank, sort
 
 ASC_SORT_ATTRS = ['ints', 'int_pct']
@@ -113,3 +113,60 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
         secondary_reverse = side_of_ball == 'defense'
 
     return [secondary_attr, attr], [secondary_reverse, reverse]
+
+
+class PassingPlaysRoute(Resource):
+    @flask_response
+    def get(self, side_of_ball: str) -> Union[PassingPlays, list[PassingPlays]]:
+        """
+        GET request to get passing plays or opponent passing plays for
+        the given years. If team is provided only get passing play data
+        for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+
+        Returns:
+          Union[PassingPlays, list[PassingPlays]]: Passing play data
+            for all teams or only passing play data for one team
+        """
+        if side_of_ball not in ['offense', 'defense']:
+            raise InvalidRequestError(
+                "Side of ball must be either 'offense' or 'defense'")
+
+        sort_attr = request.args.get('sort', 'points_per_game')
+
+        try:
+            start_year = int(request.args['start_year'])
+        except KeyError:
+            raise InvalidRequestError(
+                'Start year is a required query parameter')
+        except ValueError:
+            raise InvalidRequestError(
+                'Query parameter start year must be an integer')
+
+        end_year = request.args.get('end_year')
+        team = request.args.get('team')
+
+        if end_year is not None:
+            try:
+                end_year = int(end_year)
+            except ValueError:
+                raise InvalidRequestError(
+                    'Query parameter end year must be an integer')
+
+        passing_plays = PassingPlays.get_passing_plays(
+            side_of_ball=side_of_ball,
+            start_year=start_year,
+            end_year=end_year,
+            team=team
+        )
+
+        if isinstance(passing_plays, PassingPlays):
+            return passing_plays
+
+        attrs = ['plays', sort_attr]
+        reverses = [True, side_of_ball == 'offense']
+
+        passing_plays = sort(data=passing_plays, attrs=attrs, reverses=reverses)
+        return rank(data=passing_plays, attr=sort_attr)
