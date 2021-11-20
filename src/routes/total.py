@@ -113,7 +113,7 @@ class ScrimmagePlaysRoute(Resource):
 
         Returns:
           Union[ScrimmagePlays, list[ScrimmagePlays]]: Scrimmage play
-            data for all teams or only total data for one team
+            data for all teams or only scrimmage play data for one team
         """
         if side_of_ball not in ['offense', 'defense']:
             raise InvalidRequestError(
