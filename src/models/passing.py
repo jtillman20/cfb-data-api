@@ -483,6 +483,52 @@ class PassingPlays(db.Model):
         return self
 
     @classmethod
+    def get_passing_plays(cls, side_of_ball: str, start_year: int,
+                          end_year: int = None, team: str = None
+                        ) -> Union['PassingPlays', list['PassingPlays']]:
+        """
+        Get passing plays or opponent passing plays for qualifying
+        teams for the given years. If team is provided, only get
+        scrimmage plays data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting passing play data
+            end_year (int): Year to stop getting passing play data
+            team (str): Team for which to get passing play data
+
+        Returns:
+            Union[PassingPlays, list[PassingPlays]]: Passing plays
+                or opponent passing plays for all teams or only for
+                one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            passing_plays = query.filter_by(name=team).all()
+            return sum(passing_plays[1:], passing_plays[0])
+
+        passing_plays = {}
+        for team_name in qualifying_teams:
+            team_passing_plays = query.filter_by(name=team_name).all()
+
+            if team_passing_plays:
+                passing_plays[team_name] = sum(
+                    team_passing_plays[1:], team_passing_plays[0])
+
+        return [passing_plays[team] for team in sorted(passing_plays.keys())]
+
+    @classmethod
     def add_passing_plays(cls, start_year: int = None,
                           end_year: int = None) -> None:
         """
