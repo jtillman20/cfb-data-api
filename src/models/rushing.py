@@ -391,6 +391,52 @@ class RushingPlays(db.Model):
         return self
 
     @classmethod
+    def get_rushing_plays(cls, side_of_ball: str, start_year: int,
+                          end_year: int = None, team: str = None
+                          ) -> Union['RushingPlays', list['RushingPlays']]:
+        """
+        Get rushing plays or opponent rushing plays for qualifying
+        teams for the given years. If team is provided, only get
+        scrimmage plays data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting rushing play data
+            end_year (int): Year to stop getting rushing play data
+            team (str): Team for which to get rushing play data
+
+        Returns:
+            Union[RushingPlays, list[RushingPlays]]: Rassing plays
+                or opponent rushing plays for all teams or only for
+                one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            rushing_plays = query.filter_by(name=team).all()
+            return sum(rushing_plays[1:], rushing_plays[0])
+
+        rushing_plays = {}
+        for team_name in qualifying_teams:
+            team_rushing_plays = query.filter_by(name=team_name).all()
+
+            if team_rushing_plays:
+                rushing_plays[team_name] = sum(
+                    team_rushing_plays[1:], team_rushing_plays[0])
+
+        return [rushing_plays[team] for team in sorted(rushing_plays.keys())]
+
+    @classmethod
     def add_rushing_plays(cls, start_year: int = None,
                           end_year: int = None) -> None:
         """
