@@ -4,7 +4,7 @@ from flask import request
 from flask_restful import Resource
 
 from exceptions import InvalidRequestError
-from models import Rushing
+from models import Rushing, RushingPlays
 from utils import flask_response, rank, sort
 
 
@@ -91,3 +91,60 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
         secondary_attr = attr
 
     return [secondary_attr, attr], [side_of_ball == 'offense'] * 2
+
+
+class RushingPlaysRoute(Resource):
+    @flask_response
+    def get(self, side_of_ball: str) -> Union[RushingPlays, list[RushingPlays]]:
+        """
+        GET request to get rushing plays or opponent rushing plays for
+        the given years. If team is provided only get rushing play data
+        for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+
+        Returns:
+          Union[RushingPlays, list[RushingPlays]]: Rushing play data
+            for all teams or only rushing play data for one team
+        """
+        if side_of_ball not in ['offense', 'defense']:
+            raise InvalidRequestError(
+                "Side of ball must be either 'offense' or 'defense'")
+
+        sort_attr = request.args.get('sort', 'points_per_game')
+
+        try:
+            start_year = int(request.args['start_year'])
+        except KeyError:
+            raise InvalidRequestError(
+                'Start year is a required query parameter')
+        except ValueError:
+            raise InvalidRequestError(
+                'Query parameter start year must be an integer')
+
+        end_year = request.args.get('end_year')
+        team = request.args.get('team')
+
+        if end_year is not None:
+            try:
+                end_year = int(end_year)
+            except ValueError:
+                raise InvalidRequestError(
+                    'Query parameter end year must be an integer')
+
+        rushing_plays = RushingPlays.get_rushing_plays(
+            side_of_ball=side_of_ball,
+            start_year=start_year,
+            end_year=end_year,
+            team=team
+        )
+
+        if isinstance(rushing_plays, RushingPlays):
+            return rushing_plays
+
+        attrs = ['plays', sort_attr]
+        reverses = [True, side_of_ball == 'offense']
+
+        rushing_plays = sort(data=rushing_plays, attrs=attrs, reverses=reverses)
+        return rank(data=rushing_plays, attr=sort_attr)
