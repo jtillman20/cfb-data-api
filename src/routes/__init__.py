@@ -8,4 +8,4 @@ from .rushing import RushingRoute, RushingPlaysRoute
 from .scoring import ScoringRoute
 from .srs import ConferenceSRSRoute, SRSRoute
 from .team import TeamRoute
-from.total import TotalRoute, ScrimmagePlaysRoute
+from .total import TotalRoute, ScrimmagePlaysRoute
