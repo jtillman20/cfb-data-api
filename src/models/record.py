@@ -39,25 +39,6 @@ class Record(db.Model):
                    / self.conference_games
         return 0.0
 
-    def __add__(self, other: 'Record') -> 'Record':
-        """
-        Add two Record objects to combine multiple years of data.
-
-        Args:
-            other (Record): Data about a team's win-loss record
-
-        Returns:
-            Record: self
-        """
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
-        self.conference_wins += other.conference_wins
-        self.conference_losses += other.conference_losses
-        self.conference_ties += other.conference_ties
-
-        return self
-
     @classmethod
     def get_records(cls, start_year: int, end_year: int = None,
                     team: str = None) -> Union['Record', list['Record']]:
@@ -165,6 +146,25 @@ class Record(db.Model):
             db.session.add(record)
 
         db.session.commit()
+
+    def __add__(self, other: 'Record') -> 'Record':
+        """
+        Add two Record objects to combine multiple years of data.
+
+        Args:
+            other (Record): Data about a team's win-loss record
+
+        Returns:
+            Record: self
+        """
+        self.wins += other.wins
+        self.losses += other.losses
+        self.ties += other.ties
+        self.conference_wins += other.conference_wins
+        self.conference_losses += other.conference_losses
+        self.conference_ties += other.conference_ties
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

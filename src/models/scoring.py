@@ -34,23 +34,6 @@ class Scoring(db.Model):
             return (self.points_per_game / self.opponents_points_per_game) * 100
         return 0.0
 
-    def __add__(self, other: 'Scoring') -> 'Scoring':
-        """
-        Add two Scoring objects to combine multiple years of data.
-
-        Args:
-            other (Scoring): Data about a team's scoring offense/defense
-
-        Returns:
-            Scoring: self
-        """
-        self.points += other.points
-        self.games += other.games
-        self.opponents_points += other.opponents_points
-        self.opponents_games += other.opponents_games
-
-        return self
-
     @classmethod
     def get_scoring(cls, side_of_ball: str, start_year: int,
                     end_year: int = None, team: str = None
@@ -217,6 +200,23 @@ class Scoring(db.Model):
                     team_scoring.opponents_games += opponent_games - 1
 
         db.session.commit()
+
+    def __add__(self, other: 'Scoring') -> 'Scoring':
+        """
+        Add two Scoring objects to combine multiple years of data.
+
+        Args:
+            other (Scoring): Data about a team's scoring offense/defense
+
+        Returns:
+            Scoring: self
+        """
+        self.points += other.points
+        self.games += other.games
+        self.opponents_points += other.opponents_points
+        self.opponents_games += other.opponents_games
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

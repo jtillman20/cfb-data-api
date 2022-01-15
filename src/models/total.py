@@ -68,25 +68,6 @@ class Total(db.Model):
             return (self.yards_per_game / self.opponents_yards_per_game) * 100
         return 0.0
 
-    def __add__(self, other: 'Total') -> 'Total':
-        """
-        Add two Total objects to combine multiple years of data.
-
-        Args:
-            other (Total): Data about a team's total offense/defense
-
-        Returns:
-            Total: self
-        """
-        self.games += other.games
-        self.plays += other.plays
-        self.yards += other.yards
-        self.opponents_games += other.opponents_games
-        self.opponents_plays += other.opponents_plays
-        self.opponents_yards += other.opponents_yards
-
-        return self
-
     @classmethod
     def get_total(cls, side_of_ball: str, start_year: int, end_year: int = None,
                   team: str = None) -> Union['Total', list['Total']]:
@@ -247,6 +228,25 @@ class Total(db.Model):
 
         db.session.commit()
 
+    def __add__(self, other: 'Total') -> 'Total':
+        """
+        Add two Total objects to combine multiple years of data.
+
+        Args:
+            other (Total): Data about a team's total offense/defense
+
+        Returns:
+            Total: self
+        """
+        self.games += other.games
+        self.plays += other.plays
+        self.yards += other.yards
+        self.opponents_games += other.opponents_games
+        self.opponents_plays += other.opponents_plays
+        self.opponents_yards += other.opponents_yards
+
+        return self
+
     def __getstate__(self) -> dict:
         data = {
             'id': self.id,
@@ -340,31 +340,6 @@ class ScrimmagePlays(db.Model):
         if self.plays:
             return self.ninety / self.plays * 100
         return 0.0
-
-    def __add__(self, other: 'ScrimmagePlays') -> 'ScrimmagePlays':
-        """
-        Add two ScrimmagePlays objects to combine multiple years of data.
-
-        Args:
-            other (ScrimmagePlays): Data about a team's scrimmage plays
-                or opponent scrimmage plays
-
-        Returns:
-            ScrimmagePlays: self
-        """
-        self.games += other.games
-        self.ten += other.ten
-        self.twenty += other.twenty
-        self.thirty += other.thirty
-        self.forty += other.forty
-        self.fifty += other.fifty
-        self.sixty += other.sixty
-        self.seventy += other.seventy
-        self.eighty += other.eighty
-        self.ninety += other.ninety
-        self.plays += other.plays
-
-        return self
 
     @classmethod
     def get_scrimmage_plays(cls, side_of_ball: str, start_year: int,
@@ -483,6 +458,31 @@ class ScrimmagePlays(db.Model):
                 db.session.add(team_scrimmage_plays)
 
         db.session.commit()
+
+    def __add__(self, other: 'ScrimmagePlays') -> 'ScrimmagePlays':
+        """
+        Add two ScrimmagePlays objects to combine multiple years of data.
+
+        Args:
+            other (ScrimmagePlays): Data about a team's scrimmage plays
+                or opponent scrimmage plays
+
+        Returns:
+            ScrimmagePlays: self
+        """
+        self.games += other.games
+        self.ten += other.ten
+        self.twenty += other.twenty
+        self.thirty += other.thirty
+        self.forty += other.forty
+        self.fifty += other.fifty
+        self.sixty += other.sixty
+        self.seventy += other.seventy
+        self.eighty += other.eighty
+        self.ninety += other.ninety
+        self.plays += other.plays
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

@@ -78,27 +78,6 @@ class Rushing(db.Model):
                    * 100
         return 0.0
 
-    def __add__(self, other: 'Rushing') -> 'Rushing':
-        """
-        Add two Rushing objects to combine multiple years of data.
-
-        Args:
-            other (Rushing): Data about a team's rushing offense/defense
-
-        Returns:
-            Rushing: self
-        """
-        self.games += other.games
-        self.attempts += other.attempts
-        self.yards += other.yards
-        self.tds += other.tds
-        self.opponents_games += other.opponents_games
-        self.opponents_attempts += other.opponents_attempts
-        self.opponents_yards += other.opponents_yards
-        self.opponents_tds += other.opponents_tds
-
-        return self
-
     @classmethod
     def get_rushing(cls, side_of_ball: str, start_year: int,
                     end_year: int = None, team: str = None
@@ -267,6 +246,27 @@ class Rushing(db.Model):
 
         db.session.commit()
 
+    def __add__(self, other: 'Rushing') -> 'Rushing':
+        """
+        Add two Rushing objects to combine multiple years of data.
+
+        Args:
+            other (Rushing): Data about a team's rushing offense/defense
+
+        Returns:
+            Rushing: self
+        """
+        self.games += other.games
+        self.attempts += other.attempts
+        self.yards += other.yards
+        self.tds += other.tds
+        self.opponents_games += other.opponents_games
+        self.opponents_attempts += other.opponents_attempts
+        self.opponents_yards += other.opponents_yards
+        self.opponents_tds += other.opponents_tds
+
+        return self
+
     def __getstate__(self) -> dict:
         data = {
             'id': self.id,
@@ -364,31 +364,6 @@ class RushingPlays(db.Model):
         if self.plays:
             return self.ninety / self.plays * 100
         return 0.0
-
-    def __add__(self, other: 'RushingPlays') -> 'RushingPlays':
-        """
-        Add two RushingPlays objects to combine multiple years of data.
-
-        Args:
-            other (RushingPlays): Data about a team's rushing plays
-                or opponent rushing plays
-
-        Returns:
-            RushingPlays: self
-        """
-        self.games += other.games
-        self.ten += other.ten
-        self.twenty += other.twenty
-        self.thirty += other.thirty
-        self.forty += other.forty
-        self.fifty += other.fifty
-        self.sixty += other.sixty
-        self.seventy += other.seventy
-        self.eighty += other.eighty
-        self.ninety += other.ninety
-        self.plays += other.plays
-
-        return self
 
     @classmethod
     def get_rushing_plays(cls, side_of_ball: str, start_year: int,
@@ -506,6 +481,31 @@ class RushingPlays(db.Model):
                 db.session.add(team_rushing_plays)
 
         db.session.commit()
+
+    def __add__(self, other: 'RushingPlays') -> 'RushingPlays':
+        """
+        Add two RushingPlays objects to combine multiple years of data.
+
+        Args:
+            other (RushingPlays): Data about a team's rushing plays
+                or opponent rushing plays
+
+        Returns:
+            RushingPlays: self
+        """
+        self.games += other.games
+        self.ten += other.ten
+        self.twenty += other.twenty
+        self.thirty += other.thirty
+        self.forty += other.forty
+        self.fifty += other.fifty
+        self.sixty += other.sixty
+        self.seventy += other.seventy
+        self.eighty += other.eighty
+        self.ninety += other.ninety
+        self.plays += other.plays
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

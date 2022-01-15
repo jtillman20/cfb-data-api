@@ -38,24 +38,6 @@ class SRS(db.Model):
     def games(self) -> int:
         return self.wins + self.losses + self.ties
 
-    def __add__(self, other: 'SRS') -> 'SRS':
-        """
-        Add two SRS objects to combine multiple years of data.
-
-        Args:
-            other (SRS): Data about a team's SRS rating
-
-        Returns:
-            SRS: self
-        """
-        self.scoring_margin += other.scoring_margin
-        self.opponent_rating += other.opponent_rating
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
-
-        return self
-
     @classmethod
     def get_srs_ratings(cls, start_year: int, end_year: int = None,
                         team: str = None) -> Union['SRS', list['SRS']]:
@@ -268,6 +250,24 @@ class SRS(db.Model):
 
         db.session.commit()
 
+    def __add__(self, other: 'SRS') -> 'SRS':
+        """
+        Add two SRS objects to combine multiple years of data.
+
+        Args:
+            other (SRS): Data about a team's SRS rating
+
+        Returns:
+            SRS: self
+        """
+        self.scoring_margin += other.scoring_margin
+        self.opponent_rating += other.opponent_rating
+        self.wins += other.wins
+        self.losses += other.losses
+        self.ties += other.ties
+
+        return self
+
     def __getstate__(self) -> dict:
         data = {
             'id': self.id,
@@ -316,24 +316,6 @@ class ConferenceSRS(db.Model):
     @property
     def games(self) -> int:
         return self.wins + self.losses + self.ties
-
-    def __add__(self, other: 'ConferenceSRS') -> 'ConferenceSRS':
-        """
-        Add two ConferenceSRS objects to combine multiple years of data.
-
-        Args:
-            other (ConferenceSRS): Data about a conference's SRS rating
-
-        Returns:
-            ConferenceSRS: self
-        """
-        self.scoring_margin += other.scoring_margin
-        self.opponent_rating += other.opponent_rating
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
-
-        return self
 
     @classmethod
     def get_srs_ratings(cls, start_year: int, end_year: int = None,
@@ -435,6 +417,24 @@ class ConferenceSRS(db.Model):
             db.session.add(conference_srs)
 
         db.session.commit()
+
+    def __add__(self, other: 'ConferenceSRS') -> 'ConferenceSRS':
+        """
+        Add two ConferenceSRS objects to combine multiple years of data.
+
+        Args:
+            other (ConferenceSRS): Data about a conference's SRS rating
+
+        Returns:
+            ConferenceSRS: self
+        """
+        self.scoring_margin += other.scoring_margin
+        self.opponent_rating += other.opponent_rating
+        self.wins += other.wins
+        self.losses += other.losses
+        self.ties += other.ties
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

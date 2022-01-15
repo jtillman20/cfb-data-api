@@ -52,24 +52,6 @@ class FirstDowns(db.Model):
             return self.plays / self.total
         return 0.0
 
-    def __add__(self, other: 'FirstDowns') -> 'FirstDowns':
-        """
-        Add two FirstDowns objects to combine multiple years of data.
-
-        Args:
-            other (Total): Data about a team's first down offense/defense
-
-        Returns:
-            Total: self
-        """
-        self.games += other.games
-        self.passing += other.passing
-        self.rushing += other.rushing
-        self.penalty += other.penalty
-        self.plays += other.plays
-
-        return self
-
     @classmethod
     def get_first_downs(cls, side_of_ball: str, start_year: int,
                         end_year: int = None, team: str = None
@@ -185,6 +167,24 @@ class FirstDowns(db.Model):
                 ))
 
         db.session.commit()
+
+    def __add__(self, other: 'FirstDowns') -> 'FirstDowns':
+        """
+        Add two FirstDowns objects to combine multiple years of data.
+
+        Args:
+            other (Total): Data about a team's first down offense/defense
+
+        Returns:
+            Total: self
+        """
+        self.games += other.games
+        self.passing += other.passing
+        self.rushing += other.rushing
+        self.penalty += other.penalty
+        self.plays += other.plays
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

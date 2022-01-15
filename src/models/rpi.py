@@ -49,25 +49,6 @@ class RPI(db.Model):
     def rpi(self) -> float:
         return self.win_pct * 0.35 + self.sos * 0.65
 
-    def __add__(self, other: 'RPI') -> 'RPI':
-        """
-        Add two RPI objects to combine multiple years of data.
-
-        Args:
-            other (RPI): Data about a team's RPI rating
-
-        Returns:
-            RPI: self
-        """
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
-        self.opponent_win_pct += other.opponent_win_pct
-        self.opponents_opponent_win_pct += other.opponents_opponent_win_pct
-        self.opponent_games += other.opponent_games
-
-        return self
-
     @classmethod
     def get_rpi_ratings(cls, start_year: int, end_year: int = None,
                         team: str = None) -> Union['RPI', list['RPI']]:
@@ -321,6 +302,25 @@ class RPI(db.Model):
                 rating.opponents_opponent_win_pct += opponent_win_pct
 
         db.session.commit()
+
+    def __add__(self, other: 'RPI') -> 'RPI':
+        """
+        Add two RPI objects to combine multiple years of data.
+
+        Args:
+            other (RPI): Data about a team's RPI rating
+
+        Returns:
+            RPI: self
+        """
+        self.wins += other.wins
+        self.losses += other.losses
+        self.ties += other.ties
+        self.opponent_win_pct += other.opponent_win_pct
+        self.opponents_opponent_win_pct += other.opponents_opponent_win_pct
+        self.opponent_games += other.opponent_games
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

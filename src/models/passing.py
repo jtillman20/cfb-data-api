@@ -133,31 +133,6 @@ class Passing(db.Model):
             return (self.rating / self.opponents_rating) * 100
         return 0.0
 
-    def __add__(self, other: 'Passing') -> 'Passing':
-        """
-        Add two Passing objects to combine multiple years of data.
-
-        Args:
-            other (Passing): Data about a team's passing offense/defense
-
-        Returns:
-            Passing: self
-        """
-        self.games += other.games
-        self.attempts += other.attempts
-        self.completions += other.completions
-        self.yards += other.yards
-        self.tds += other.tds
-        self.ints += other.ints
-        self.opponents_games += other.opponents_games
-        self.opponents_attempts += other.opponents_attempts
-        self.opponents_completions += other.opponents_completions
-        self.opponents_yards += other.opponents_yards
-        self.opponents_tds += other.opponents_tds
-        self.opponents_ints += other.opponents_ints
-
-        return self
-
     @classmethod
     def get_passing(cls, side_of_ball: str, start_year: int,
                     end_year: int = None, team: str = None
@@ -350,6 +325,31 @@ class Passing(db.Model):
 
         db.session.commit()
 
+    def __add__(self, other: 'Passing') -> 'Passing':
+        """
+        Add two Passing objects to combine multiple years of data.
+
+        Args:
+            other (Passing): Data about a team's passing offense/defense
+
+        Returns:
+            Passing: self
+        """
+        self.games += other.games
+        self.attempts += other.attempts
+        self.completions += other.completions
+        self.yards += other.yards
+        self.tds += other.tds
+        self.ints += other.ints
+        self.opponents_games += other.opponents_games
+        self.opponents_attempts += other.opponents_attempts
+        self.opponents_completions += other.opponents_completions
+        self.opponents_yards += other.opponents_yards
+        self.opponents_tds += other.opponents_tds
+        self.opponents_ints += other.opponents_ints
+
+        return self
+
     def __getstate__(self) -> dict:
         data = {
             'id': self.id,
@@ -456,31 +456,6 @@ class PassingPlays(db.Model):
         if self.plays:
             return self.ninety / self.plays * 100
         return 0.0
-
-    def __add__(self, other: 'PassingPlays') -> 'PassingPlays':
-        """
-        Add two PassingPlays objects to combine multiple years of data.
-
-        Args:
-            other (PassingPlays): Data about a team's passing plays
-                or opponent passing plays
-
-        Returns:
-            PassingPlays: self
-        """
-        self.games += other.games
-        self.ten += other.ten
-        self.twenty += other.twenty
-        self.thirty += other.thirty
-        self.forty += other.forty
-        self.fifty += other.fifty
-        self.sixty += other.sixty
-        self.seventy += other.seventy
-        self.eighty += other.eighty
-        self.ninety += other.ninety
-        self.plays += other.plays
-
-        return self
 
     @classmethod
     def get_passing_plays(cls, side_of_ball: str, start_year: int,
@@ -598,6 +573,31 @@ class PassingPlays(db.Model):
                 db.session.add(team_passing_plays)
 
         db.session.commit()
+
+    def __add__(self, other: 'PassingPlays') -> 'PassingPlays':
+        """
+        Add two PassingPlays objects to combine multiple years of data.
+
+        Args:
+            other (PassingPlays): Data about a team's passing plays
+                or opponent passing plays
+
+        Returns:
+            PassingPlays: self
+        """
+        self.games += other.games
+        self.ten += other.ten
+        self.twenty += other.twenty
+        self.thirty += other.thirty
+        self.forty += other.forty
+        self.fifty += other.fifty
+        self.sixty += other.sixty
+        self.seventy += other.seventy
+        self.eighty += other.eighty
+        self.ninety += other.ninety
+        self.plays += other.plays
+
+        return self
 
     def __getstate__(self) -> dict:
         data = {

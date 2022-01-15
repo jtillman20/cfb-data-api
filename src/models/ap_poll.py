@@ -96,39 +96,6 @@ class APPoll(db.Model):
                 return mean(final)
         return None
 
-    def __add__(self, other: 'APPoll') -> 'APPoll':
-        """
-        Add two APPoll objects to combine multiple years of data.
-
-        Args:
-            other (APPoll): Data about a team's AP Poll rankings
-
-        Returns:
-            APPoll: self
-        """
-        self.year = other.year
-        self.weeks += other.weeks
-        self.weeks_top_ten += other.weeks_top_ten
-        self.weeks_top_five += other.weeks_top_five
-        self.weeks_number_one += other.weeks_number_one
-        self.score += other.score
-
-        if self.preseason_ranking is not None:
-            if other.preseason_ranking is not None:
-                self.preseason_ranking += other.preseason_ranking
-        else:
-            if other.preseason_ranking is not None:
-                self.preseason_ranking = other.preseason_ranking
-
-        if self.final_ranking is not None:
-            if other.final_ranking is not None:
-                self.final_ranking += other.final_ranking
-        else:
-            if other.final_ranking is not None:
-                self.final_ranking = other.final_ranking
-
-        return self
-
     @classmethod
     def get_ap_poll_data(cls, start_year: int, end_year: int = None,
                          team: str = None) -> Union['APPoll', list['APPoll']]:
@@ -245,6 +212,39 @@ class APPoll(db.Model):
             db.session.add(ap_poll[item])
 
         db.session.commit()
+
+    def __add__(self, other: 'APPoll') -> 'APPoll':
+        """
+        Add two APPoll objects to combine multiple years of data.
+
+        Args:
+            other (APPoll): Data about a team's AP Poll rankings
+
+        Returns:
+            APPoll: self
+        """
+        self.year = other.year
+        self.weeks += other.weeks
+        self.weeks_top_ten += other.weeks_top_ten
+        self.weeks_top_five += other.weeks_top_five
+        self.weeks_number_one += other.weeks_number_one
+        self.score += other.score
+
+        if self.preseason_ranking is not None:
+            if other.preseason_ranking is not None:
+                self.preseason_ranking += other.preseason_ranking
+        else:
+            if other.preseason_ranking is not None:
+                self.preseason_ranking = other.preseason_ranking
+
+        if self.final_ranking is not None:
+            if other.final_ranking is not None:
+                self.final_ranking += other.final_ranking
+        else:
+            if other.final_ranking is not None:
+                self.final_ranking = other.final_ranking
+
+        return self
 
     def __getstate__(self) -> dict:
         avg_preseason = round(self.avg_preseason, 2) \
