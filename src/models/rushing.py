@@ -260,6 +260,7 @@ class Rushing(db.Model):
         self.attempts += other.attempts
         self.yards += other.yards
         self.tds += other.tds
+        self.first_downs += other.first_downs
         self.opponents_games += other.opponents_games
         self.opponents_attempts += other.opponents_attempts
         self.opponents_yards += other.opponents_yards

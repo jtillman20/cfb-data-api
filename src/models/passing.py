@@ -341,6 +341,7 @@ class Passing(db.Model):
         self.yards += other.yards
         self.tds += other.tds
         self.ints += other.ints
+        self.first_downs += other.first_downs
         self.opponents_games += other.opponents_games
         self.opponents_attempts += other.opponents_attempts
         self.opponents_completions += other.opponents_completions
