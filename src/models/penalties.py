@@ -1,3 +1,5 @@
+from typing import Union
+
 from app import db
 from .game import Game
 from .team import Team
@@ -30,6 +32,51 @@ class Penalties(db.Model):
         if self.penalties:
             return self.yards / self.penalties
         return 0.0
+
+    @classmethod
+    def get_penalties(cls, side_of_ball: str, start_year: int,
+                      end_year: int = None, team: str = None
+                      ) -> Union['Penalties', list['Penalties']]:
+        """
+        Get penalties or opponent penalties for qualifying teams for
+        the given years. If team is provided, only get penalty data
+        for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting penalty data
+            end_year (int): Year to stop getting penalty data
+            team (str): Team for which to get penalty data
+
+        Returns:
+            Union[Penalties, list[Penalties]]: Penalties or opponent
+                penalties for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            penalties = query.filter_by(name=team).all()
+            return sum(penalties[1:], penalties[0])
+
+        penalties = {}
+        for team_name in qualifying_teams:
+            team_penalties = query.filter_by(name=team_name).all()
+
+            if team_penalties:
+                penalties[team_name] = sum(
+                    team_penalties[1:], team_penalties[0])
+
+        return [penalties[team] for team in sorted(penalties.keys())]
 
     @classmethod
     def add_penalties(cls, start_year: int = None,
