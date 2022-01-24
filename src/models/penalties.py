@@ -1,4 +1,6 @@
 from app import db
+from .game import Game
+from .team import Team
 
 
 class Penalties(db.Model):
@@ -28,6 +30,71 @@ class Penalties(db.Model):
         if self.penalties:
             return self.yards / self.penalties
         return 0.0
+
+    @classmethod
+    def add_penalties(cls, start_year: int = None,
+                      end_year: int = None) -> None:
+        """
+        Get penalties and opponent penalties for all teams for the
+        given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start adding penalty stats
+            end_year (int): Year to stop adding penalty stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            end_year = max([year.year for year in query])
+            years = range(2010, end_year + 1)
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding penalty stats for {year}')
+            cls.add_penalties_for_one_year(year=year)
+
+    @classmethod
+    def add_penalties_for_one_year(cls, year: int) -> None:
+        """
+        Get penalties and opponent penalties for all teams for one year
+        and add them to the database.
+
+        Args:
+            year (int): Year to get penalty stats
+        """
+        teams = Team.get_teams(year=year)
+
+        for team in teams:
+            games = Game.get_games(year=year, team=team.name)
+            game_stats = [game.stats[0] for game in games]
+
+            for side_of_ball in ['offense', 'defense']:
+                penalties = 0
+                yards = 0
+
+                for stats in game_stats:
+                    home_team = stats.game.home_team
+
+                    if side_of_ball == 'offense':
+                        side = 'home' if home_team == team.name else 'away'
+                    else:
+                        side = 'away' if home_team == team.name else 'home'
+
+                    penalties += getattr(stats, f'{side}_penalties')
+                    yards += getattr(stats, f'{side}_penalty_yards')
+
+                db.session.add(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=len(games),
+                    penalties=penalties,
+                    yards=yards,
+                ))
+
+        db.session.commit()
 
     def __add__(self, other: 'Penalties') -> 'Penalties':
         """
