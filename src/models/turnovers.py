@@ -1,3 +1,5 @@
+from typing import Union
+
 from app import db
 from .game import Game
 from .team import Team
@@ -43,6 +45,47 @@ class Turnovers(db.Model):
         if self.games:
             return self.margin / self.games
         return 0.0
+
+    @classmethod
+    def get_turnovers(cls, start_year: int, end_year: int = None,
+                      team: str = None) -> Union['Turnovers',
+                                                 list['Turnovers']]:
+        """
+        Get turnovers and opponent turnovers for qualifying teams for
+        the given years. If team is provided, only get turnover data
+        for that team.
+
+        Args:
+            start_year (int): Year to start getting turnover data
+            end_year (int): Year to stop getting turnover data
+            team (str): Team for which to get turnover data
+
+        Returns:
+            Union[Turnovers, list[Turnovers]]: Turnovers or opponent
+                turnovers for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            turnovers = query.filter_by(name=team).all()
+            return sum(turnovers[1:], turnovers[0])
+
+        turnovers = {}
+        for team_name in qualifying_teams:
+            team_turnovers = query.filter_by(name=team_name).all()
+
+            if team_turnovers:
+                turnovers[team_name] = sum(
+                    team_turnovers[1:], team_turnovers[0])
+
+        return [turnovers[team] for team in sorted(turnovers.keys())]
 
     @classmethod
     def add_turnovers(cls, start_year: int = None,
