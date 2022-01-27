@@ -25,6 +25,7 @@ class Team(db.Model):
         'ScrimmagePlays', backref='team', lazy=True)
     srs = db.relationship('SRS', backref='team', lazy=True)
     total = db.relationship('Total', backref='team', lazy=True)
+    turnovers = db.relationship('Turnovers', backref='team', lazy=True)
 
     @classmethod
     def get_teams(cls, year: int, conference: str = None) -> list['Team']:
