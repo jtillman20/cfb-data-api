@@ -470,7 +470,6 @@ class ConferenceRPI(db.Model):
         Args:
             year (int): Year to get records
         """
-        rpi_ratings = {}
         conferences = Conference.get_conferences(year=year)
 
         for conference in conferences:
@@ -492,10 +491,7 @@ class ConferenceRPI(db.Model):
                 rpi_rating.losses += record.losses - record.conference_losses
                 rpi_rating.ties += record.ties - record.conference_ties
 
-            rpi_ratings[conference] = rpi_rating
-
-            for rpi in rpi_ratings.values():
-                db.session.add(rpi)
+            db.session.add(rpi_rating)
 
         db.session.commit()
 
