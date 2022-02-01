@@ -10,6 +10,7 @@ class Conference(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
 
+    rpi = db.relationship('ConferenceRPI', backref='conference', lazy=True)
     srs = db.relationship('ConferenceSRS', backref='conference', lazy=True)
 
     @classmethod
