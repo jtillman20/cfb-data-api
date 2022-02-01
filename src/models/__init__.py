@@ -5,7 +5,7 @@ from .game import Game, GameStats
 from .passing import Passing, PassingPlays
 from .penalties import Penalties
 from .record import Record
-from .rpi import RPI
+from .rpi import ConferenceRPI, RPI
 from .rushing import Rushing, RushingPlays
 from .scoring import Scoring
 from .srs import ConferenceSRS, SRS
