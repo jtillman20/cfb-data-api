@@ -393,7 +393,7 @@ class ConferenceSRS(db.Model):
         conferences = Conference.get_conferences(year=year)
 
         for conference in conferences:
-            conference_srs = cls(
+            srs_rating = cls(
                 conference_id=conference.id,
                 year=year,
                 scoring_margin=0,
@@ -402,19 +402,20 @@ class ConferenceSRS(db.Model):
                 losses=0,
                 ties=0
             )
-            teams = conference.get_teams(year=year)
 
+            teams = conference.get_teams(year=year)
             for team in teams:
+                record = Record.get_records(start_year=year, team=team)
                 rating = SRS.query.filter_by(year=year).join(Team).filter_by(
                     name=team).first()
 
-                conference_srs.scoring_margin += rating.scoring_margin
-                conference_srs.opponent_rating += rating.opponent_rating
-                conference_srs.wins += rating.wins
-                conference_srs.losses += rating.losses
-                conference_srs.ties += rating.ties
+                srs_rating.scoring_margin += rating.scoring_margin
+                srs_rating.opponent_rating += rating.opponent_rating
+                srs_rating.wins += rating.wins - record.conference_wins
+                srs_rating.losses += rating.losses - record.conference_losses
+                srs_rating.ties += rating.ties - record.conference_ties
 
-            db.session.add(conference_srs)
+            db.session.add(srs_rating)
 
         db.session.commit()
 
