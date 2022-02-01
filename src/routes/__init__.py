@@ -4,7 +4,7 @@ from .first_downs import FirstDownsRoute
 from .passing import PassingRoute, PassingPlaysRoute
 from .penalties import PenaltiesRoute
 from .record import RecordRoute
-from .rpi import RPIRoute
+from .rpi import ConferenceRPIRoute, RPIRoute
 from .rushing import RushingRoute, RushingPlaysRoute
 from .scoring import ScoringRoute
 from .srs import ConferenceSRSRoute, SRSRoute
