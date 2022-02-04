@@ -1,11 +1,16 @@
 from typing import Union
 
-from flask import request
 from flask_restful import Resource
 
-from exceptions import InvalidRequestError
 from models import FirstDowns
-from utils import flask_response, rank, sort
+from utils import (
+    check_side_of_ball,
+    flask_response,
+    get_multiple_year_params,
+    get_optional_param,
+    rank,
+    sort
+)
 
 ASC_SORT_ATTRS = ['plays_per_first_down']
 
@@ -25,32 +30,15 @@ class FirstDownsRoute(Resource):
           Union[FirstDowns, list[FirstDowns]]: First down data for all
             teams or only first down data for one team
         """
-        if side_of_ball not in ['offense', 'defense']:
-            raise InvalidRequestError(
-                "Side of ball must be either 'offense' or 'defense'")
+        check_side_of_ball(value=side_of_ball)
 
-        sort_attr = request.args.get('sort', 'total_per_game')
+        sort_attr = get_optional_param(
+            name='sort', default_value='total_per_game')
         attrs, reverses = secondary_sort(
             attr=sort_attr, side_of_ball=side_of_ball)
 
-        try:
-            start_year = int(request.args['start_year'])
-        except KeyError:
-            raise InvalidRequestError(
-                'Start year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError(
-                'Query parameter start year must be an integer')
-
-        end_year = request.args.get('end_year')
-        team = request.args.get('team')
-
-        if end_year is not None:
-            try:
-                end_year = int(end_year)
-            except ValueError:
-                raise InvalidRequestError(
-                    'Query parameter end year must be an integer')
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
 
         first_downs = FirstDowns.get_first_downs(
             side_of_ball=side_of_ball,

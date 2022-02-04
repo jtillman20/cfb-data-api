@@ -1,9 +1,7 @@
-from flask import request
 from flask_restful import Resource
 
-from exceptions import InvalidRequestError
 from models import Conference
-from utils import flask_response
+from utils import flask_response, get_year_param
 
 
 class ConferenceRoute(Resource):
@@ -15,11 +13,5 @@ class ConferenceRoute(Resource):
         Returns:
             list[Conference]: All conferences
         """
-        try:
-            year = int(request.args['year'])
-        except KeyError:
-            raise InvalidRequestError('Year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError('Query parameter year must be an integer')
-
+        year = get_year_param()
         return Conference.get_conferences(year=year)

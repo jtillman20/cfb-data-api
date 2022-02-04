@@ -5,7 +5,14 @@ from flask_restful import Resource
 
 from exceptions import InvalidRequestError
 from models import APPoll, APPollRanking
-from utils import flask_response, rank, sort
+from utils import (
+    flask_response,
+    get_multiple_year_params,
+    get_optional_param,
+    get_year_param,
+    rank,
+    sort
+)
 
 ASC_SORT_ATTRS = ['avg_preseason', 'avg_final']
 WEEKS = ['weeks_number_one', 'weeks_top_five', 'weeks_top_ten', 'weeks']
@@ -25,27 +32,10 @@ class APPollRoute(Resource):
           Union[APPoll, list[APPoll]]: Poll data for all teams
               or only poll data for one team
         """
-        sort_attr = request.args.get('sort', 'weeks')
+        sort_attr = get_optional_param(name='sort', default_value='weeks')
         secondary_attr, secondary_reverse = secondary_sort(attr=sort_attr)
-
-        try:
-            start_year = int(request.args['start_year'])
-        except KeyError:
-            raise InvalidRequestError(
-                'Start year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError(
-                'Query parameter start year must be an integer')
-
-        end_year = request.args.get('end_year')
-        team = request.args.get('team')
-
-        if end_year is not None:
-            try:
-                end_year = int(end_year)
-            except ValueError:
-                raise InvalidRequestError(
-                    'Query parameter end year must be an integer')
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
 
         poll_data = APPoll.get_ap_poll_data(
             start_year=start_year, end_year=end_year, team=team)
@@ -104,23 +94,14 @@ class APPollRankingRoute(Resource):
         Returns:
             list[APPollRanking]: AP Poll rankings
         """
+        year = get_year_param()
+        team = get_optional_param(name='team')
+
         try:
-            year = int(request.args['year'])
-        except KeyError:
-            raise InvalidRequestError(
-                'Year is a required query parameter')
+            week = int(request.args['week'])
+        except (KeyError, TypeError):
+            week = None
         except ValueError:
-            raise InvalidRequestError(
-                'Query parameter year must be an integer')
-
-        week = request.args.get('week')
-        team = request.args.get('team')
-
-        if week is not None:
-            try:
-                week = int(week)
-            except ValueError:
-                raise InvalidRequestError(
-                    'Query parameter week must be an integer')
+            raise InvalidRequestError('Query parameter week must be an integer')
 
         return APPollRanking.get_rankings(year=year, week=week, team=team)

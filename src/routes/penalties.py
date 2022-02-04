@@ -1,11 +1,16 @@
 from typing import Union
 
-from flask import request
 from flask_restful import Resource
 
-from exceptions import InvalidRequestError
 from models import Penalties
-from utils import flask_response, rank, sort
+from utils import (
+    check_side_of_ball,
+    flask_response,
+    get_multiple_year_params,
+    get_optional_param,\
+    rank,
+    sort
+)
 
 
 class PenaltiesRoute(Resource):
@@ -24,32 +29,15 @@ class PenaltiesRoute(Resource):
                 penalties for all teams or only win-loss records for
                 one team
         """
-        if side_of_ball not in ['offense', 'defense']:
-            raise InvalidRequestError(
-                "Side of ball must be either 'offense' or 'defense'")
+        check_side_of_ball(value=side_of_ball)
 
-        sort_attr = request.args.get('sort', 'yards_per_game')
+        sort_attr = get_optional_param(
+            name='sort', default_value='yards_per_game')
         secondary_attr, secondary_reverse = secondary_sort(
             attr=sort_attr, side_of_ball=side_of_ball)
 
-        try:
-            start_year = int(request.args['start_year'])
-        except KeyError:
-            raise InvalidRequestError(
-                'Start year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError(
-                'Query parameter start year must be an integer')
-
-        end_year = request.args.get('end_year')
-        team = request.args.get('team')
-
-        if end_year is not None:
-            try:
-                end_year = int(end_year)
-            except ValueError:
-                raise InvalidRequestError(
-                    'Query parameter end year must be an integer')
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
 
         penalties = Penalties.get_penalties(
             side_of_ball=side_of_ball,

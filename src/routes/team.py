@@ -1,9 +1,7 @@
-from flask import request
 from flask_restful import Resource
 
-from exceptions import InvalidRequestError
 from models import Team
-from utils import flask_response
+from utils import flask_response, get_optional_param, get_year_param
 
 
 class TeamRoute(Resource):
@@ -16,12 +14,6 @@ class TeamRoute(Resource):
         Returns:
             list[Team]: All teams or teams filtered by conference
         """
-        try:
-            year = int(request.args['year'])
-        except KeyError:
-            raise InvalidRequestError('Year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError('Query parameter year must be an integer')
-
-        conference = request.args.get('conference')
+        year = get_year_param()
+        conference = get_optional_param(name='conference')
         return Team.get_teams(year=year, conference=conference)

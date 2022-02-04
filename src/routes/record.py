@@ -1,11 +1,15 @@
 from typing import Union
 
-from flask import request
 from flask_restful import Resource
 
-from exceptions import InvalidRequestError
 from models import Record
-from utils import flask_response, rank, sort
+from utils import (
+    flask_response,
+    get_multiple_year_params,
+    get_optional_param,
+    rank,
+    sort
+)
 
 ASC_SORT_ATTRS = ['losses', 'conference_losses']
 
@@ -21,27 +25,10 @@ class RecordRoute(Resource):
             Union[Record, list[Record]]: Win-loss records for all teams
                 or only win-loss records for one team
         """
-        sort_attr = request.args.get('sort', 'win_pct')
+        sort_attr = get_optional_param(name='sort', default_value='win_pct')
         secondary_attr, secondary_reverse = secondary_sort(attr=sort_attr)
-
-        try:
-            start_year = int(request.args['start_year'])
-        except KeyError:
-            raise InvalidRequestError(
-                'Start year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError(
-                'Query parameter start year must be an integer')
-
-        end_year = request.args.get('end_year')
-        team = request.args.get('team')
-
-        if end_year is not None:
-            try:
-                end_year = int(end_year)
-            except ValueError:
-                raise InvalidRequestError(
-                    'Query parameter end year must be an integer')
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
 
         records = Record.get_records(
             start_year=start_year, end_year=end_year, team=team)

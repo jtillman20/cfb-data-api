@@ -1,11 +1,15 @@
 from typing import Union
 
-from flask import request
 from flask_restful import Resource
 
-from exceptions import InvalidRequestError
 from models import SRS, ConferenceSRS
-from utils import flask_response, rank, sort
+from utils import (
+    flask_response,
+    get_multiple_year_params,
+    get_optional_param,
+    rank,
+    sort
+)
 
 
 class SRSRoute(Resource):
@@ -19,26 +23,9 @@ class SRSRoute(Resource):
             Union[SRS, list[SRS]]: SRS ratings for all teams or only
                 the SRS rating for one team
         """
-        sort_attr = request.args.get('sort', 'srs')
-
-        try:
-            start_year = int(request.args['start_year'])
-        except KeyError:
-            raise InvalidRequestError(
-                'Start year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError(
-                'Query parameter start year must be an integer')
-
-        end_year = request.args.get('end_year')
-        team = request.args.get('team')
-
-        if end_year is not None:
-            try:
-                end_year = int(end_year)
-            except ValueError:
-                raise InvalidRequestError(
-                    'Query parameter end year must be an integer')
+        sort_attr = get_optional_param(name='sort', default_value='srs')
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
 
         ratings = SRS.get_srs_ratings(
             start_year=start_year, end_year=end_year, team=team)
@@ -62,26 +49,9 @@ class ConferenceSRSRoute(Resource):
             Union[ConferenceSRS, list[ConferenceSRS]]: SRS ratings for
                 all conferences or only the SRS rating for one conference
         """
-        sort_attr = request.args.get('sort', 'srs')
-
-        try:
-            start_year = int(request.args['start_year'])
-        except KeyError:
-            raise InvalidRequestError(
-                'Start year is a required query parameter')
-        except ValueError:
-            raise InvalidRequestError(
-                'Query parameter start year must be an integer')
-
-        end_year = request.args.get('end_year')
-        conference = request.args.get('conference')
-
-        if end_year is not None:
-            try:
-                end_year = int(end_year)
-            except ValueError:
-                raise InvalidRequestError(
-                    'Query parameter end year must be an integer')
+        sort_attr = get_optional_param(name='sort', default_value='srs')
+        start_year, end_year = get_multiple_year_params()
+        conference = get_optional_param(name='conference')
 
         ratings = ConferenceSRS.get_srs_ratings(
             start_year=start_year, end_year=end_year, conference=conference)
