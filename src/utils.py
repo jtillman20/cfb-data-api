@@ -1,10 +1,27 @@
 from functools import wraps
 from operator import attrgetter
+from typing import Union
 
 from flask import request, Response
 from jsonpickle import encode
 
-from exceptions import BaseError
+from exceptions import BaseError, InvalidRequestError
+
+
+def check_side_of_ball(value: str) -> None:
+    """
+    Check if the side of ball in the request is a valid value of either
+    'offense' or 'defense'.
+
+    Args:
+        value (str): Side of ball
+
+    Raises:
+        InvalidRequestError: The side of ball is an invalid value
+    """
+    if value not in ['offense', 'defense']:
+        raise InvalidRequestError(
+            "Side of ball must be either 'offense' or 'defense'")
 
 
 def flask_response(function) -> Response:
@@ -40,6 +57,73 @@ def flask_response(function) -> Response:
         )
 
     return wrapper
+
+
+def get_multiple_year_params() -> tuple:
+    """
+    Get the required query parameter start_year and the optional query
+    parameter end_year from the flask request.
+
+    Returns:
+        tuple: Start year and end year
+
+    Raises:
+        InvalidRequestError: The start_year query paramter is missing
+            or either the start_year or end_year query parameter has
+            an invalid value
+    """
+    # TODO: Add validation for the start_year or end_year value
+    try:
+        start_year = int(request.args['start_year'])
+    except KeyError:
+        raise InvalidRequestError(
+            'Start year is a required query parameter')
+    except ValueError:
+        raise InvalidRequestError(
+            'Query parameter start year must be an integer')
+
+    try:
+        end_year = int(request.args['end_year'])
+    except (KeyError, TypeError):
+        end_year = None
+    except ValueError:
+        raise InvalidRequestError(
+            'Query parameter end year must be an integer')
+
+    return start_year, end_year
+
+
+def get_optional_param(name: str, default_value: str = None) -> \
+        Union[str, None]:
+    """
+    Get an optional query parameter from the flask request.
+
+    Args:
+        name (str): Parameter name to try to get
+        default_value (str): Value if param is missing from the request
+
+    Returns:
+        Union[str, None]: Query parameter value
+    """
+    return request.args.get(name, default_value)
+
+
+def get_year_param() -> int:
+    """
+    Get the required query param year from the flask request.
+
+    Returns:
+        int:
+
+    Raises:
+        InvalidRequestError:
+    """
+    try:
+        return int(request.args['year'])
+    except KeyError:
+        raise InvalidRequestError('Year is a required query parameter')
+    except ValueError:
+        raise InvalidRequestError('Query parameter year must be an integer')
 
 
 def rank(data: list[any], attr: str) -> list[any]:
