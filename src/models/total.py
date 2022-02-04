@@ -255,7 +255,7 @@ class Total(db.Model):
             'side_of_ball': self.side_of_ball,
             'games': self.games,
             'plays': self.plays,
-            'plays_per_game': round(self.plays, 1),
+            'plays_per_game': round(self.plays_per_game, 1),
             'yards': self.yards,
             'yards_per_play': round(self.yards_per_play, 2),
             'yards_per_game': round(self.yards_per_game, 1),
