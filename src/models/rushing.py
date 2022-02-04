@@ -264,7 +264,6 @@ class Rushing(db.Model):
         self.opponents_games += other.opponents_games
         self.opponents_attempts += other.opponents_attempts
         self.opponents_yards += other.opponents_yards
-        self.opponents_tds += other.opponents_tds
 
         return self
 
