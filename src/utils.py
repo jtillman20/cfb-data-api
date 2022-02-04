@@ -170,8 +170,16 @@ def sort(data: list[any], attrs: list[str], reverses: list[bool]) -> list[any]:
 
     Returns:
         list: Sorted list
+
+    Raises:
+        InvalidRequestError: An attribute in attrs is not a valid
+            attribute to sort on the list of objects
     """
-    for attr, reverse in zip(attrs, reverses):
-        data = sorted(data, key=attrgetter(attr), reverse=reverse)
+    try:
+        for attr, reverse in zip(attrs, reverses):
+            data = sorted(data, key=attrgetter(attr), reverse=reverse)
+    except AttributeError:
+        attr = attr.replace('_', ' ')
+        raise InvalidRequestError(f'Cannot sort by attribute {attr}')
 
     return data
