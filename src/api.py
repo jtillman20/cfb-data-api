@@ -28,5 +28,7 @@ api.add_resource(
 api.add_resource(ScoringRoute, f'{API_BASE}/scoring/<string:side_of_ball>')
 api.add_resource(
     ScrimmagePlaysRoute, f'{API_BASE}/scrimmage_plays/<string:side_of_ball>')
+api.add_resource(
+    ThirdDownsRoute, f'{API_BASE}/third_down_conversions/<string:side_of_ball>')
 api.add_resource(TotalRoute, f'{API_BASE}/total/<string:side_of_ball>')
 api.add_resource(TurnoversRoute, f'{API_BASE}/turnovers')
