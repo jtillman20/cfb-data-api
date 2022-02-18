@@ -13,6 +13,7 @@ class Team(db.Model):
     ap_poll_ranking = db.relationship(
         'APPollRanking', backref='team', lazy=True)
     first_downs = db.relationship('FirstDowns', backref='team', lazy=True)
+    fourth_downs = db.relationship('FourthDowns', backref='team', lazy=True)
     passing = db.relationship('Passing', backref='team', lazy=True)
     passing_plays = db.relationship('PassingPlays', backref='team', lazy=True)
     penalties = db.relationship('Penalties', backref='team', lazy=True)
