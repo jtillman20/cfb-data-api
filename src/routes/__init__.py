@@ -1,6 +1,6 @@
 from .ap_poll import APPollRoute, APPollRankingRoute
 from .conference import ConferenceRoute
-from .conversions import ThirdDownsRoute
+from .conversions import FourthDownsRoute, ThirdDownsRoute
 from .first_downs import FirstDownsRoute
 from .passing import PassingRoute, PassingPlaysRoute
 from .penalties import PenaltiesRoute
