@@ -1,6 +1,6 @@
 from .ap_poll import APPoll, APPollRanking
 from .conference import Conference, ConferenceMembership
-from .conversions import FourthDowns, ThirdDowns
+from .conversions import FourthDowns, RedZone, ThirdDowns
 from .first_downs import FirstDowns
 from .game import Game, GameStats
 from .passing import Passing, PassingPlays

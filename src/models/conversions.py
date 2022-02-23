@@ -176,6 +176,84 @@ class FourthDowns(db.Model):
         return data
 
 
+class RedZone(db.Model):
+    __tablename__ = 'red_zone'
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    side_of_ball = db.Column(db.String(10), nullable=False)
+    games = db.Column(db.Integer, nullable=False)
+    attempts = db.Column(db.Integer, nullable=False)
+    scores = db.Column(db.Integer, nullable=False)
+    tds = db.Column(db.Integer, nullable=False)
+    field_goals = db.Column(db.Integer, nullable=False)
+
+    @property
+    def score_pct(self) -> float:
+        if self.attempts:
+            return self.scores / self.attempts * 100
+        return 0.0
+
+    @property
+    def td_pct(self) -> float:
+        if self.attempts:
+            return self.tds / self.attempts * 100
+        return 0.0
+
+    @property
+    def field_goal_pct(self) -> float:
+        if self.attempts:
+            return self.field_goals / self.attempts * 100
+        return 0.0
+
+    @property
+    def points_per_attempt(self) -> float:
+        if self.attempts:
+            return (self.tds * 6 + self.field_goals * 3) / self.attempts
+        return 0.0
+
+    def __add__(self, other: 'RedZone') -> 'RedZone':
+        """
+        Add two RedZone objects to combine multiple years of data.
+
+        Args:
+            other (RedZone): Data about a team's red zone
+                offense/defense
+
+        Returns:
+            RedZone: self
+        """
+        self.games += other.games
+        self.attempts += other.attempts
+        self.scores += other.scores
+        self.tds += other.tds
+        self.field_goals += other.field_goals
+
+        return self
+
+    def __getstate__(self) -> dict:
+        data = {
+            'id': self.id,
+            'team': self.team.serialize(year=self.year),
+            'year': self.year,
+            'side_of_ball': self.side_of_ball,
+            'games': self.games,
+            'attempts': self.attempts,
+            'scores': self.scores,
+            'score_pct': round(self.score_pct, 2),
+            'tds': self.tds,
+            'td_pct': round(self.td_pct, 2),
+            'field_goals': self.field_goals,
+            'field_goal_pct': round(self.field_goal_pct, 2),
+            'points_per_attempt': round(self.points_per_attempt, 2)
+        }
+
+        if hasattr(self, 'rank'):
+            data['rank'] = self.rank
+
+        return data
+
+
 class ThirdDowns(db.Model):
     __tablename__ = 'third_downs'
     id = db.Column(db.Integer, primary_key=True)
