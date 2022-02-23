@@ -18,6 +18,7 @@ class Team(db.Model):
     passing_plays = db.relationship('PassingPlays', backref='team', lazy=True)
     penalties = db.relationship('Penalties', backref='team', lazy=True)
     record = db.relationship('Record', backref='team', lazy=True)
+    red_zone = db.relationship('RedZone', backref='team', lazy=True)
     rpi = db.relationship('RPI', backref='team', lazy=True)
     rushing = db.relationship('Rushing', backref='team', lazy=True)
     rushing_plays = db.relationship('RushingPlays', backref='team', lazy=True)
