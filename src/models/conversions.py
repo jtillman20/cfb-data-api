@@ -212,6 +212,66 @@ class RedZone(db.Model):
             return (self.tds * 6 + self.field_goals * 3) / self.attempts
         return 0.0
 
+    @classmethod
+    def add_red_zone(cls, start_year: int = None, end_year: int = None) -> None:
+        """
+        Get red zone offense and defense stats for all teams for the
+        given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start adding red zone stats
+            end_year (int): Year to stop adding red zone stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding red zone stats for {year}')
+            cls.add_red_zone_for_one_year(year=year)
+
+    @classmethod
+    def add_red_zone_for_one_year(cls, year: int) -> None:
+        """
+        Get red zone offense and defense stats for all teams for one
+        year and add them to the database.
+
+        Args:
+            year (int): Year to add red zone stats
+        """
+        scraper = CFBStatsScraper(year=year)
+
+        for side_of_ball in ['offense', 'defense']:
+            red_zone = []
+
+            html_content = scraper.get_html_data(
+                side_of_ball=side_of_ball, category='27')
+            red_zone_data = scraper.parse_html_data(
+                html_content=html_content)
+
+            for item in red_zone_data:
+                team = Team.query.filter_by(name=item[1]).first()
+
+                red_zone.append(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=item[2],
+                    attempts=item[3],
+                    scores=item[4],
+                    tds=item[6],
+                    field_goals=item[8]
+                ))
+
+            for team_red_zone in sorted(red_zone, key=attrgetter('team_id')):
+                db.session.add(team_red_zone)
+
+        db.session.commit()
+
     def __add__(self, other: 'RedZone') -> 'RedZone':
         """
         Add two RedZone objects to combine multiple years of data.
