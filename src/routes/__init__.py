@@ -9,6 +9,7 @@ from .rpi import ConferenceRPIRoute, RPIRoute
 from .rushing import RushingRoute, RushingPlaysRoute
 from .scoring import ScoringRoute
 from .srs import ConferenceSRSRoute, SRSRoute
+from .tackles_for_loss import TacklesForLossRoute
 from .team import TeamRoute
 from .total import TotalRoute, ScrimmagePlaysRoute
 from .turnovers import TurnoversRoute
