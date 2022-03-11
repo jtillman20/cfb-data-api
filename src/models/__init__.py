@@ -10,6 +10,7 @@ from .rpi import ConferenceRPI, RPI
 from .rushing import Rushing, RushingPlays
 from .scoring import Scoring
 from .srs import ConferenceSRS, SRS
+from .tackles_for_loss import TacklesForLoss
 from .team import Team
 from .total import Total, ScrimmagePlays
 from .turnovers import Turnovers
