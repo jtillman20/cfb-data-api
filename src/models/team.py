@@ -26,6 +26,8 @@ class Team(db.Model):
     scrimmage_plays = db.relationship(
         'ScrimmagePlays', backref='team', lazy=True)
     srs = db.relationship('SRS', backref='team', lazy=True)
+    tackles_for_loss = db.relationship(
+        'TacklesForLoss', backref='team', lazy=True)
     third_downs = db.relationship('ThirdDowns', backref='team', lazy=True)
     total = db.relationship('Total', backref='team', lazy=True)
     turnovers = db.relationship('Turnovers', backref='team', lazy=True)
