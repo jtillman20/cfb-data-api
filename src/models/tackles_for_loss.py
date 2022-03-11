@@ -1,4 +1,10 @@
+from operator import attrgetter
+
 from app import db
+from scraper import CFBStatsScraper
+from .game import Game
+from .team import Team
+from .total import Total
 
 
 class TacklesForLoss(db.Model):
@@ -29,6 +35,75 @@ class TacklesForLoss(db.Model):
         if self.tackles_for_loss:
             return self.yards / self.tackles_for_loss
         return 0.0
+
+    @classmethod
+    def add_tackles_for_loss(cls, start_year: int = None,
+                             end_year: int = None) -> None:
+        """
+        Get tackles for loss and opponent tackles for loss stats for
+        all teams for the given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start adding tackles for loss
+                stats
+            end_year (int): Year to stop adding tackles for loss
+                stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding tackles for loss stats for {year}')
+            cls.add_tackles_for_loss_for_one_year(year=year)
+
+    @classmethod
+    def add_tackles_for_loss_for_one_year(cls, year: int) -> None:
+        """
+        Get tackles for loss and opponent tackles for loss stats for
+        all teams for one year and add them to the database.
+
+        Args:
+            year (int): Year to add tackles for loss stats
+        """
+        scraper = CFBStatsScraper(year=year)
+
+        for side_of_ball in ['offense', 'defense']:
+            tfl = []
+
+            html_content = scraper.get_html_data(
+                side_of_ball=side_of_ball, category='21')
+            tfl_data = scraper.parse_html_data(
+                html_content=html_content)
+
+            for item in tfl_data:
+                team = Team.query.filter_by(name=item[1]).first()
+                opposite_side_of_ball = 'defense' \
+                    if side_of_ball == 'offense' else 'offense'
+                total = Total.get_total(
+                    side_of_ball=opposite_side_of_ball,
+                    start_year=year,
+                    team=team.name
+                )
+
+                tfl.append(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=item[2],
+                    tackles_for_loss=item[3],
+                    yards=item[4],
+                    plays=total.plays
+                ))
+
+            for team_tfl in sorted(tfl, key=attrgetter('team_id')):
+                db.session.add(team_tfl)
+
+        db.session.commit()
 
     def __add__(self, other: 'TacklesForLoss') -> 'TacklesForLoss':
         """
