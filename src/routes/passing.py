@@ -26,8 +26,8 @@ class PassingRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-          Union[Passing, list[Passing]]: Passing data for all teams
-              or only passing data for one team
+            Union[Passing, list[Passing]]: Passing data for all teams
+                or only passing data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -115,8 +115,8 @@ class PassingPlaysRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-          Union[PassingPlays, list[PassingPlays]]: Passing play data
-            for all teams or only passing play data for one team
+            Union[PassingPlays, list[PassingPlays]]: Passing play data
+                for all teams or only passing play data for one team
         """
         check_side_of_ball(value=side_of_ball)
 

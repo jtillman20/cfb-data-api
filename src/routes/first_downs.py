@@ -27,8 +27,8 @@ class FirstDownsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-          Union[FirstDowns, list[FirstDowns]]: First down data for all
-            teams or only first down data for one team
+            Union[FirstDowns, list[FirstDowns]]: First down data for
+                all teams or only first down data for one team
         """
         check_side_of_ball(value=side_of_ball)
 

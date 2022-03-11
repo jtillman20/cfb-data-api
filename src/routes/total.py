@@ -24,8 +24,8 @@ class TotalRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-          Union[Total, list[Total]]: Total data for all teams
-              or only total data for one team
+            Union[Total, list[Total]]: Total data for all teams
+                or only total data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -100,8 +100,9 @@ class ScrimmagePlaysRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-          Union[ScrimmagePlays, list[ScrimmagePlays]]: Scrimmage play
-            data for all teams or only scrimmage play data for one team
+            Union[ScrimmagePlays, list[ScrimmagePlays]]: Scrimmage play
+                data for all teams or only scrimmage play data for one
+                team
         """
         check_side_of_ball(value=side_of_ball)
 

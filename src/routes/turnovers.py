@@ -23,8 +23,8 @@ class TurnoversRoute(Resource):
         team.
 
         Returns:
-          Union[Turnovers, list[Turnovers]]: Turnover data for all teams
-              or only turnover data for one team
+            Union[Turnovers, list[Turnovers]]: Turnover data for all
+                teams or only turnover data for one team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='margin_per_game')

@@ -24,8 +24,8 @@ class ScoringRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-          Union[Scoring, list[Scoring]]: Scoring data for all teams
-              or only scoring data for one team
+            Union[Scoring, list[Scoring]]: Scoring data for all teams
+                or only scoring data for one team
         """
         check_side_of_ball(value=side_of_ball)
 

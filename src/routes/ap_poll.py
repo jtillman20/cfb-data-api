@@ -29,8 +29,8 @@ class APPollRoute(Resource):
         If team is provided only get poll data for that team.
 
         Returns:
-          Union[APPoll, list[APPoll]]: Poll data for all teams
-              or only poll data for one team
+            Union[APPoll, list[APPoll]]: Poll data for all teams
+                or only poll data for one team
         """
         sort_attr = get_optional_param(name='sort', default_value='weeks')
         secondary_attr, secondary_reverse = secondary_sort(attr=sort_attr)
