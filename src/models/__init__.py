@@ -8,6 +8,7 @@ from .penalties import Penalties
 from .record import Record
 from .rpi import ConferenceRPI, RPI
 from .rushing import Rushing, RushingPlays
+from .sacks import Sacks
 from .scoring import Scoring
 from .srs import ConferenceSRS, SRS
 from .tackles_for_loss import TacklesForLoss
