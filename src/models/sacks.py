@@ -39,6 +39,48 @@ class Sacks(db.Model):
         return 0.0
 
     @classmethod
+    def get_sacks(cls, side_of_ball: str, start_year: int, end_year: int = None,
+                  team: str = None) -> Union['Sacks', list['Sacks']]:
+        """
+        Get sacks or opponent sacks for qualifying teams for the given
+        years. If team is provided, only get sack data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting sack data
+            end_year (int): Year to stop getting sack data
+            team (str): Team for which to get sack data
+
+        Returns:
+            Union[Sacks, list[Sacks]]: Sacks or opponent sacks for all
+                teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            sacks = query.filter_by(name=team).all()
+            return sum(sacks[1:], sacks[0])
+
+        sacks = {}
+        for team_name in qualifying_teams:
+            team_sacks = query.filter_by(name=team_name).all()
+
+            if team_sacks:
+                sacks[team_name] = sum(team_sacks[1:], team_sacks[0])
+
+        return [sacks[team] for team in sorted(sacks.keys())]
+
+    @classmethod
     def add_sacks(cls, start_year: int = None, end_year: int = None) -> None:
         """
         Get sack and opponent sack stats for all teams for the given
