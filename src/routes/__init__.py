@@ -7,6 +7,7 @@ from .penalties import PenaltiesRoute
 from .record import RecordRoute
 from .rpi import ConferenceRPIRoute, RPIRoute
 from .rushing import RushingRoute, RushingPlaysRoute
+from .sacks import SacksRoute
 from .scoring import ScoringRoute
 from .srs import ConferenceSRSRoute, SRSRoute
 from .tackles_for_loss import TacklesForLossRoute
