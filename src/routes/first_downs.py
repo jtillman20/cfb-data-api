@@ -73,7 +73,7 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
         secondary_attr = 'plays'
 
     else:
-        secondary_attr = 'total_per_game'
+        secondary_attr = attr
 
     if attr not in ASC_SORT_ATTRS:
         reverse = side_of_ball == 'offense'

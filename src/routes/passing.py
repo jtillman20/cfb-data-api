@@ -65,7 +65,7 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
     Returns:
         tuple: Secondary sort attribute and sort order
     """
-    if attr in ['yards_per_game', 'attemptsPerGame', 'completionsPerGame']:
+    if attr in ['yards_per_game', 'attempts_per_game', 'completions_per_game']:
         secondary_attr = 'games'
 
     elif attr in ['completion_pct', 'yards_per_attempt', 'td_pct', 'int_pct',
@@ -73,10 +73,10 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
         secondary_attr = 'attempts'
 
     elif attr == 'attempts':
-        secondary_attr = 'attemptsPerGame'
+        secondary_attr = 'attempts_per_game'
 
     elif attr == 'completions':
-        secondary_attr = 'completionsPerGame'
+        secondary_attr = 'completions_per_game'
 
     elif attr == 'yards_per_completions':
         secondary_attr = 'completions'

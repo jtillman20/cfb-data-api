@@ -69,7 +69,7 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
     if attr == 'sacks_per_game':
         secondary_attr = 'games'
 
-    elif attr in ['sacks']:
+    elif attr == 'sacks':
         secondary_attr = 'sacks_per_game'
 
     elif attr in ['sack_pct', 'yards_per_sack']:
