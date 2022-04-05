@@ -1,4 +1,5 @@
 from operator import attrgetter
+from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -41,6 +42,50 @@ class Punting(db.Model):
         if self.punts:
             return self.plays / self.punts
         return 0.0
+
+    @classmethod
+    def get_punting(cls, side_of_ball: str, start_year: int,
+                    end_year: int = None, team: str = None
+                    ) -> Union['Punting', list['Punting']]:
+        """
+        Get punting or opponent punting for qualifying teams for the
+        given years. If team is provided, only get punting  data for
+        that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting punting data
+            end_year (int): Year to stop getting punting data
+            team (str): Team for which to get punting data
+
+        Returns:
+            Union[Punting, list[Punting]]: Punting or opponent punting
+                for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            punting = query.filter_by(name=team).all()
+            return sum(punting[1:], punting[0])
+
+        punting = {}
+        for team_name in qualifying_teams:
+            team_punting = query.filter_by(name=team_name).all()
+
+            if team_punting:
+                punting[team_name] = sum(team_punting[1:], team_punting[0])
+
+        return [punting[team] for team in sorted(punting.keys())]
 
     @classmethod
     def add_punting(cls, start_year: int = None, end_year: int = None) -> None:
