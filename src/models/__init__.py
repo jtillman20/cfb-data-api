@@ -5,7 +5,7 @@ from .first_downs import FirstDowns
 from .game import Game, GameStats
 from .passing import Passing, PassingPlays
 from .penalties import Penalties
-from .punting import Punting
+from .punting import Punting, PuntReturns
 from .record import Record
 from .rpi import ConferenceRPI, RPI
 from .rushing import Rushing, RushingPlays
