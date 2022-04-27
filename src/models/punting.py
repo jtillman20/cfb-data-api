@@ -456,6 +456,76 @@ class PuntReturnPlays(db.Model):
             return self.ninety / self.returns * 100
         return 0.0
 
+    @classmethod
+    def add_punt_return_plays(cls, start_year: int = None,
+                              end_year: int = None) -> None:
+        """
+        Get punt return plays and opponent punt return plays for all
+        teams for the given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start adding punt return play stats
+            end_year (int): Year to stop adding punt return play stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            end_year = max([year.year for year in query])
+            years = range(2010, end_year + 1)
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding punt return play stats for {year}')
+            cls.add_punt_return_plays_for_one_year(year=year)
+
+    @classmethod
+    def add_punt_return_plays_for_one_year(cls, year: int) -> None:
+        """
+        Get punt return plays and opponent punt return plays for all
+        teams for one year and add them to the database.
+
+        Args:
+            year (int): Year to add punt return play stats
+        """
+        scraper = CFBStatsScraper(year=year)
+
+        for side_of_ball in ['offense', 'defense']:
+            punt_return_plays = []
+
+            html_content = scraper.get_html_data(
+                side_of_ball=side_of_ball, category='33')
+            punt_return_play_data = scraper.parse_html_data(
+                html_content=html_content)
+
+            for item in punt_return_play_data:
+                team = Team.query.filter_by(name=item[1]).first()
+                returns = PuntReturns.get_punt_returns(
+                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+
+                punt_return_plays.append(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=item[2],
+                    twenty=item[3],
+                    thirty=item[4],
+                    forty=item[5],
+                    fifty=item[6],
+                    sixty=item[7],
+                    seventy=item[8],
+                    eighty=item[9],
+                    ninety=item[10],
+                    returns=returns.returns
+                ))
+
+            for team_punt_return_plays in sorted(
+                    punt_return_plays, key=attrgetter('team_id')):
+                db.session.add(team_punt_return_plays)
+
+        db.session.commit()
+
     def __add__(self, other: 'PuntReturnPlays') -> 'PuntReturnPlays':
         """
         Add two PuntReturnPlays objects to combine multiple years of
