@@ -28,6 +28,8 @@ api.add_resource(PuntingRoute, f'{API_BASE}/punting/<string:side_of_ball>')
 api.add_resource(
     PuntReturnsRoute, f'{API_BASE}/punt_returns/<string:side_of_ball>')
 api.add_resource(
+    PuntReturnPlaysRoute, f'{API_BASE}/punt_return_plays/<string:side_of_ball>')
+api.add_resource(
     RedZoneRoute, f'{API_BASE}/red_zone_conversions/<string:side_of_ball>')
 api.add_resource(RushingRoute, f'{API_BASE}/rushing/<string:side_of_ball>')
 api.add_resource(
