@@ -356,7 +356,7 @@ class RushingPlays(db.Model):
     @property
     def eighty_pct(self) -> float:
         if self.plays:
-            return self.eighty_pct / self.plays * 100
+            return self.eighty / self.plays * 100
         return 0.0
 
     @property
