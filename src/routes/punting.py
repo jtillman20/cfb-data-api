@@ -3,7 +3,7 @@ from typing import Union
 
 from flask_restful import Resource
 
-from models import Punting, PuntReturns
+from models import Punting, PuntReturns, PuntReturnPlays
 from utils import (
     check_side_of_ball,
     flask_response,
@@ -145,3 +145,43 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
         secondary_reverse = side_of_ball == 'defense'
 
     return [secondary_attr, attr], [secondary_reverse, reverse]
+
+
+class PuntReturnPlaysRoute(Resource):
+    @flask_response
+    def get(self, side_of_ball: str) -> Union[PuntReturnPlays,
+                                              list[PuntReturnPlays]]:
+        """
+        GET request to get punt return plays or opponent punt return
+        plays for the given years. If team is provided only get punt
+        return play data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            Union[PuntReturnPlays, list[PuntReturnPlays]]: Punt return
+                play data for all teams or only punt return play data
+                for one team
+        """
+        check_side_of_ball(value=side_of_ball)
+
+        sort_attr = get_optional_param(name='sort', default_value='twenty_pct')
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
+
+        return_plays = PuntReturnPlays.get_punt_return_plays(
+            side_of_ball=side_of_ball,
+            start_year=start_year,
+            end_year=end_year,
+            team=team
+        )
+
+        if isinstance(return_plays, PuntReturnPlays):
+            return return_plays
+
+        attrs = ['returns', sort_attr]
+        reverses = [True, side_of_ball == 'offense']
+
+        return_plays = sort(data=return_plays, attrs=attrs, reverses=reverses)
+        return rank(data=return_plays, attr=sort_attr)

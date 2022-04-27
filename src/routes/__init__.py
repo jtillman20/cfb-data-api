@@ -4,7 +4,7 @@ from .conversions import FourthDownsRoute, RedZoneRoute, ThirdDownsRoute
 from .first_downs import FirstDownsRoute
 from .passing import PassingRoute, PassingPlaysRoute
 from .penalties import PenaltiesRoute
-from .punting import PuntingRoute, PuntReturnsRoute
+from .punting import PuntingRoute, PuntReturnsRoute, PuntReturnPlaysRoute
 from .record import RecordRoute
 from .rpi import ConferenceRPIRoute, RPIRoute
 from .rushing import RushingRoute, RushingPlaysRoute
