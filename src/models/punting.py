@@ -457,6 +457,52 @@ class PuntReturnPlays(db.Model):
         return 0.0
 
     @classmethod
+    def get_punt_return_plays(cls, side_of_ball: str, start_year: int,
+                              end_year: int = None, team: str = None
+                              ) -> Union['PuntReturnPlays',
+                                         list['PuntReturnPlays']]:
+        """
+        Get punt returns or opponent punt returns for qualifying teams
+        for the given years. If team is provided, only get punting  data
+        for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting punt return data
+            end_year (int): Year to stop getting punt return data
+            team (str): Team for which to get punt return data
+
+        Returns:
+            Union[PuntReturns, list[PuntReturns]]: Punt returns or
+                opponent punt returns for all teams or only for one
+                team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            returns = query.filter_by(name=team).all()
+            return sum(returns[1:], returns[0])
+
+        returns = {}
+        for team_name in qualifying_teams:
+            team_returns = query.filter_by(name=team_name).all()
+
+            if team_returns:
+                returns[team_name] = sum(team_returns[1:], team_returns[0])
+
+        return [returns[team] for team in sorted(returns.keys())]
+
+    @classmethod
     def add_punt_return_plays(cls, start_year: int = None,
                               end_year: int = None) -> None:
         """
