@@ -18,6 +18,7 @@ api.add_resource(ConferenceRPIRoute, f'{API_BASE}/conference_rpi_ratings')
 api.add_resource(SRSRoute, f'{API_BASE}/srs_ratings')
 api.add_resource(ConferenceSRSRoute, f'{API_BASE}/conference_srs_ratings')
 
+api.add_resource(FieldGoalsRoute, f'{API_BASE}/field_goals/<string:side_of_ball>')
 api.add_resource(
     FourthDownsRoute, f'{API_BASE}/fourth_down_conversions/<string:side_of_ball>')
 api.add_resource(PassingRoute, f'{API_BASE}/passing/<string:side_of_ball>')
