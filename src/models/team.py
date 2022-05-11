@@ -17,6 +17,7 @@ class Team(db.Model):
     fourth_downs = db.relationship('FourthDowns', backref='team', lazy=True)
     passing = db.relationship('Passing', backref='team', lazy=True)
     passing_plays = db.relationship('PassingPlays', backref='team', lazy=True)
+    pats = db.relationship('PATs', backref='team', lazy=True)
     penalties = db.relationship('Penalties', backref='team', lazy=True)
     punt_return_plays = db.relationship(
         'PuntReturnPlays', backref='team', lazy=True)
