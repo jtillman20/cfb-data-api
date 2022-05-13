@@ -1,4 +1,3 @@
-from inspect import stack
 from typing import Union
 
 from flask_restful import Resource
@@ -106,33 +105,24 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
     Returns:
         tuple: Secondary sort attribute and sort order
     """
-    class_name = stack()[1][0].f_locals['self'].__class__.__name__
+    if attr in ['punts', 'punts_per_game', 'yards', 'yards_per_game', 'returns',
+                'returns_per_game']:
+        secondary_attr = 'games'
 
-    if class_name == 'Punting':
-        if attr in ['punts', 'punts_per_game', 'yards', 'yards_per_game']:
-            secondary_attr = 'games'
+    elif attr in ['yards_per_punt', 'plays_per_punt']:
+        secondary_attr = 'punts'
 
-        elif attr in ['yards_per_punt', 'plays_per_punt']:
-            secondary_attr = 'punts'
+    elif attr in ['yards_per_return', 'td_pct']:
+        return ['returns', attr], [True, side_of_ball == 'offense']
 
-        else:
-            secondary_attr = attr
+    elif attr == 'tds':
+        secondary_attr = 'td_pct'
+
+    elif attr == 'return_pct':
+        secondary_attr = 'punts'
 
     else:
-        if attr in ['returns', 'returns_per_game', 'yards', 'yards_per_game']:
-            secondary_attr = 'games'
-
-        elif attr in ['yards_per_return', 'td_pct']:
-            return ['returns', attr], [True, side_of_ball == 'offense']
-
-        elif attr == 'tds':
-            secondary_attr = 'td_pct'
-
-        elif attr == 'return_pct':
-            secondary_attr = 'punts'
-
-        else:
-            secondary_attr = attr
+        secondary_attr = attr
 
     if attr not in ASC_SORT_ATTRS:
         reverse = side_of_ball == 'offense'

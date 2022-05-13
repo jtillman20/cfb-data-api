@@ -148,43 +148,39 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
     """
     class_name = stack()[1][0].f_locals['self'].__class__.__name__
 
-    if class_name in ['FourthDownsRoute', 'ThirdDownsRoute']:
-        if attr in ['conversion_pct', 'play_pct']:
-            secondary_attr = 'attempts'
+    if attr in ['conversion_pct', 'play_pct', 'score_pct', 'td_pct',
+                'field_goal_pct', 'points_per_attempt']:
+        secondary_attr = 'attempts'
 
-        elif attr in ['conversions', 'attempts']:
-            secondary_attr = 'conversion_pct'
-
+    elif attr == 'attempts':
+        if class_name == 'RedZone':
+            secondary_attr = 'scores'
         else:
-            secondary_attr = attr
+            secondary_attr = 'conversions'
 
-        if attr not in ASC_SORT_ATTRS:
-            reverse = side_of_ball == 'offense'
-        else:
-            reverse = side_of_ball == 'defense'
+    elif attr in 'conversions':
+        secondary_attr = 'conversion_pct'
 
-        if secondary_attr not in ASC_SORT_ATTRS:
-            secondary_reverse = side_of_ball == 'offense'
-        else:
-            secondary_reverse = side_of_ball == 'defense'
+    elif attr == 'scores':
+        secondary_attr = 'score_pct'
 
-        return [secondary_attr, attr], [secondary_reverse, reverse]
+    elif attr == 'tds':
+        secondary_attr = 'td_pct'
+
+    elif attr == 'field_goals':
+        secondary_attr = 'field_goal_pct'
 
     else:
-        if attr in ['score_pct', 'td_pct', 'field_goal_pct',
-                    'points_per_attempt']:
-            secondary_attr = 'attempts'
+        secondary_attr = attr
 
-        elif attr in ['attempts', 'scores']:
-            secondary_attr = 'score_pct'
+    if attr not in ASC_SORT_ATTRS:
+        reverse = side_of_ball == 'offense'
+    else:
+        reverse = side_of_ball == 'defense'
 
-        elif attr == 'tds':
-            secondary_attr = 'td_pct'
+    if secondary_attr not in ASC_SORT_ATTRS:
+        secondary_reverse = side_of_ball == 'offense'
+    else:
+        secondary_reverse = side_of_ball == 'defense'
 
-        elif attr == 'field_goals':
-            secondary_attr = 'field_goal_pct'
-
-        else:
-            secondary_attr = attr
-
-        return secondary_attr, side_of_ball == 'offense'
+    return [secondary_attr, attr], [secondary_reverse, reverse]
