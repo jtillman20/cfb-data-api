@@ -24,6 +24,7 @@ api.add_resource(
 api.add_resource(PassingRoute, f'{API_BASE}/passing/<string:side_of_ball>')
 api.add_resource(
     PassingPlaysRoute, f'{API_BASE}/passing_plays/<string:side_of_ball>')
+api.add_resource(PATsRoute, f'{API_BASE}/pats/<string:side_of_ball>')
 api.add_resource(PenaltiesRoute, f'{API_BASE}/penalties/<string:side_of_ball>')
 api.add_resource(PuntingRoute, f'{API_BASE}/punting/<string:side_of_ball>')
 api.add_resource(
