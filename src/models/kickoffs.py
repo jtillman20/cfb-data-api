@@ -1,4 +1,5 @@
 from operator import attrgetter
+from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -42,6 +43,50 @@ class Kickoffs(db.Model):
         if self.kickoffs:
             return self.onside / self.kickoffs * 100
         return 0.0
+
+    @classmethod
+    def get_kickoffs(cls, side_of_ball: str, start_year: int,
+                     end_year: int = None, team: str = None
+                        ) -> Union['Kickoffs', list['Kickoffs']]:
+        """
+        Get kickoffs or opponent kickoffs for qualifying teams for the
+        given years. If team is provided, only get kickoff data for
+        that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting kickoff data
+            end_year (int): Year to stop getting kickoff data
+            team (str): Team for which to get kickoff data
+
+        Returns:
+            Union[Kickoffs, list[Kickoffs]]: Kickoffs or opponent
+                kickoffs for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            kickoffs = query.filter_by(name=team).all()
+            return sum(kickoffs[1:], kickoffs[0])
+
+        kickoffs = {}
+        for team_name in qualifying_teams:
+            team_kickoffs = query.filter_by(name=team_name).all()
+
+            if team_kickoffs:
+                kickoffs[team_name] = sum(team_kickoffs[1:], team_kickoffs[0])
+
+        return [kickoffs[team] for team in sorted(kickoffs.keys())]
 
     @classmethod
     def add_kickoffs(cls, start_year: int = None, end_year: int = None) -> None:
