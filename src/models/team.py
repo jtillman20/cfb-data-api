@@ -15,6 +15,7 @@ class Team(db.Model):
     field_goals = db.relationship('FieldGoals', backref='team', lazy=True)
     first_downs = db.relationship('FirstDowns', backref='team', lazy=True)
     fourth_downs = db.relationship('FourthDowns', backref='team', lazy=True)
+    kickoffs = db.relationship('Kickoffs', backref='team', lazy=True)
     passing = db.relationship('Passing', backref='team', lazy=True)
     passing_plays = db.relationship('PassingPlays', backref='team', lazy=True)
     pats = db.relationship('PATs', backref='team', lazy=True)
