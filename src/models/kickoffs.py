@@ -178,11 +178,11 @@ class Kickoffs(db.Model):
             'kickoffs': self.kickoffs,
             'yards': self.yards,
             'yards_per_kickoff': round(self.yards_per_kickoff, 2),
-            'touchbacks': self.kickoffs,
+            'touchbacks': self.touchbacks,
             'touchback_pct': round(self.touchback_pct, 2),
-            'out_of_bounds': self.kickoffs,
+            'out_of_bounds': self.out_of_bounds,
             'out_of_bounds_pct': round(self.out_of_bounds_pct, 2),
-            'onside': self.kickoffs,
+            'onside': self.onside,
             'onside_pct': round(self.onside_pct, 2)
         }
 
