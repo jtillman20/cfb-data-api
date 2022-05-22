@@ -4,7 +4,7 @@ from .conversions import FourthDowns, RedZone, ThirdDowns
 from .first_downs import FirstDowns
 from .game import Game, GameStats
 from .kicking import FieldGoals, PATs
-from .kickoffs import Kickoffs
+from .kickoffs import Kickoffs, KickoffReturns
 from .passing import Passing, PassingPlays
 from .penalties import Penalties
 from .punting import Punting, PuntReturns, PuntReturnPlays
