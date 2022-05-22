@@ -3,7 +3,7 @@ from .conference import ConferenceRoute
 from .conversions import FourthDownsRoute, RedZoneRoute, ThirdDownsRoute
 from .first_downs import FirstDownsRoute
 from .kicking import FieldGoalsRoute, PATsRoute
-from .kickoffs import KickoffsRoute
+from .kickoffs import KickoffsRoute, KickoffReturnsRoute
 from .passing import PassingRoute, PassingPlaysRoute
 from .penalties import PenaltiesRoute
 from .punting import PuntingRoute, PuntReturnsRoute, PuntReturnPlaysRoute

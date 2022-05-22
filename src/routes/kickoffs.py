@@ -1,8 +1,9 @@
+from inspect import stack
 from typing import Union
 
 from flask_restful import Resource
 
-from models import Kickoffs
+from models import Kickoffs, KickoffReturns
 from utils import (
     check_side_of_ball,
     flask_response,
@@ -53,6 +54,47 @@ class KickoffsRoute(Resource):
         return rank(data=kickoffs, attr=sort_attr)
 
 
+class KickoffReturnsRoute(Resource):
+    @flask_response
+    def get(self, side_of_ball: str) -> Union[KickoffReturns,
+                                              list[KickoffReturns]]:
+        """
+        GET request to get kickoff returns or opponent kickoff returns
+        for the given years. If team is provided only get kickoff
+        return data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            Union[KickoffReturns, list[KickoffReturns]]: Kickoff return
+                data for all teams or only kickoff return data for one
+                team
+        """
+        check_side_of_ball(value=side_of_ball)
+
+        sort_attr = get_optional_param(
+            name='sort', default_value='yards_per_return')
+        attrs, reverses = secondary_sort(
+            attr=sort_attr, side_of_ball=side_of_ball)
+
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
+
+        returns = KickoffReturns.get_kickoff_returns(
+            side_of_ball=side_of_ball,
+            start_year=start_year,
+            end_year=end_year,
+            team=team
+        )
+
+        if isinstance(returns, Kickoffs):
+            return returns
+
+        returns = sort(data=returns, attrs=attrs, reverses=reverses)
+        return rank(data=returns, attr=sort_attr)
+
+
 def secondary_sort(attr: str, side_of_ball: str) -> tuple:
     """
     Determine the secondary sort attribute and order when the
@@ -65,12 +107,26 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
     Returns:
         tuple: Secondary sort attribute and sort order
     """
-    if attr in ['kickoffs', 'yards']:
+    class_name = stack()[1][0].f_locals['self'].__class__.__name__
+
+    if attr in ['yards_per_kickoff', 'touchback_pct', 'out_of_bounds_pct',
+                'onside_pct']:
+        secondary_attr = 'kickoffs'
+
+    elif attr in ['returns', 'returns_per_game', 'yards_per_game']:
+        secondary_attr = 'games'
+
+    elif attr in ['yards_per_return', 'td_pct']:
+        return ['returns', attr], [True, side_of_ball == 'offense']
+
+    elif attr == 'kickoffs':
         secondary_attr = 'yards_per_kickoff'
 
-    elif attr in ['yards_per_kickoff', 'touchback_pct', 'out_of_bounds_pct',
-                  'onside_pct']:
-        secondary_attr = 'kickoffs'
+    elif attr == 'yards':
+        if class_name == 'Kickoffs':
+            secondary_attr = 'kickoffs'
+        else:
+            secondary_attr = 'games'
 
     elif attr == 'touchbacks':
         secondary_attr = 'touchback_pct'
@@ -80,6 +136,12 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
 
     elif attr == 'onside':
         secondary_attr = 'onside_pct'
+
+    elif attr == 'tds':
+        secondary_attr = 'td_pct'
+
+    elif attr == 'return_pct':
+        secondary_attr = 'punts'
 
     else:
         secondary_attr = attr
