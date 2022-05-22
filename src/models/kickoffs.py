@@ -234,6 +234,74 @@ class KickoffReturns(db.Model):
             return self.returns / self.kickoffs * 100
         return 0.0
 
+    @classmethod
+    def add_kickoff_returns(cls, start_year: int = None,
+                            end_year: int = None) -> None:
+        """
+        Get kickoff return and opponent kickoff return stats for all
+        teams for the given years and add them to the database.
+
+        Args:
+            start_year (int): Year to start adding kickoff return stats
+            end_year (int): Year to stop adding kickoff return stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding kickoff return stats for {year}')
+            cls.add_kickoff_returns_for_one_year(year=year)
+
+    @classmethod
+    def add_kickoff_returns_for_one_year(cls, year: int) -> None:
+        """
+        Get kickoff return and opponent kickoff return stats for all teams
+        for one year and add them to the database.
+
+        Args:
+            year (int): Year to add kickoff return stats
+        """
+        scraper = CFBStatsScraper(year=year)
+
+        for side_of_ball in ['offense', 'defense']:
+            returns = []
+
+            html_content = scraper.get_html_data(
+                side_of_ball=side_of_ball, category='05')
+            kickoff_return_data = scraper.parse_html_data(
+                html_content=html_content)
+
+            for item in kickoff_return_data:
+                team = Team.query.filter_by(name=item[1]).first()
+                opposite_side_of_ball = 'defense' \
+                    if side_of_ball == 'offense' else 'offense'
+                kickoffs = Kickoffs.get_kickoffs(
+                    side_of_ball=opposite_side_of_ball,
+                    start_year=year,
+                    team=team.name
+                )
+
+                returns.append(cls(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                    games=item[2],
+                    returns=item[3],
+                    yards=item[4],
+                    tds=item[6],
+                    kickoffs=kickoffs.kickoffs
+                ))
+
+            for team_returns in sorted(returns, key=attrgetter('team_id')):
+                db.session.add(team_returns)
+
+        db.session.commit()
+
     def __add__(self, other: 'KickoffReturns') -> 'KickoffReturns':
         """
         Add two KickoffReturns objects to combine multiple years of data.
