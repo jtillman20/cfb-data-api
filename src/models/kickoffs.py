@@ -450,6 +450,54 @@ class KickoffReturnPlays(db.Model):
         return 0.0
 
     @classmethod
+    def get_kickoff_return_plays(cls, side_of_ball: str, start_year: int,
+                                 end_year: int = None, team: str = None
+                                 ) -> Union['KickoffReturnPlays',
+                                            list['KickoffReturnPlays']]:
+        """
+        Get kickoff return plays or opponent kickoff return plays for
+        qualifying teams for the given years. If team is provided, only
+        get kickoff return play data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+            start_year (int): Year to start getting kickoff return play
+                data
+            end_year (int): Year to stop getting kickoff return play
+                data
+            team (str): Team for which to get kickoff return play data
+
+        Returns:
+            Union[KickoffReturnPlays, list[KickoffReturnPlays]]: Kickoff
+                return plays or opponent kickoff return plays for all
+                teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.side_of_ball == side_of_ball,
+            cls.year >= start_year,
+            cls.year <= end_year
+        )
+
+        if team is not None:
+            returns = query.filter_by(name=team).all()
+            return sum(returns[1:], returns[0])
+
+        returns = {}
+        for team_name in qualifying_teams:
+            team_returns = query.filter_by(name=team_name).all()
+
+            if team_returns:
+                returns[team_name] = sum(team_returns[1:], team_returns[0])
+
+        return [returns[team] for team in sorted(returns.keys())]
+
+    @classmethod
     def add_kickoff_return_plays(cls, start_year: int = None,
                                  end_year: int = None) -> None:
         """
