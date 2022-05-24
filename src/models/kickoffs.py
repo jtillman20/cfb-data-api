@@ -389,3 +389,114 @@ class KickoffReturns(db.Model):
             data['rank'] = self.rank
 
         return data
+
+
+class KickoffReturnPlays(db.Model):
+    __tablename__ = 'kickoff_return_plays'
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    side_of_ball = db.Column(db.String(10), nullable=False)
+    games = db.Column(db.Integer, nullable=False)
+    thirty = db.Column(db.Integer, nullable=False)
+    forty = db.Column(db.Integer, nullable=False)
+    fifty = db.Column(db.Integer, nullable=False)
+    sixty = db.Column(db.Integer, nullable=False)
+    seventy = db.Column(db.Integer, nullable=False)
+    eighty = db.Column(db.Integer, nullable=False)
+    ninety = db.Column(db.Integer, nullable=False)
+    returns = db.Column(db.Integer, nullable=False)
+
+    @property
+    def thirty_pct(self) -> float:
+        if self.returns:
+            return self.thirty / self.returns * 100
+        return 0.0
+
+    @property
+    def forty_pct(self) -> float:
+        if self.returns:
+            return self.forty / self.returns * 100
+        return 0.0
+
+    @property
+    def fifty_pct(self) -> float:
+        if self.returns:
+            return self.fifty / self.returns * 100
+        return 0.0
+
+    @property
+    def sixty_pct(self) -> float:
+        if self.returns:
+            return self.sixty / self.returns * 100
+        return 0.0
+
+    @property
+    def seventy_pct(self) -> float:
+        if self.returns:
+            return self.sixty / self.returns * 100
+        return 0.0
+
+    @property
+    def eighty_pct(self) -> float:
+        if self.returns:
+            return self.eighty / self.returns * 100
+        return 0.0
+
+    @property
+    def ninety_pct(self) -> float:
+        if self.returns:
+            return self.ninety / self.returns * 100
+        return 0.0
+
+    def __add__(self, other: 'KickoffReturnPlays') -> 'KickoffReturnPlays':
+        """
+        Add two KickoffReturnPlays objects to combine multiple years of
+        data.
+
+        Args:
+            other (KickoffReturnPlays): Data about a team's kickoff
+                return plays or opponent kickoff return plays
+
+        Returns:
+            KickoffReturnPlays: self
+        """
+        self.games += other.games
+        self.thirty += other.thirty
+        self.forty += other.forty
+        self.fifty += other.fifty
+        self.sixty += other.sixty
+        self.seventy += other.seventy
+        self.eighty += other.eighty
+        self.ninety += other.ninety
+        self.returns += other.returns
+
+        return self
+
+    def __getstate__(self) -> dict:
+        data = {
+            'id': self.id,
+            'team': self.team.serialize(year=self.year),
+            'year': self.year,
+            'side_of_ball': self.side_of_ball,
+            'games': self.games,
+            'thirty': self.thirty,
+            'thirty_pct': round(self.thirty_pct, 2),
+            'forty': self.forty,
+            'forty_pct': round(self.forty_pct, 2),
+            'fifty': self.fifty,
+            'fifty_pct': round(self.fifty_pct, 2),
+            'sixty': self.sixty,
+            'sixty_pct': round(self.sixty_pct, 2),
+            'seventy': self.seventy,
+            'seventy_pct': round(self.seventy_pct, 2),
+            'eighty': self.eighty,
+            'eighty_pct': round(self.eighty_pct, 2),
+            'ninety': self.ninety,
+            'ninety_pct': round(self.ninety_pct, 2),
+        }
+
+        if hasattr(self, 'rank'):
+            data['rank'] = self.rank
+
+        return data
