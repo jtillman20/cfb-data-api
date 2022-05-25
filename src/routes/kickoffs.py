@@ -3,7 +3,7 @@ from typing import Union
 
 from flask_restful import Resource
 
-from models import Kickoffs, KickoffReturns
+from models import Kickoffs, KickoffReturns, KickoffReturnPlays
 from utils import (
     check_side_of_ball,
     flask_response,
@@ -160,3 +160,43 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
         secondary_reverse = True
 
     return [secondary_attr, attr], [secondary_reverse, reverse]
+
+
+class KickoffReturnPlaysRoute(Resource):
+    @flask_response
+    def get(self, side_of_ball: str) -> Union[KickoffReturnPlays,
+                                              list[KickoffReturnPlays]]:
+        """
+        GET request to get kickoff return plays or opponent kickoff
+        return plays for the given years. If team is provided only get
+        kickoff return play data for that team.
+
+        Args:
+            side_of_ball (str): Offense or defense
+
+        Returns:
+            Union[KickoffReturnPlays, list[KickoffReturnPlays]]: Kickoff
+                return play data for all teams or only kickoff return
+                play data for one team
+        """
+        check_side_of_ball(value=side_of_ball)
+
+        sort_attr = get_optional_param(name='sort', default_value='thirty_pct')
+        start_year, end_year = get_multiple_year_params()
+        team = get_optional_param(name='team')
+
+        return_plays = KickoffReturnPlays.get_kickoff_return_plays(
+            side_of_ball=side_of_ball,
+            start_year=start_year,
+            end_year=end_year,
+            team=team
+        )
+
+        if isinstance(return_plays, KickoffReturnPlays):
+            return return_plays
+
+        attrs = ['returns', sort_attr]
+        reverses = [True, side_of_ball == 'offense']
+
+        return_plays = sort(data=return_plays, attrs=attrs, reverses=reverses)
+        return rank(data=return_plays, attr=sort_attr)
