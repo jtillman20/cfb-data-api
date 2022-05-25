@@ -24,6 +24,8 @@ api.add_resource(
 api.add_resource(KickoffsRoute, f'{API_BASE}/kickoffs/<string:side_of_ball>')
 api.add_resource(
     KickoffReturnsRoute, f'{API_BASE}/kickoff_returns/<string:side_of_ball>')
+api.add_resource(
+    KickoffReturnPlaysRoute, f'{API_BASE}/kickoff_return_plays/<string:side_of_ball>')
 api.add_resource(PassingRoute, f'{API_BASE}/passing/<string:side_of_ball>')
 api.add_resource(
     PassingPlaysRoute, f'{API_BASE}/passing_plays/<string:side_of_ball>')
