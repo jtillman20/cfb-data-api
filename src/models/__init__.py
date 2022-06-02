@@ -3,6 +3,7 @@ from .conference import Conference, ConferenceMembership
 from .conversions import FourthDowns, RedZone, ThirdDowns
 from .first_downs import FirstDowns
 from .game import Game, GameStats
+from .interceptions import Interceptions
 from .kicking import FieldGoals, PATs
 from .kickoffs import Kickoffs, KickoffReturns, KickoffReturnPlays
 from .passing import Passing, PassingPlays
