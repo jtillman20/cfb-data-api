@@ -1,4 +1,5 @@
 from operator import attrgetter
+from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -33,6 +34,47 @@ class Interceptions(db.Model):
         if self.ints:
             return self.tds / self.ints * 100
         return 0.0
+
+    @classmethod
+    def get_interceptions(cls, start_year: int, end_year: int = None,
+                          team: str = None) -> Union['Interceptions',
+                                                     list['Interceptions']]:
+        """
+        Get interceptions or opponent interceptions for qualifying
+        teams for the given years. If team is provided, only get
+        interception data for that team.
+
+        Args:
+            start_year (int): Year to start getting interception data
+            end_year (int): Year to stop getting interception data
+            team (str): Team for which to get interception data
+
+        Returns:
+            Union[Interceptions, list[Interceptions]]: Interceptions or
+                opponent interceptions for all teams or only for one
+                team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            ints = query.filter_by(name=team).all()
+            return sum(ints[1:], ints[0])
+
+        ints = {}
+        for team_name in qualifying_teams:
+            team_ints = query.filter_by(name=team_name).all()
+
+            if team_ints:
+                ints[team_name] = sum(team_ints[1:], team_ints[0])
+
+        return [ints[team] for team in sorted(ints.keys())]
 
     @classmethod
     def add_interceptions(cls, start_year: int = None,
