@@ -21,6 +21,7 @@ api.add_resource(ConferenceSRSRoute, f'{API_BASE}/conference_srs_ratings')
 api.add_resource(FieldGoalsRoute, f'{API_BASE}/field_goals/<string:side_of_ball>')
 api.add_resource(
     FourthDownsRoute, f'{API_BASE}/fourth_down_conversions/<string:side_of_ball>')
+api.add_resource(InterceptionsRoute, f'{API_BASE}/interceptions')
 api.add_resource(KickoffsRoute, f'{API_BASE}/kickoffs/<string:side_of_ball>')
 api.add_resource(
     KickoffReturnsRoute, f'{API_BASE}/kickoff_returns/<string:side_of_ball>')
