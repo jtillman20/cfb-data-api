@@ -157,7 +157,6 @@ class Interceptions(db.Model):
             'id': self.id,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
-            'side_of_ball': self.side_of_ball,
             'games': self.games,
             'ints': self.ints,
             'ints_per_game': round(self.ints_per_game, 2),
