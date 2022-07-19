@@ -6,6 +6,7 @@ from .game import Game, GameStats
 from .interceptions import Interceptions
 from .kicking import FieldGoals, PATs
 from .kickoffs import Kickoffs, KickoffReturns, KickoffReturnPlays
+from .passes_defended import PassesDefended
 from .passing import Passing, PassingPlays
 from .penalties import Penalties
 from .punting import Punting, PuntReturns, PuntReturnPlays
