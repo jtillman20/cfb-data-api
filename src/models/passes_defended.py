@@ -1,4 +1,10 @@
+from operator import attrgetter
+
 from app import db
+from scraper import CFBStatsScraper
+from .game import Game
+from .passing import Passing
+from .team import Team
 
 
 class PassesDefended(db.Model):
@@ -39,6 +45,71 @@ class PassesDefended(db.Model):
         if self.incompletions:
             return self.passes_defended / self.incompletions * 100
         return 0.0
+
+    @classmethod
+    def add_passes_defended(cls, start_year: int = None,
+                            end_year: int = None) -> None:
+        """
+        Get passes defended for all teams for the given years and add
+        them to the database.
+
+        Args:
+            start_year (int): Year to start adding passes defended stats
+            end_year (int): Year to stop adding passes defended stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            end_year = max([year.year for year in query])
+            years = range(2010, end_year + 1)
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding passes defended stats for {year}')
+            cls.add_passes_defended_for_one_year(year=year)
+
+    @classmethod
+    def add_passes_defended_for_one_year(cls, year: int) -> None:
+        """
+        Get passes defended for all teams for one year and add them to
+        the database.
+
+        Args:
+            year (int): Year to add passes defended stats
+        """
+        scraper = CFBStatsScraper(year=year)
+        passes_defended = []
+
+        html_content = scraper.get_html_data(
+            side_of_ball='offense', category='23')
+        passes_defended_data = scraper.parse_html_data(
+            html_content=html_content)
+
+        for item in passes_defended_data:
+            team = Team.query.filter_by(name=item[1]).first()
+            passing = Passing.get_passing(
+                side_of_ball='defense',
+                start_year=year,
+                team=team.name
+            )
+
+            passes_defended.append(cls(
+                team_id=team.id,
+                year=year,
+                games=item[2],
+                ints=item[3],
+                passes_broken_up=item[4],
+                attempts=passing.attempts,
+                incompletions=passing.attempts - passing.completions
+            ))
+
+        for team_passes_defended in sorted(
+                passes_defended, key=attrgetter('team_id')):
+            db.session.add(team_passes_defended)
+
+        db.session.commit()
 
     def __add__(self, other: 'PassesDefended') -> 'PassesDefended':
         """
