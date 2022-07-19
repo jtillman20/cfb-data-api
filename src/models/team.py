@@ -21,6 +21,8 @@ class Team(db.Model):
     kickoff_returns = db.relationship(
         'KickoffReturns', backref='team', lazy=True)
     kickoffs = db.relationship('Kickoffs', backref='team', lazy=True)
+    passes_defended = db.relationship(
+        'PassesDefended', backref='team', lazy=True)
     passing = db.relationship('Passing', backref='team', lazy=True)
     passing_plays = db.relationship('PassingPlays', backref='team', lazy=True)
     pats = db.relationship('PATs', backref='team', lazy=True)
