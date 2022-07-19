@@ -1,4 +1,5 @@
 from operator import attrgetter
+from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -45,6 +46,46 @@ class PassesDefended(db.Model):
         if self.incompletions:
             return self.passes_defended / self.incompletions * 100
         return 0.0
+
+    @classmethod
+    def get_passes_defended(cls, start_year: int, end_year: int = None,
+                            team: str = None) -> Union['PassesDefended',
+                                                       list['PassesDefended']]:
+        """
+        Get passes defended for qualifying teams for the given years. If
+        team is provided, only get passes defended data for that team.
+
+        Args:
+            start_year (int): Year to start getting passes defended data
+            end_year (int): Year to stop getting passes defended data
+            team (str): Team for which to get passes defended data
+
+        Returns:
+            Union[PassesDefended, list[PassesDefended]]: Passes
+                defended for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            passes_defended = query.filter_by(name=team).all()
+            return sum(passes_defended[1:], passes_defended[0])
+
+        passes_defended = {}
+        for team_name in qualifying_teams:
+            team_passes_defended = query.filter_by(name=team_name).all()
+
+            if team_passes_defended:
+                passes_defended[team_name] = sum(
+                    team_passes_defended[1:], team_passes_defended[0])
+
+        return [passes_defended[team] for team in sorted(passes_defended.keys())]
 
     @classmethod
     def add_passes_defended(cls, start_year: int = None,
