@@ -5,6 +5,7 @@ from .first_downs import FirstDownsRoute
 from .interceptions import InterceptionsRoute
 from .kicking import FieldGoalsRoute, PATsRoute
 from .kickoffs import KickoffsRoute, KickoffReturnsRoute, KickoffReturnPlaysRoute
+from .passes_defended import PassesDefendedRoute
 from .passing import PassingRoute, PassingPlaysRoute
 from .penalties import PenaltiesRoute
 from .punting import PuntingRoute, PuntReturnsRoute, PuntReturnPlaysRoute
