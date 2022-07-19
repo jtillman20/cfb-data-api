@@ -462,9 +462,9 @@ class PuntReturnPlays(db.Model):
                               ) -> Union['PuntReturnPlays',
                                          list['PuntReturnPlays']]:
         """
-        Get punt returns or opponent punt returns for qualifying teams
-        for the given years. If team is provided, only get punting  data
-        for that team.
+        Get punt return plays or opponent punt return plays for qualifying
+        teams for the given years. If team is provided, only get punting
+        data for that team.
 
         Args:
             side_of_ball (str): Offense or defense
@@ -473,9 +473,9 @@ class PuntReturnPlays(db.Model):
             team (str): Team for which to get punt return data
 
         Returns:
-            Union[PuntReturns, list[PuntReturns]]: Punt returns or
-                opponent punt returns for all teams or only for one
-                team
+            Union[PuntReturnPlays, list[PuntReturnPlays]]: Punt return
+                plays or opponent punt return plays for all teams or only
+                for one team
         """
         if end_year is None:
             end_year = start_year

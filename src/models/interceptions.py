@@ -40,9 +40,8 @@ class Interceptions(db.Model):
                           team: str = None) -> Union['Interceptions',
                                                      list['Interceptions']]:
         """
-        Get interceptions or opponent interceptions for qualifying
-        teams for the given years. If team is provided, only get
-        interception data for that team.
+        Get interceptions for qualifying teams for the given years. If
+        team is provided, only get interception data for that team.
 
         Args:
             start_year (int): Year to start getting interception data
@@ -50,9 +49,8 @@ class Interceptions(db.Model):
             team (str): Team for which to get interception data
 
         Returns:
-            Union[Interceptions, list[Interceptions]]: Interceptions or
-                opponent interceptions for all teams or only for one
-                team
+            Union[Interceptions, list[Interceptions]]: Interceptions
+                for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -80,8 +78,8 @@ class Interceptions(db.Model):
     def add_interceptions(cls, start_year: int = None,
                           end_year: int = None) -> None:
         """
-        Get interceptions and opponent interceptionss for all teams for
-        the given years and add them to the database.
+        Get interceptions for all teams for the given years and add
+        them to the database.
 
         Args:
             start_year (int): Year to start adding interception stats
@@ -103,8 +101,8 @@ class Interceptions(db.Model):
     @classmethod
     def add_interceptions_for_one_year(cls, year: int) -> None:
         """
-        Get interceptions and opponent interceptions for all teams for
-        one year and add them to the database.
+        Get interceptions for all teams for one year and add them to
+        the database.
 
         Args:
             year (int): Year to add interception stats

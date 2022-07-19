@@ -16,12 +16,12 @@ class InterceptionsRoute(Resource):
     @flask_response
     def get(self) -> Union[Interceptions, list[Interceptions]]:
         """
-        GET request to get punting or opponent punting for the given
-        years. If team is provided only get punting data for that team.
+        GET request to get interceptions for the given years. If team is
+        provided only get interception data for that team.
 
         Returns:
-            Union[Punting, list[Punting]]: Punting data for all teams
-                or only punting data for one team
+            Union[Interceptions, list[Interceptions]]: Interception data
+                for all teams or only interception data for one team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='ints')

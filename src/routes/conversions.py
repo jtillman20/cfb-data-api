@@ -28,8 +28,8 @@ class FourthDownsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[FourthDowns, list[FourthDowns]]: Red zone down data for
-                all teams or only red zone data for one team
+            Union[FourthDowns, list[FourthDowns]]: Fourth down data for
+                all teams or only fourth down data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
