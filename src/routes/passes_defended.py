@@ -24,7 +24,7 @@ class PassesDefendedRoute(Resource):
                 or only punting data for one team
         """
         sort_attr = get_optional_param(
-            name='sort', default_value='ints')
+            name='sort', default_value='passes_defended_per_game')
         secondary_attr, secondary_reverse = secondary_sort(attr=sort_attr)
 
         start_year, end_year = get_multiple_year_params()
