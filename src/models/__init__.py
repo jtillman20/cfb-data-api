@@ -2,6 +2,7 @@ from .ap_poll import APPoll, APPollRanking
 from .conference import Conference, ConferenceMembership
 from .conversions import FourthDowns, RedZone, ThirdDowns
 from .first_downs import FirstDowns
+from .fumbles import Fumbles
 from .game import Game, GameStats
 from .interceptions import Interceptions
 from .kicking import FieldGoals, PATs
