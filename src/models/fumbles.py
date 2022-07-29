@@ -1,3 +1,5 @@
+from typing import Union
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -60,6 +62,45 @@ class Fumbles(db.Model):
         if self.fumbles:
             return self.fumbles_forced / self.opponent_fumbles * 100
         return 0.0
+
+    @classmethod
+    def get_fumbles(cls, start_year: int, end_year: int = None,
+                    team: str = None) -> Union['Fumbles', list['Fumbles']]:
+        """
+        Get fumbles and opponent fumbles for qualifying teams for the
+        given years. If team is provided, only get fumble data for that
+        team.
+
+        Args:
+            start_year (int): Year to start getting fumble data
+            end_year (int): Year to stop getting fumble data
+            team (str): Team for which to get fumble data
+
+        Returns:
+            Union[Fumbles, list[Fumbles]]: Fumbles and opponent fumbles
+                for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            passes_defended = query.filter_by(name=team).all()
+            return sum(passes_defended[1:], passes_defended[0])
+
+        fumbles = {}
+        for team_name in qualifying_teams:
+            team_fumbles = query.filter_by(name=team_name).all()
+
+            if team_fumbles:
+                fumbles[team_name] = sum(team_fumbles[1:], team_fumbles[0])
+
+        return [fumbles[team] for team in sorted(fumbles.keys())]
 
     @classmethod
     def add_fumbles(cls, start_year: int = None, end_year: int = None) -> None:
