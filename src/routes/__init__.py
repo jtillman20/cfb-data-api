@@ -2,6 +2,7 @@ from .ap_poll import APPollRoute, APPollRankingRoute
 from .conference import ConferenceRoute
 from .conversions import FourthDownsRoute, RedZoneRoute, ThirdDownsRoute
 from .first_downs import FirstDownsRoute
+from .fumbles import FumblesRoute
 from .interceptions import InterceptionsRoute
 from .kicking import FieldGoalsRoute, PATsRoute
 from .kickoffs import KickoffsRoute, KickoffReturnsRoute, KickoffReturnPlaysRoute
