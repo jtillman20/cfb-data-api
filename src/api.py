@@ -52,5 +52,6 @@ api.add_resource(
     TacklesForLossRoute, f'{API_BASE}/tackles_for_loss/<string:side_of_ball>')
 api.add_resource(
     ThirdDownsRoute, f'{API_BASE}/third_down_conversions/<string:side_of_ball>')
+api.add_resource(TimeOfPossessionRoute, f'{API_BASE}/time_of_possession')
 api.add_resource(TotalRoute, f'{API_BASE}/total/<string:side_of_ball>')
 api.add_resource(TurnoversRoute, f'{API_BASE}/turnovers')
