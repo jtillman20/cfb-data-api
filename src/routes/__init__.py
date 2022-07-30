@@ -18,5 +18,6 @@ from .scoring import ScoringRoute
 from .srs import ConferenceSRSRoute, SRSRoute
 from .tackles_for_loss import TacklesForLossRoute
 from .team import TeamRoute
+from .time_of_possession import TimeOfPossessionRoute
 from .total import TotalRoute, ScrimmagePlaysRoute
 from .turnovers import TurnoversRoute
