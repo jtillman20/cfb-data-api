@@ -118,7 +118,7 @@ class Game(db.Model):
         return games
 
     @classmethod
-    def add_games(cls, start_year: int, end_year: int) -> None:
+    def add_games(cls, start_year: int, end_year: int = None) -> None:
         """
         Get all FBS games for the given years and add them to the
         database.
@@ -128,6 +128,9 @@ class Game(db.Model):
             end_year (int): Year to stop adding games
         """
         scraper = SportsReferenceScraper()
+
+        if end_year is None:
+            end_year = start_year
 
         for year in range(start_year, end_year + 1):
             print(f'Adding games for {year}')
@@ -231,7 +234,7 @@ class GameStats(db.Model):
         return self.away_fumbles + self.away_ints
 
     @classmethod
-    def add_game_stats(cls, start_year: int, end_year: int) -> None:
+    def add_game_stats(cls, start_year: int, end_year: int = None) -> None:
         """
         Get stats for all FBS games for the given years and add them
         to the database.
@@ -242,6 +245,9 @@ class GameStats(db.Model):
         """
         game_stats = {}
         scraper = SportsReferenceScraper()
+
+        if end_year is None:
+            end_year = start_year
 
         for year in range(start_year, end_year + 1):
             print(f'Adding game stats for {year}')
