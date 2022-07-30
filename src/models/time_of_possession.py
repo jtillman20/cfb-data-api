@@ -1,6 +1,11 @@
+from operator import attrgetter
 from typing import Union
 
 from app import db
+from scraper import CFBStatsScraper
+from .game import Game
+from .team import Team
+from .total import Total
 
 
 class TimeOfPossession(db.Model):
@@ -23,6 +28,73 @@ class TimeOfPossession(db.Model):
         if self.plays:
             return self.time_of_possession / self.plays
         return 0.0
+
+    @classmethod
+    def add_time_of_possession(cls, start_year: int = None,
+                               end_year: int = None) -> None:
+        """
+        Get time of possession for all teams for the given years and add
+        them to the database.
+
+        Args:
+            start_year (int): Year to start adding time of possession
+                stats
+            end_year (int): Year to stop adding time of possession
+                stats
+        """
+        if start_year is None:
+            query = Game.query.with_entities(Game.year).distinct()
+            end_year = max([year.year for year in query])
+            years = range(2010, end_year + 1)
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding time of possession stats for {year}')
+            cls.add_time_of_possession_for_one_year(year=year)
+
+    @classmethod
+    def add_time_of_possession_for_one_year(cls, year: int) -> None:
+        """
+        Get time of possession for all teams for one year and add them
+        to the database.
+
+        Args:
+            year (int): Year to add time of possession stats
+        """
+        scraper = CFBStatsScraper(year=year)
+        time_of_possession = []
+
+        html_content = scraper.get_html_data(
+            side_of_ball='offense', category='15')
+        time_of_possession_data = scraper.parse_html_data(
+            html_content=html_content)
+
+        for item in time_of_possession_data:
+            team = Team.query.filter_by(name=item[1]).first()
+            total = Total.get_total(
+                side_of_ball='offense',
+                start_year=year,
+                team=team.name
+            )
+
+            time = item[3].split(':')
+
+            time_of_possession.append(cls(
+                team_id=team.id,
+                year=year,
+                games=item[2],
+                time_of_possession=int(time[0]) * 60 + int(time[1]),
+                plays=total.plays
+            ))
+
+        for team_time_of_possession in sorted(
+                time_of_possession, key=attrgetter('team_id')):
+            db.session.add(team_time_of_possession)
+
+        db.session.commit()
 
     @classmethod
     def format_time(cls, time: Union[int, float]) -> str:
