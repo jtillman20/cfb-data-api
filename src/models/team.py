@@ -45,6 +45,8 @@ class Team(db.Model):
     tackles_for_loss = db.relationship(
         'TacklesForLoss', backref='team', lazy=True)
     third_downs = db.relationship('ThirdDowns', backref='team', lazy=True)
+    time_of_possession = db.relationship(
+        'TimeOfPossession', backref='team', lazy=True)
     total = db.relationship('Total', backref='team', lazy=True)
     turnovers = db.relationship('Turnovers', backref='team', lazy=True)
 
