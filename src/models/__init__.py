@@ -19,5 +19,6 @@ from .scoring import Scoring
 from .srs import ConferenceSRS, SRS
 from .tackles_for_loss import TacklesForLoss
 from .team import Team
+from .time_of_possession import TimeOfPossession
 from .total import Total, ScrimmagePlays
 from .turnovers import Turnovers
