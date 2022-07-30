@@ -190,13 +190,13 @@ class Scoring(db.Model):
                     opposite_side_of_ball = 'defense' \
                         if side_of_ball == 'offense' else 'offense'
 
-                    opponent_defense = cls.query.filter_by(
+                    opponent_scoring = cls.query.filter_by(
                         year=year, side_of_ball=opposite_side_of_ball).join(
                         Team).filter_by(name=opponent_name).first()
 
-                    opponent_points = opponent_defense.points - points
+                    opponent_points = opponent_scoring.points - points
                     team_scoring.opponents_points += opponent_points
-                    opponent_games = opponent_defense.games
+                    opponent_games = opponent_scoring.games
                     team_scoring.opponents_games += opponent_games - 1
 
         db.session.commit()

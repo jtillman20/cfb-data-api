@@ -562,9 +562,9 @@ class KickoffReturnPlays(db.Model):
                     returns=returns.returns
                 ))
 
-            for team_punt_return_plays in sorted(
+            for team_kickoff_return_plays in sorted(
                     kickoff_return_plays, key=attrgetter('team_id')):
-                db.session.add(team_punt_return_plays)
+                db.session.add(team_kickoff_return_plays)
 
         db.session.commit()
 
