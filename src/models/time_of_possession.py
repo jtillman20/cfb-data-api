@@ -30,6 +30,51 @@ class TimeOfPossession(db.Model):
         return 0.0
 
     @classmethod
+    def get_time_of_possession(cls, start_year: int, end_year: int = None,
+                               team: str = None
+                               ) -> Union['TimeOfPossession',
+                                          list['TimeOfPossession']]:
+        """
+        Get time of possession for qualifying teams for the given years.
+        If team is provided, only get time of possession data for that
+        team.
+
+        Args:
+            start_year (int): Year to start getting time of possession
+                data
+            end_year (int): Year to stop getting time of possession
+                data
+            team (str): Team for which to get time of possession data
+
+        Returns:
+            Union[TimeOfPossession, list[TimeOfPossession]]: Time of
+                possession for all teams or only for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        qualifying_teams = Team.get_qualifying_teams(
+            start_year=start_year, end_year=end_year)
+
+        query = cls.query.join(Team).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if team is not None:
+            time_of_possession = query.filter_by(name=team).all()
+            return sum(time_of_possession[1:], time_of_possession[0])
+
+        time_of_possession = {}
+        for team_name in qualifying_teams:
+            team_time_of_possession = query.filter_by(name=team_name).all()
+
+            if team_time_of_possession:
+                time_of_possession[team_name] = sum(
+                    team_time_of_possession[1:], team_time_of_possession[0])
+
+        return [time_of_possession[team] for team in
+                sorted(time_of_possession.keys())]
+
+    @classmethod
     def add_time_of_possession(cls, start_year: int = None,
                                end_year: int = None) -> None:
         """
