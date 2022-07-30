@@ -16,12 +16,13 @@ class PassesDefendedRoute(Resource):
     @flask_response
     def get(self) -> Union[PassesDefended, list[PassesDefended]]:
         """
-        GET request to get punting or opponent punting for the given
-        years. If team is provided only get punting data for that team.
+        GET request to get passes defended for the given years. If team
+        is provided only get passed defended data for that team.
 
         Returns:
-            Union[Punting, list[Punting]]: Punting data for all teams
-                or only punting data for one team
+            Union[PassesDefended, list[PassesDefended]]: Passes defended
+                data for all teams or only passes defended data for one
+                team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='passes_defended_per_game')
