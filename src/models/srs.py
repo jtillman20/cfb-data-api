@@ -289,10 +289,11 @@ class SRS(db.Model):
 class ConferenceSRS(db.Model):
     __tablename__ = 'conference_srs'
     id = db.Column(db.Integer, primary_key=True)
-    conference_id = db.Column(db.Integer, db.ForeignKey('conference.id'))
+    conference_id = db.Column(db.Integer, db.ForeignKey('conference.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     scoring_margin = db.Column(db.Integer, nullable=False)
     opponent_rating = db.Column(db.Integer, nullable=False)
+    games = db.Column(db.Integer, nullable=True)
     wins = db.Column(db.Integer, nullable=True)
     losses = db.Column(db.Integer, nullable=True)
     ties = db.Column(db.Integer, nullable=True)
@@ -312,10 +313,6 @@ class ConferenceSRS(db.Model):
     @property
     def srs(self) -> float:
         return self.avg_scoring_margin + self.sos
-
-    @property
-    def games(self) -> int:
-        return self.wins + self.losses + self.ties
 
     @classmethod
     def get_srs_ratings(cls, start_year: int, end_year: int = None,
@@ -398,6 +395,7 @@ class ConferenceSRS(db.Model):
                 year=year,
                 scoring_margin=0,
                 opponent_rating=0,
+                games=0,
                 wins=0,
                 losses=0,
                 ties=0
@@ -411,6 +409,7 @@ class ConferenceSRS(db.Model):
 
                 srs_rating.scoring_margin += rating.scoring_margin
                 srs_rating.opponent_rating += rating.opponent_rating
+                srs_rating.games += rating.games
                 srs_rating.wins += rating.wins - record.conference_wins
                 srs_rating.losses += rating.losses - record.conference_losses
                 srs_rating.ties += rating.ties - record.conference_ties
@@ -431,6 +430,7 @@ class ConferenceSRS(db.Model):
         """
         self.scoring_margin += other.scoring_margin
         self.opponent_rating += other.opponent_rating
+        self.games += other.games
         self.wins += other.wins
         self.losses += other.losses
         self.ties += other.ties
