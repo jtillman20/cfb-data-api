@@ -102,7 +102,8 @@ class SportsReferenceScraper(object):
             str: HTML data
         """
         url = f'{self.BASE_URL}/years/{path}'
-        return self.session.get(url).content.decode('latin-1')
+        with self.session as session:
+            return session.get(url).content.decode('latin-1')
 
     @classmethod
     def parse_standings_html_data(cls, html_content: str) -> tuple:
@@ -282,7 +283,8 @@ class SportsReferenceScraper(object):
         team = team.replace(' ', '-').lower()
 
         url = f'{self.BASE_URL}/schools/{team}/{year}/gamelog/'
-        return self.session.get(url).content.decode('latin-1')
+        with self.session as session:
+            return session.get(url).content.decode('latin-1')
 
     @classmethod
     def parse_game_log_data(cls, html_content: str, side_of_ball: str) -> tuple:
@@ -435,7 +437,8 @@ class CFBStatsScraper(object):
             str: HTML data
         """
         url = f'{self.base_url}/{side_of_ball}/split01/category{category}/sort01.html'
-        return self.session.get(url).content.decode('utf-8')
+        with self.session as session:
+            return session.get(url).content.decode('utf-8')
 
     @classmethod
     def parse_html_data(cls, html_content: str) -> tuple:
