@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Interceptions
@@ -14,14 +12,14 @@ from utils import (
 
 class InterceptionsRoute(Resource):
     @flask_response
-    def get(self) -> Union[Interceptions, list[Interceptions]]:
+    def get(self) -> list[Interceptions]:
         """
         GET request to get interceptions for the given years. If team is
         provided only get interception data for that team.
 
         Returns:
-            Union[Interceptions, list[Interceptions]]: Interception data
-                for all teams or only interception data for one team
+            list[Interceptions]: Interception data for all teams or only
+                interception data for one team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='ints')
@@ -32,9 +30,6 @@ class InterceptionsRoute(Resource):
 
         ints = Interceptions.get_interceptions(
             start_year=start_year, end_year=end_year, team=team)
-
-        if isinstance(ints, Interceptions):
-            return ints
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, True]

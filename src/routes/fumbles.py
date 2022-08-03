@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Fumbles
@@ -17,14 +15,14 @@ ASC_SORT_ATTRS = ['fumbles', 'fumbles_lost', 'fumbles_lost_per_game',
 
 class FumblesRoute(Resource):
     @flask_response
-    def get(self) -> Union[Fumbles, list[Fumbles]]:
+    def get(self) -> list[Fumbles]:
         """
         GET request to get fumbles and opponent fumbles for the given
         years. If team is provided only get fumble data for that team.
 
         Returns:
-            Union[Fumbles, list[Fumbles]]: Fumble data for all teams
-                or only fumble data for one team
+            list[Fumbles]: Fumble data for all teams or only fumble data
+                for one team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='fumbles')
@@ -35,9 +33,6 @@ class FumblesRoute(Resource):
 
         fumbles = Fumbles.get_fumbles(
             start_year=start_year, end_year=end_year, team=team)
-
-        if isinstance(fumbles, Fumbles):
-            return fumbles
 
         fumbles = sort(data=fumbles, attrs=attrs, reverses=reverses)
         return rank(data=fumbles, attr=sort_attr)

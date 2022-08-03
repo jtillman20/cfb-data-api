@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import FieldGoals, PATs
@@ -15,7 +13,7 @@ from utils import (
 
 class FieldGoalsRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[FieldGoals, list[FieldGoals]]:
+    def get(self, side_of_ball: str) -> list[FieldGoals]:
         """
         GET request to get field goals or opponent field goals for the
         given years. If team is provided only get field goal data for
@@ -25,8 +23,8 @@ class FieldGoalsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[FieldGoals, list[FieldGoals]]: Field goal data for
-                all teams or only field goal data for one team
+            list[FieldGoals]: Field goal data for all teams or only
+                field goal data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -44,9 +42,6 @@ class FieldGoalsRoute(Resource):
             team=team
         )
 
-        if isinstance(field_goals, FieldGoals):
-            return field_goals
-
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, side_of_ball == 'offense']
 
@@ -56,7 +51,7 @@ class FieldGoalsRoute(Resource):
 
 class PATsRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[PATs, list[PATs]]:
+    def get(self, side_of_ball: str) -> list[PATs]:
         """
         GET request to get PATs or opponent PATs for the given years.
         If team is provided only get PAT data for that team.
@@ -65,8 +60,8 @@ class PATsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[PATs, list[PATs]]: PAT data for all teams or only PAT
-                data for one team
+            list[PATs]: PAT data for all teams or only PAT data for
+                one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -83,9 +78,6 @@ class PATsRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(pats, FieldGoals):
-            return pats
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, side_of_ball == 'offense']

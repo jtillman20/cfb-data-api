@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -47,7 +46,7 @@ class Kickoffs(db.Model):
     @classmethod
     def get_kickoffs(cls, side_of_ball: str, start_year: int,
                      end_year: int = None, team: str = None
-                     ) -> Union['Kickoffs', list['Kickoffs']]:
+                     ) -> list['Kickoffs']:
         """
         Get kickoffs or opponent kickoffs for qualifying teams for the
         given years. If team is provided, only get kickoff data for
@@ -60,8 +59,8 @@ class Kickoffs(db.Model):
             team (str): Team for which to get kickoff data
 
         Returns:
-            Union[Kickoffs, list[Kickoffs]]: Kickoffs or opponent
-                kickoffs for all teams or only for one team
+            list[Kickoffs]: Kickoffs or opponent kickoffs for all teams
+                or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -74,7 +73,7 @@ class Kickoffs(db.Model):
 
         if team is not None:
             kickoffs = query.filter_by(name=team).all()
-            return sum(kickoffs[1:], kickoffs[0]) if kickoffs else []
+            return [sum(kickoffs[1:], kickoffs[0])] if kickoffs else []
 
         kickoffs = {}
         for team_name in Team.get_qualifying_teams(
@@ -233,7 +232,7 @@ class KickoffReturns(db.Model):
     @classmethod
     def get_kickoff_returns(cls, side_of_ball: str, start_year: int,
                             end_year: int = None, team: str = None
-                            ) -> Union['KickoffReturns', list['KickoffReturns']]:
+                            ) -> list['KickoffReturns']:
         """
         Get kickoff returns or opponent kickoff returns for qualifying teams
         for the given years. If team is provided, only get kickoffing  data
@@ -246,9 +245,8 @@ class KickoffReturns(db.Model):
             team (str): Team for which to get kickoff return data
 
         Returns:
-            Union[KickoffReturns, list[KickoffReturns]]: Kickoff returns
-                or opponent kickoff returns for all teams or only for
-                one team
+            list[KickoffReturns]: Kickoff returns or opponent kickoff
+                returns for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -261,7 +259,7 @@ class KickoffReturns(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0]) if returns else []
+            return [sum(returns[1:], returns[0])] if returns else []
 
         returns = {}
         for team_name in Team.get_qualifying_teams(
@@ -316,11 +314,11 @@ class KickoffReturns(db.Model):
                 team = Team.query.filter_by(name=item[1]).first()
                 opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                          else 'offense')
-                kickoffs = Kickoffs.get_kickoffs(
+                kickoffs = Kickoffs.query.filter_by(
+                    team_id=team.id,
+                    year=year,
                     side_of_ball=opposite_side_of_ball,
-                    start_year=year,
-                    team=team.name
-                )
+                ).first()
 
                 returns.append(cls(
                     team_id=team.id,
@@ -443,8 +441,7 @@ class KickoffReturnPlays(db.Model):
     @classmethod
     def get_kickoff_return_plays(cls, side_of_ball: str, start_year: int,
                                  end_year: int = None, team: str = None
-                                 ) -> Union['KickoffReturnPlays',
-                                            list['KickoffReturnPlays']]:
+                                 ) -> list['KickoffReturnPlays']:
         """
         Get kickoff return plays or opponent kickoff return plays for
         qualifying teams for the given years. If team is provided, only
@@ -459,9 +456,8 @@ class KickoffReturnPlays(db.Model):
             team (str): Team for which to get kickoff return play data
 
         Returns:
-            Union[KickoffReturnPlays, list[KickoffReturnPlays]]: Kickoff
-                return plays or opponent kickoff return plays for all
-                teams or only for one team
+            list[KickoffReturnPlays]: Kickoff return plays or opponent
+                kickoff return plays for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -474,7 +470,7 @@ class KickoffReturnPlays(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0]) if returns else []
+            return [sum(returns[1:], returns[0])] if returns else []
 
         returns = {}
         for team_name in Team.get_qualifying_teams(
@@ -530,8 +526,11 @@ class KickoffReturnPlays(db.Model):
 
             for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                returns = KickoffReturns.get_kickoff_returns(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                returns = KickoffReturns.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 kickoff_return_plays.append(cls(
                     team_id=team.id,

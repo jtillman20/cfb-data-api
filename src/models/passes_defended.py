@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -49,8 +48,7 @@ class PassesDefended(db.Model):
 
     @classmethod
     def get_passes_defended(cls, start_year: int, end_year: int = None,
-                            team: str = None) -> Union['PassesDefended',
-                                                       list['PassesDefended']]:
+                            team: str = None) -> list['PassesDefended']:
         """
         Get passes defended for qualifying teams for the given years. If
         team is provided, only get passes defended data for that team.
@@ -61,8 +59,8 @@ class PassesDefended(db.Model):
             team (str): Team for which to get passes defended data
 
         Returns:
-            Union[PassesDefended, list[PassesDefended]]: Passes
-                defended for all teams or only for one team
+            list[PassesDefended]: Passes defended for all teams or only
+                for one team
         """
         if end_year is None:
             end_year = start_year
@@ -75,7 +73,7 @@ class PassesDefended(db.Model):
 
         if team is not None:
             passes_defended = query.filter_by(name=team).all()
-            return (sum(passes_defended[1:], passes_defended[0])
+            return ([sum(passes_defended[1:], passes_defended[0])]
                     if passes_defended else [])
 
         passes_defended = {}
@@ -129,11 +127,11 @@ class PassesDefended(db.Model):
         for item in scraper.parse_html_data(
                 html_content=html_content):
             team = Team.query.filter_by(name=item[1]).first()
-            passing = Passing.get_passing(
+            passing = Passing.query.filter_by(
+                team_id=team.id,
+                year=year,
                 side_of_ball='defense',
-                start_year=year,
-                team=team.name
-            )
+            ).first()
 
             passes_defended.append(cls(
                 team_id=team.id,

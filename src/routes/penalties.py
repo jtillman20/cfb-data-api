@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Penalties
@@ -7,7 +5,7 @@ from utils import (
     check_side_of_ball,
     flask_response,
     get_multiple_year_params,
-    get_optional_param,\
+    get_optional_param,
     rank,
     sort
 )
@@ -15,7 +13,7 @@ from utils import (
 
 class PenaltiesRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[Penalties, list[Penalties]]:
+    def get(self, side_of_ball: str) -> list[Penalties]:
         """
         GET request to get penalties or opponent penalties for a given
         number of years. If team is provided, only get records for that
@@ -25,9 +23,8 @@ class PenaltiesRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[Penalties, list[Penalties]]: Penalties or opponent
-                penalties for all teams or only win-loss records for
-                one team
+            list[Penalties]: Penalty data for all teams or only penalty
+                for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -45,9 +42,6 @@ class PenaltiesRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(penalties, Penalties):
-            return penalties
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, side_of_ball == 'defense']

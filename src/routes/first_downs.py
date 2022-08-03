@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import FirstDowns
@@ -17,7 +15,7 @@ ASC_SORT_ATTRS = ['plays_per_first_down']
 
 class FirstDownsRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[FirstDowns, list[FirstDowns]]:
+    def get(self, side_of_ball: str) -> list[FirstDowns]:
         """
         GET request to get first down offense or defense for the given
         years. If team is provided only get first down data for that
@@ -27,8 +25,8 @@ class FirstDownsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[FirstDowns, list[FirstDowns]]: First down data for
-                all teams or only first down data for one team
+            list[FirstDowns]: First down data for all teams or only
+                first down data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -46,9 +44,6 @@ class FirstDownsRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(first_downs, FirstDowns):
-            return first_downs
 
         passing = sort(data=first_downs, attrs=attrs, reverses=reverses)
         return rank(data=passing, attr=sort_attr)

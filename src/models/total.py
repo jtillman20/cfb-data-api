@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -70,7 +69,7 @@ class Total(db.Model):
 
     @classmethod
     def get_total(cls, side_of_ball: str, start_year: int, end_year: int = None,
-                  team: str = None) -> Union['Total', list['Total']]:
+                  team: str = None) -> list['Total']:
         """
         Get total offense or defense for qualifying teams for the
         given years. If team is provided, only get total data for
@@ -83,8 +82,8 @@ class Total(db.Model):
             team (str): Team for which to get total data
 
         Returns:
-            Union[Total, list[Total]]: Total offense or defense
-                for all teams or only for one team
+            list[Total]: Total offense or defense for all teams or only
+                for one team
         """
         if end_year is None:
             end_year = start_year
@@ -97,7 +96,7 @@ class Total(db.Model):
 
         if team is not None:
             total = query.filter_by(name=team).all()
-            return sum(total[1:], total[0]) if total else []
+            return [sum(total[1:], total[0])] if total else []
 
         total = {}
         for team_name in Team.get_qualifying_teams(
@@ -201,15 +200,16 @@ class Total(db.Model):
                     Team).filter_by(name=opponent_name)
 
                 if opponent_query.first() is not None:
+                    opponent = Team.query.filter_by(name=opponent_name).first()
                     side_of_ball = team_total.side_of_ball
                     opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                              else 'offense')
 
-                    opponent_stats = cls.get_total(
+                    opponent_stats = cls.query.filter_by(
+                        team_id=opponent.id,
+                        year=year,
                         side_of_ball=opposite_side_of_ball,
-                        start_year=year,
-                        team=opponent_name
-                    )
+                    ).first()
 
                     opponent_games = opponent_stats.games
                     team_total.opponents_games += opponent_games - 1
@@ -338,7 +338,7 @@ class ScrimmagePlays(db.Model):
     @classmethod
     def get_scrimmage_plays(cls, side_of_ball: str, start_year: int,
                             end_year: int = None, team: str = None
-                            ) -> Union['ScrimmagePlays', list['ScrimmagePlays']]:
+                            ) -> list['ScrimmagePlays']:
         """
         Get scrimmage plays or opponent scrimmage plays for qualifying
         teams for the given years. If team is provided, only get
@@ -351,9 +351,8 @@ class ScrimmagePlays(db.Model):
             team (str): Team for which to get scrimmage play data
 
         Returns:
-            Union[ScrimmagePlays, list[ScrimmagePlays]]: Scrimmage plays
-                or opponent scrimmage plays for all teams or only for
-                one team
+            list[ScrimmagePlays]: Scrimmage plays or opponent scrimmage
+                plays for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -366,7 +365,7 @@ class ScrimmagePlays(db.Model):
 
         if team is not None:
             scrimmage_plays = query.filter_by(name=team).all()
-            return sum(scrimmage_plays[1:], scrimmage_plays[0])
+            return [sum(scrimmage_plays[1:], scrimmage_plays[0])]
 
         scrimmage_plays = {}
         for team_name in Team.get_qualifying_teams(
@@ -422,8 +421,11 @@ class ScrimmagePlays(db.Model):
 
             for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                total = Total.get_total(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                total = Total.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 scrimmage_plays.append(cls(
                     team_id=team.id,

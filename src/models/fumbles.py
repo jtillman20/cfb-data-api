@@ -1,5 +1,3 @@
-from typing import Union
-
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -65,7 +63,7 @@ class Fumbles(db.Model):
 
     @classmethod
     def get_fumbles(cls, start_year: int, end_year: int = None,
-                    team: str = None) -> Union['Fumbles', list['Fumbles']]:
+                    team: str = None) -> list['Fumbles']:
         """
         Get fumbles and opponent fumbles for qualifying teams for the
         given years. If team is provided, only get fumble data for that
@@ -77,8 +75,8 @@ class Fumbles(db.Model):
             team (str): Team for which to get fumble data
 
         Returns:
-            Union[Fumbles, list[Fumbles]]: Fumbles and opponent fumbles
-                for all teams or only for one team
+            list[Fumbles]: Fumbles and opponent fumbles for all teams
+                or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -88,7 +86,7 @@ class Fumbles(db.Model):
 
         if team is not None:
             fumbles = query.filter_by(name=team).all()
-            return sum(fumbles[1:], fumbles[0]) if fumbles else []
+            return [sum(fumbles[1:], fumbles[0])] if fumbles else []
 
         fumbles = {}
         for team_name in Team.get_qualifying_teams(

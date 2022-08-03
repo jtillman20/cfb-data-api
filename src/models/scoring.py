@@ -1,5 +1,3 @@
-from typing import Union
-
 from app import db
 from .game import Game
 from .team import Team
@@ -36,8 +34,7 @@ class Scoring(db.Model):
 
     @classmethod
     def get_scoring(cls, side_of_ball: str, start_year: int,
-                    end_year: int = None, team: str = None
-                    ) -> Union['Scoring', list['Scoring']]:
+                    end_year: int = None, team: str = None) -> list['Scoring']:
         """
         Get scoring offense or defense for qualifying teams for the
         given years. If team is provided, only get scoring data for
@@ -50,8 +47,8 @@ class Scoring(db.Model):
             team (str): Team for which to get scoring data
 
         Returns:
-            Union[Scoring, list[Scoring]]: Scoring offense or defense
-                for all teams or only for one team
+            list[Scoring]: Scoring offense or defense for all teams or
+                only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -64,7 +61,7 @@ class Scoring(db.Model):
 
         if team is not None:
             scoring = query.filter_by(name=team).all()
-            return sum(scoring[1:], scoring[0]) if scoring else []
+            return [sum(scoring[1:], scoring[0])] if scoring else []
 
         scoring = {}
         for team_name in Team.get_qualifying_teams(
@@ -179,14 +176,16 @@ class Scoring(db.Model):
                     Team).filter_by(name=opponent_name)
 
                 if opponent_query.first() is not None:
+                    opponent = Team.query.filter_by(name=opponent_name).first()
                     side_of_ball = team_scoring.side_of_ball
                     opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                              else 'offense')
-                    opponent_scoring = cls.get_scoring(
+
+                    opponent_scoring = cls.query.filter_by(
+                        team_id=opponent.id,
+                        year=year,
                         side_of_ball=opposite_side_of_ball,
-                        start_year=year,
-                        team=opponent_name
-                    )
+                    ).first()
 
                     opponent_points = opponent_scoring.points - points
                     team_scoring.opponents_points += opponent_points

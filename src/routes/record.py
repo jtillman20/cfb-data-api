@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Record
@@ -16,14 +14,14 @@ ASC_SORT_ATTRS = ['losses', 'conference_losses']
 
 class RecordRoute(Resource):
     @flask_response
-    def get(self) -> Union[Record, list[Record]]:
+    def get(self) -> list[Record]:
         """
         GET request to get win-loss records for a given number of years.
         If team is provided, only get records for that team.
 
         Returns:
-            Union[Record, list[Record]]: Win-loss records for all teams
-                or only win-loss records for one team
+            list[Record]: Win-loss records for all teams or only win-loss
+                records for one team
         """
         sort_attr = get_optional_param(name='sort', default_value='win_pct')
         secondary_attr, secondary_reverse = secondary_sort(attr=sort_attr)
@@ -32,9 +30,6 @@ class RecordRoute(Resource):
 
         records = Record.get_records(
             start_year=start_year, end_year=end_year, team=team)
-
-        if isinstance(records, Record):
-            return records
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, sort_attr not in ASC_SORT_ATTRS]

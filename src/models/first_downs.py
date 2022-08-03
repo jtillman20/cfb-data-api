@@ -1,5 +1,3 @@
-from typing import Union
-
 from app import db
 from .game import Game
 from .team import Team
@@ -55,7 +53,7 @@ class FirstDowns(db.Model):
     @classmethod
     def get_first_downs(cls, side_of_ball: str, start_year: int,
                         end_year: int = None, team: str = None
-                        ) -> Union['FirstDowns', list['FirstDowns']]:
+                        ) -> list['FirstDowns']:
         """
         Get first down offense or defense for qualifying teams for the
         given years. If team is provided, only get first down data for
@@ -68,8 +66,8 @@ class FirstDowns(db.Model):
             team (str): Team for which to get first down data
 
         Returns:
-            Union[FirstDowns, list[FirstDowns]]: First down offense or
-                defense for all teams or only for one team
+            list[FirstDowns]: First down offense or defense for all
+                teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -82,7 +80,7 @@ class FirstDowns(db.Model):
 
         if team is not None:
             first_downs = query.filter_by(name=team).all()
-            return sum(first_downs[1:], first_downs[0]) if first_downs else []
+            return [sum(first_downs[1:], first_downs[0])] if first_downs else []
 
         first_downs = {}
         for team_name in Team.get_qualifying_teams(
@@ -146,8 +144,11 @@ class FirstDowns(db.Model):
                     rushing += getattr(stats, f'{side}_rushing_first_downs')
                     penalty += getattr(stats, f'{side}_penalty_first_downs')
 
-                total = Total.get_total(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                total = Total.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 db.session.add(cls(
                     team_id=team.id,

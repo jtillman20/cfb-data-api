@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -40,7 +39,7 @@ class Sacks(db.Model):
 
     @classmethod
     def get_sacks(cls, side_of_ball: str, start_year: int, end_year: int = None,
-                  team: str = None) -> Union['Sacks', list['Sacks']]:
+                  team: str = None) -> list['Sacks']:
         """
         Get sacks or opponent sacks for qualifying teams for the given
         years. If team is provided, only get sack data for that team.
@@ -52,8 +51,8 @@ class Sacks(db.Model):
             team (str): Team for which to get sack data
 
         Returns:
-            Union[Sacks, list[Sacks]]: Sacks or opponent sacks for all
-                teams or only for one team
+            list[Sacks]: Sacks or opponent sacks for all teams or only
+                for one team
         """
         if end_year is None:
             end_year = start_year
@@ -66,7 +65,7 @@ class Sacks(db.Model):
 
         if team is not None:
             sacks = query.filter_by(name=team).all()
-            return sum(sacks[1:], sacks[0]) if sacks else []
+            return [sum(sacks[1:], sacks[0])] if sacks else []
 
         sacks = {}
         for team_name in Team.get_qualifying_teams(
@@ -120,11 +119,11 @@ class Sacks(db.Model):
                 team = Team.query.filter_by(name=item[1]).first()
                 opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                          else 'offense')
-                passing = Passing.get_passing(
+                passing = Passing.query.filter_by(
+                    team_id=team.id,
+                    year=year,
                     side_of_ball=opposite_side_of_ball,
-                    start_year=year,
-                    team=team.name
-                )
+                ).first()
 
                 sacks.append(cls(
                     team_id=team.id,

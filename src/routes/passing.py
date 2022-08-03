@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Passing, PassingPlays
@@ -17,7 +15,7 @@ ASC_SORT_ATTRS = ['ints', 'int_pct']
 
 class PassingRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[Passing, list[Passing]]:
+    def get(self, side_of_ball: str) -> list[Passing]:
         """
         GET request to get passing offense or defense for the given years.
         If team is provided only get passing data for that team.
@@ -26,8 +24,8 @@ class PassingRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[Passing, list[Passing]]: Passing data for all teams
-                or only passing data for one team
+            list[Passing]: Passing data for all teams or only passing
+                data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -45,9 +43,6 @@ class PassingRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(passing, Passing):
-            return passing
 
         passing = sort(data=passing, attrs=attrs, reverses=reverses)
         return rank(data=passing, attr=sort_attr)
@@ -105,7 +100,7 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
 
 class PassingPlaysRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[PassingPlays, list[PassingPlays]]:
+    def get(self, side_of_ball: str) -> list[PassingPlays]:
         """
         GET request to get passing plays or opponent passing plays for
         the given years. If team is provided only get passing play data
@@ -115,8 +110,8 @@ class PassingPlaysRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[PassingPlays, list[PassingPlays]]: Passing play data
-                for all teams or only passing play data for one team
+            list[PassingPlays]: Passing play data for all teams or only
+                passing play data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -130,9 +125,6 @@ class PassingPlaysRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(passing_plays, PassingPlays):
-            return passing_plays
 
         attrs = ['plays', sort_attr]
         reverses = [True, side_of_ball == 'offense']

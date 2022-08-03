@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -40,8 +39,7 @@ class TacklesForLoss(db.Model):
     @classmethod
     def get_tackles_for_loss(cls, side_of_ball: str, start_year: int,
                              end_year: int = None, team: str = None
-                             ) -> Union['TacklesForLoss',
-                                        list['TacklesForLoss']]:
+                             ) -> list['TacklesForLoss']:
         """
         Get tackles for loss or opponent tackles for loss for qualifying
         teams for the given years. If team is provided, only get tackle
@@ -54,9 +52,8 @@ class TacklesForLoss(db.Model):
             team (str): Team for which to get tackle for loss data
 
         Returns:
-            Union[TacklesForLoss, list[TacklesForLoss]]: Tackles for
-                loss or opponent tackles for loss for all teams or only
-                for one team
+            list[TacklesForLoss]: Tackles for loss or opponent tackles
+                for loss for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -69,7 +66,7 @@ class TacklesForLoss(db.Model):
 
         if team is not None:
             tfl = query.filter_by(name=team).all()
-            return sum(tfl[1:], tfl[0]) if tfl else []
+            return [sum(tfl[1:], tfl[0])] if tfl else []
 
         tfl = {}
         for team_name in Team.get_qualifying_teams(
@@ -126,11 +123,11 @@ class TacklesForLoss(db.Model):
                 team = Team.query.filter_by(name=item[1]).first()
                 opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                          else 'offense')
-                total = Total.get_total(
+                total = Total.query.filter_by(
+                    team_id=team.id,
+                    year=year,
                     side_of_ball=opposite_side_of_ball,
-                    start_year=year,
-                    team=team.name
-                )
+                ).first()
 
                 tfl.append(cls(
                     team_id=team.id,

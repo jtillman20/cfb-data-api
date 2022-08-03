@@ -13,5 +13,4 @@ class ConferenceRoute(Resource):
         Returns:
             list[Conference]: All conferences
         """
-        year = get_year_param()
-        return Conference.get_conferences(year=year)
+        return Conference.get_conferences(year=get_year_param())

@@ -1,7 +1,4 @@
 from operator import attrgetter
-from typing import Union
-
-from numpy import mean, std
 
 from app import db
 from scraper import CFBStatsScraper
@@ -137,8 +134,7 @@ class Passing(db.Model):
 
     @classmethod
     def get_passing(cls, side_of_ball: str, start_year: int,
-                    end_year: int = None, team: str = None
-                    ) -> Union['Passing', list['Passing']]:
+                    end_year: int = None, team: str = None) -> list['Passing']:
         """
         Get passing offense or defense for qualifying teams for the
         given years. If team is provided, only get passing data for
@@ -151,8 +147,8 @@ class Passing(db.Model):
             team (str): Team for which to get passing data
 
         Returns:
-            Union[Passing, list[Passing]]: Passing offense or defense
-                for all teams or only for one team
+            list[Passing]: Passing offense or defense for all teams or
+                only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -165,7 +161,7 @@ class Passing(db.Model):
 
         if team is not None:
             passing = query.filter_by(name=team).all()
-            return sum(passing[1:], passing[0]) if passing else []
+            return [sum(passing[1:], passing[0])] if passing else []
 
         passing = {}
         for team_name in Team.get_qualifying_teams(
@@ -230,8 +226,11 @@ class Passing(db.Model):
                     tds += getattr(stats, f'{side}_passing_tds')
                     ints += getattr(stats, f'{side}_ints')
 
-                first_downs = FirstDowns.get_first_downs(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                first_downs = FirstDowns.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 db.session.add(cls(
                     team_id=team.id,
@@ -288,15 +287,16 @@ class Passing(db.Model):
                     Team).filter_by(name=opponent_name)
 
                 if opponent_query.first() is not None:
+                    opponent = Team.query.filter_by(name=opponent_name).first()
                     side_of_ball = team_passing.side_of_ball
                     opposite_side_of_ball = ('defense'if side_of_ball == 'offense'
                                              else 'offense')
 
-                    opponent_stats = cls.get_passing(
+                    opponent_stats = cls.query.filter_by(
+                        team_id=opponent.id,
+                        year=year,
                         side_of_ball=opposite_side_of_ball,
-                        start_year=year,
-                        team=opponent_name
-                    )
+                    ).first()
 
                     opponent_games = opponent_stats.games
                     team_passing.opponents_games += opponent_games - 1
@@ -454,7 +454,7 @@ class PassingPlays(db.Model):
     @classmethod
     def get_passing_plays(cls, side_of_ball: str, start_year: int,
                           end_year: int = None, team: str = None
-                        ) -> Union['PassingPlays', list['PassingPlays']]:
+                        ) -> list['PassingPlays']:
         """
         Get passing plays or opponent passing plays for qualifying
         teams for the given years. If team is provided, only get
@@ -467,9 +467,8 @@ class PassingPlays(db.Model):
             team (str): Team for which to get passing play data
 
         Returns:
-            Union[PassingPlays, list[PassingPlays]]: Passing plays
-                or opponent passing plays for all teams or only for
-                one team
+            list[PassingPlays]: Passing plays or opponent passing plays
+                for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -482,7 +481,7 @@ class PassingPlays(db.Model):
 
         if team is not None:
             passing_plays = query.filter_by(name=team).all()
-            return (sum(passing_plays[1:], passing_plays[0])
+            return ([sum(passing_plays[1:], passing_plays[0])]
                     if passing_plays else [])
 
         passing_plays = {}
@@ -538,8 +537,11 @@ class PassingPlays(db.Model):
 
             for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                passing = Passing.get_passing(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                passing = Passing.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 passing_plays.append(cls(
                     team_id=team.id,

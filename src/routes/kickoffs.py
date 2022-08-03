@@ -1,5 +1,4 @@
 from inspect import stack
-from typing import Union
 
 from flask_restful import Resource
 
@@ -18,7 +17,7 @@ ASC_SORT_ATTRS = ['out_of_bounds', 'out_of_bounds_pct']
 
 class KickoffsRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[Kickoffs, list[Kickoffs]]:
+    def get(self, side_of_ball: str) -> list[Kickoffs]:
         """
         GET request to get kickoffs or opponent kickoffs for the given
         years. If team is provided only get kickoff data for that team.
@@ -27,8 +26,8 @@ class KickoffsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[Kickoffs, list[Kickoffs]]: Kickoff data for all teams
-                or only kickoff data for one team
+            list[Kickoffs]: Kickoff data for all teams or only kickoff
+                data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -47,17 +46,13 @@ class KickoffsRoute(Resource):
             team=team
         )
 
-        if isinstance(kickoffs, Kickoffs):
-            return kickoffs
-
         kickoffs = sort(data=kickoffs, attrs=attrs, reverses=reverses)
         return rank(data=kickoffs, attr=sort_attr)
 
 
 class KickoffReturnsRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[KickoffReturns,
-                                              list[KickoffReturns]]:
+    def get(self, side_of_ball: str) -> list[KickoffReturns]:
         """
         GET request to get kickoff returns or opponent kickoff returns
         for the given years. If team is provided only get kickoff
@@ -67,9 +62,8 @@ class KickoffReturnsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[KickoffReturns, list[KickoffReturns]]: Kickoff return
-                data for all teams or only kickoff return data for one
-                team
+            list[KickoffReturns]: Kickoff return data for all teams or
+                only kickoff return data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -87,9 +81,6 @@ class KickoffReturnsRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(returns, Kickoffs):
-            return returns
 
         returns = sort(data=returns, attrs=attrs, reverses=reverses)
         return rank(data=returns, attr=sort_attr)
@@ -164,8 +155,7 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
 
 class KickoffReturnPlaysRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[KickoffReturnPlays,
-                                              list[KickoffReturnPlays]]:
+    def get(self, side_of_ball: str) -> list[KickoffReturnPlays]:
         """
         GET request to get kickoff return plays or opponent kickoff
         return plays for the given years. If team is provided only get
@@ -175,9 +165,8 @@ class KickoffReturnPlaysRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[KickoffReturnPlays, list[KickoffReturnPlays]]: Kickoff
-                return play data for all teams or only kickoff return
-                play data for one team
+            list[KickoffReturnPlays]: Kickoff return play data for all
+                teams or only kickoff return play data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -191,9 +180,6 @@ class KickoffReturnPlaysRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(return_plays, KickoffReturnPlays):
-            return return_plays
 
         attrs = ['returns', sort_attr]
         reverses = [True, side_of_ball == 'offense']

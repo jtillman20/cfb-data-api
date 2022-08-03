@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import TimeOfPossession
@@ -16,15 +14,14 @@ ASC_SORT_ATTRS = ['seconds_per_play']
 
 class TimeOfPossessionRoute(Resource):
     @flask_response
-    def get(self) -> Union[TimeOfPossession, list[TimeOfPossession]]:
+    def get(self) -> list[TimeOfPossession]:
         """
         GET request to get time of possession for the given years. If
         team is provided only get time of possession data for that team.
 
         Returns:
-            Union[TimeOfPossession, list[TimeOfPossession]]: Time of
-                possession data for all teams or only time of possession
-                data for one team
+            list[TimeOfPossession]: Time of possession data for all
+                teams or only time of possession data for one team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='time_of_possession_per_game')
@@ -35,9 +32,6 @@ class TimeOfPossessionRoute(Resource):
 
         time_of_possession = TimeOfPossession.get_time_of_possession(
             start_year=start_year, end_year=end_year, team=team)
-
-        if isinstance(time_of_possession, TimeOfPossession):
-            return time_of_possession
 
         time_of_possession = sort(data=time_of_possession, attrs=attrs, reverses=reverses)
         return rank(data=time_of_possession, attr=sort_attr)

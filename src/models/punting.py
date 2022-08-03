@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -45,8 +44,7 @@ class Punting(db.Model):
 
     @classmethod
     def get_punting(cls, side_of_ball: str, start_year: int,
-                    end_year: int = None, team: str = None
-                    ) -> Union['Punting', list['Punting']]:
+                    end_year: int = None, team: str = None) -> list['Punting']:
         """
         Get punting or opponent punting for qualifying teams for the
         given years. If team is provided, only get punting data for
@@ -59,8 +57,8 @@ class Punting(db.Model):
             team (str): Team for which to get punting data
 
         Returns:
-            Union[Punting, list[Punting]]: Punting or opponent punting
-                for all teams or only for one team
+            list[Punting]: Punting or opponent punting for all teams or
+                only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -73,7 +71,7 @@ class Punting(db.Model):
 
         if team is not None:
             punting = query.filter_by(name=team).all()
-            return sum(punting[1:], punting[0]) if punting else []
+            return [sum(punting[1:], punting[0])] if punting else []
 
         punting = {}
         for team_name in Team.get_qualifying_teams(
@@ -127,11 +125,11 @@ class Punting(db.Model):
                 team = Team.query.filter_by(name=item[1]).first()
                 opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                          else 'offense')
-                total = Total.get_total(
+                total = Total.query.filter_by(
+                    team_id=team.id,
+                    year=year,
                     side_of_ball=opposite_side_of_ball,
-                    start_year=year,
-                    team=team.name
-                )
+                ).first()
 
                 punting.append(cls(
                     team_id=team.id,
@@ -232,7 +230,7 @@ class PuntReturns(db.Model):
     @classmethod
     def get_punt_returns(cls, side_of_ball: str, start_year: int,
                          end_year: int = None, team: str = None
-                         ) -> Union['PuntReturns', list['PuntReturns']]:
+                         ) -> list['PuntReturns']:
         """
         Get punt returns or opponent punt returns for qualifying teams
         for the given years. If team is provided, only get punting  data
@@ -245,9 +243,8 @@ class PuntReturns(db.Model):
             team (str): Team for which to get punt return data
 
         Returns:
-            Union[PuntReturns, list[PuntReturns]]: Punt returns or
-                opponent punt returns for all teams or only for one
-                team
+            list[PuntReturns]: Punt returns or opponent punt returns for
+                all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -260,7 +257,7 @@ class PuntReturns(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0]) if returns else []
+            return [sum(returns[1:], returns[0])] if returns else []
 
         returns = {}
         for team_name in Team.get_qualifying_teams(
@@ -315,11 +312,11 @@ class PuntReturns(db.Model):
                 team = Team.query.filter_by(name=item[1]).first()
                 opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                          else 'offense')
-                punting = Punting.get_punting(
+                punting = Punting.query.filter_by(
+                    team_id=team.id,
+                    year=year,
                     side_of_ball=opposite_side_of_ball,
-                    start_year=year,
-                    team=team.name
-                )
+                ).first()
 
                 returns.append(cls(
                     team_id=team.id,
@@ -449,8 +446,7 @@ class PuntReturnPlays(db.Model):
     @classmethod
     def get_punt_return_plays(cls, side_of_ball: str, start_year: int,
                               end_year: int = None, team: str = None
-                              ) -> Union['PuntReturnPlays',
-                                         list['PuntReturnPlays']]:
+                              ) -> list['PuntReturnPlays']:
         """
         Get punt return plays or opponent punt return plays for qualifying
         teams for the given years. If team is provided, only get punting
@@ -463,9 +459,8 @@ class PuntReturnPlays(db.Model):
             team (str): Team for which to get punt return data
 
         Returns:
-            Union[PuntReturnPlays, list[PuntReturnPlays]]: Punt return
-                plays or opponent punt return plays for all teams or only
-                for one team
+            list[PuntReturnPlays]: Punt return plays or opponent punt
+                return plays for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -478,7 +473,7 @@ class PuntReturnPlays(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0]) if returns else []
+            return [sum(returns[1:], returns[0])] if returns else []
 
         returns = {}
         for team_name in Team.get_qualifying_teams(
@@ -532,8 +527,11 @@ class PuntReturnPlays(db.Model):
 
             for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                returns = PuntReturns.get_punt_returns(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                returns = PuntReturns.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 punt_return_plays.append(cls(
                     team_id=team.id,

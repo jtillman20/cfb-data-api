@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Turnovers
@@ -16,15 +14,15 @@ ASC_SORT_ATTRS = ['ints', 'fumbles', 'giveaways']
 
 class TurnoversRoute(Resource):
     @flask_response
-    def get(self) -> Union[Turnovers, list[Turnovers]]:
+    def get(self) -> list[Turnovers]:
         """
         GET request to get turnovers and opponent turnovers for the
         given years. If team is provided only get scoring data for that
         team.
 
         Returns:
-            Union[Turnovers, list[Turnovers]]: Turnover data for all
-                teams or only turnover data for one team
+            list[Turnovers]: Turnover data for all teams or only turnover
+                data for one team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='margin_per_game')
@@ -35,9 +33,6 @@ class TurnoversRoute(Resource):
 
         turnovers = Turnovers.get_turnovers(
             start_year=start_year, end_year=end_year, team=team)
-
-        if isinstance(turnovers, Turnovers):
-            return turnovers
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, sort_attr not in ASC_SORT_ATTRS]

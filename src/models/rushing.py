@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -80,8 +79,7 @@ class Rushing(db.Model):
 
     @classmethod
     def get_rushing(cls, side_of_ball: str, start_year: int,
-                    end_year: int = None, team: str = None
-                    ) -> Union['Rushing', list['Rushing']]:
+                    end_year: int = None, team: str = None) -> list['Rushing']:
         """
         Get rushing offense or defense for qualifying teams for the
         given years. If team is provided, only get rushing data for
@@ -94,8 +92,8 @@ class Rushing(db.Model):
             team (str): Team for which to get rushing data
 
         Returns:
-            Union[Rushing, list[Rushing]]: rushing offense or defense
-                for all teams or only for one team
+            list[Rushing]: Rushing offense or defense for all teams or
+                only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -108,7 +106,7 @@ class Rushing(db.Model):
 
         if team is not None:
             rushing = query.filter_by(name=team).all()
-            return sum(rushing[1:], rushing[0]) if rushing else []
+            return [sum(rushing[1:], rushing[0])] if rushing else []
 
         rushing = {}
         for team_name in Team.get_qualifying_teams(
@@ -171,8 +169,11 @@ class Rushing(db.Model):
                     yards += getattr(stats, f'{side}_rushing_yards')
                     tds += getattr(stats, f'{side}_rushing_tds')
 
-                first_downs = FirstDowns.get_first_downs(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                first_downs = FirstDowns.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 db.session.add(cls(
                     team_id=team.id,
@@ -218,15 +219,16 @@ class Rushing(db.Model):
                     Team).filter_by(name=opponent_name)
 
                 if opponent_query.first() is not None:
+                    opponent = Team.query.filter_by(name=opponent_name).first()
                     side_of_ball = team_rushing.side_of_ball
                     opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
                                              else 'offense')
 
-                    opponent_stats = cls.get_rushing(
+                    opponent_stats = cls.query.filter_by(
+                        team_id=opponent.id,
+                        year=year,
                         side_of_ball=opposite_side_of_ball,
-                        start_year=year,
-                        team=opponent_name
-                    )
+                    ).first()
 
                     opponent_games = opponent_stats.games
                     team_rushing.opponents_games += opponent_games - 1
@@ -361,7 +363,7 @@ class RushingPlays(db.Model):
     @classmethod
     def get_rushing_plays(cls, side_of_ball: str, start_year: int,
                           end_year: int = None, team: str = None
-                          ) -> Union['RushingPlays', list['RushingPlays']]:
+                          ) -> list['RushingPlays']:
         """
         Get rushing plays or opponent rushing plays for qualifying
         teams for the given years. If team is provided, only get
@@ -374,9 +376,8 @@ class RushingPlays(db.Model):
             team (str): Team for which to get rushing play data
 
         Returns:
-            Union[RushingPlays, list[RushingPlays]]: Rassing plays
-                or opponent rushing plays for all teams or only for
-                one team
+            list[RushingPlays]: Rushing plays or opponent rushing plays
+                for all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -389,7 +390,7 @@ class RushingPlays(db.Model):
 
         if team is not None:
             rushing_plays = query.filter_by(name=team).all()
-            return (sum(rushing_plays[1:], rushing_plays[0])
+            return ([sum(rushing_plays[1:], rushing_plays[0])]
                     if rushing_plays else [])
 
         rushing_plays = {}
@@ -445,8 +446,11 @@ class RushingPlays(db.Model):
 
             for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                rushing = Rushing.get_rushing(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                rushing = Rushing.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 rushing_plays.append(cls(
                     team_id=team.id,

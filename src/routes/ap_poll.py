@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask import request
 from flask_restful import Resource
 
@@ -23,14 +21,14 @@ FINAL = ['final_number_one', 'final_top_five', 'final_top_ten', 'final']
 
 class APPollRoute(Resource):
     @flask_response
-    def get(self) -> Union[APPoll, list[APPoll]]:
+    def get(self) -> list[APPoll]:
         """
         GET request to get AP Poll ranking data for the given years.
         If team is provided only get poll data for that team.
 
         Returns:
-            Union[APPoll, list[APPoll]]: Poll data for all teams
-                or only poll data for one team
+            list[APPoll]: Poll data for all teams or only poll data
+                for one team
         """
         sort_attr = get_optional_param(name='sort', default_value='weeks')
         secondary_attr, secondary_reverse = secondary_sort(attr=sort_attr)
@@ -39,9 +37,6 @@ class APPollRoute(Resource):
 
         poll_data = APPoll.get_ap_poll_data(
             start_year=start_year, end_year=end_year, team=team)
-
-        if isinstance(poll_data, APPoll):
-            return poll_data
 
         attrs = [*secondary_attr, sort_attr]
         reverses = [*secondary_reverse, sort_attr not in ASC_SORT_ATTRS]

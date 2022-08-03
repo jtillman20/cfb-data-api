@@ -245,12 +245,10 @@ class SportsReferenceScraper(object):
 
             first_place_votes = row.find(
                 attrs={'data-stat': 'votes_first'}).text
-            first_place_votes = int(first_place_votes) \
-                if first_place_votes else 0
+            first_place_votes = int(first_place_votes) if first_place_votes else 0
 
-            previous_rank = row.find(attrs={'data-stat': 'rank_prev'}).text
             try:
-                previous_rank = int(previous_rank)
+                previous_rank = int(row.find(attrs={'data-stat': 'rank_prev'}).text)
             except ValueError:
                 previous_rank = None
 

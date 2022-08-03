@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Sacks
@@ -15,7 +13,7 @@ from utils import (
 
 class SacksRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[Sacks, list[Sacks]]:
+    def get(self, side_of_ball: str) -> list[Sacks]:
         """
         GET request to get sacks or opponent sacls for the given years.
         If team is provided only get sack data for that team.
@@ -24,8 +22,8 @@ class SacksRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[Sacks, list[Sacks]]: Sack data for all teams or only
-                sack data for one team
+            list[Sacks]: Sack data for all teams or only sack data
+                for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -43,9 +41,6 @@ class SacksRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(sacks, Sacks):
-            return sacks
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, side_of_ball == 'offense']

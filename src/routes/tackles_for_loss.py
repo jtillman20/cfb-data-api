@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import TacklesForLoss
@@ -15,8 +13,7 @@ from utils import (
 
 class TacklesForLossRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[TacklesForLoss,
-                                              list[TacklesForLoss]]:
+    def get(self, side_of_ball: str) -> list[TacklesForLoss]:
         """
         GET request to get tackles for loss or opponent tackles for loss
         for the given years. If team is provided only get tackles for
@@ -26,9 +23,8 @@ class TacklesForLossRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[TacklesForLoss, list[TacklesForLoss]]: Tackles for
-                loss data for all teams or only tackles for loss data
-                for one team
+            list[TacklesForLoss]: Tackles for loss data for all teams or
+                only tackles for loss data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -46,9 +42,6 @@ class TacklesForLossRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(tfl, TacklesForLoss):
-            return tfl
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, side_of_ball == 'offense']

@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import PassesDefended
@@ -14,15 +12,14 @@ from utils import (
 
 class PassesDefendedRoute(Resource):
     @flask_response
-    def get(self) -> Union[PassesDefended, list[PassesDefended]]:
+    def get(self) -> list[PassesDefended]:
         """
         GET request to get passes defended for the given years. If team
         is provided only get passed defended data for that team.
 
         Returns:
-            Union[PassesDefended, list[PassesDefended]]: Passes defended
-                data for all teams or only passes defended data for one
-                team
+            list[PassesDefended]: Passes defended data for all teams or
+                only passes defended data for one team
         """
         sort_attr = get_optional_param(
             name='sort', default_value='passes_defended_per_game')
@@ -33,9 +30,6 @@ class PassesDefendedRoute(Resource):
 
         passes_defended = PassesDefended.get_passes_defended(
             start_year=start_year, end_year=end_year, team=team)
-
-        if isinstance(passes_defended, PassesDefended):
-            return passes_defended
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, True]

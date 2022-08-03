@@ -1,5 +1,3 @@
-from typing import Union
-
 from app import db
 from .conference import Conference
 from .game import Game
@@ -40,7 +38,7 @@ class SRS(db.Model):
 
     @classmethod
     def get_srs_ratings(cls, start_year: int, end_year: int = None,
-                        team: str = None) -> Union['SRS', list['SRS']]:
+                        team: str = None) -> list['SRS']:
         """
         Get SRS ratings for qualifying teams for the given years.
         If team is provided, only get ratings for that team.
@@ -51,8 +49,8 @@ class SRS(db.Model):
             team (str): Team for which to get ratings
 
         Returns:
-            Union[SRS, list[SRS]]: SRS ratings for qualifying teams or
-                only the SRS rating for one team
+            list[SRS]: SRS ratings for qualifying teams or only the SRS
+                rating for one team
         """
         if end_year is None:
             end_year = start_year
@@ -62,7 +60,7 @@ class SRS(db.Model):
 
         if team is not None:
             ratings = query.filter_by(name=team).all()
-            return sum(ratings[1:], ratings[0]) if ratings else []
+            return [sum(ratings[1:], ratings[0])] if ratings else []
 
         ratings = {}
         for team_name in Team.get_qualifying_teams(
@@ -125,7 +123,7 @@ class SRS(db.Model):
         srs_ratings = {}
 
         for team in Team.get_teams(year=year):
-            record = Record.get_records(start_year=year, team=team.name)
+            record = Record.query.filter_by(team=team.id, year=year).first()
             srs_rating = cls(
                 team_id=team.id,
                 year=year,
@@ -306,8 +304,7 @@ class ConferenceSRS(db.Model):
 
     @classmethod
     def get_srs_ratings(cls, start_year: int, end_year: int = None,
-                        conference: str = None) -> Union['ConferenceSRS',
-                                                         list['ConferenceSRS']]:
+                        conference: str = None) -> list['ConferenceSRS']:
         """
         Get SRS ratings for all conferences for the given years.
         If conference is provided, only get ratings for that conference.
@@ -318,8 +315,8 @@ class ConferenceSRS(db.Model):
             conference (str): Conference for which to get ratings
 
         Returns:
-            Union[ConferenceSRS, list[ConferenceSRS]]: SRS ratings for
-                all conferences or only the SRS rating for one conference
+            list[ConferenceSRS]: SRS ratings for all conferences or only
+                the SRS rating for one conference
         """
         if end_year is None:
             end_year = start_year
@@ -329,7 +326,7 @@ class ConferenceSRS(db.Model):
 
         if conference is not None:
             ratings = query.filter(conference == Conference.name).all()
-            return sum(ratings[1:], ratings[0]) if ratings else []
+            return [sum(ratings[1:], ratings[0])] if ratings else []
 
         ratings = {}
         for conference in Conference.get_qualifying_conferences(
@@ -388,8 +385,10 @@ class ConferenceSRS(db.Model):
             )
 
             for team in conference.get_teams(year=year):
-                record = Record.get_records(start_year=year, team=team)
-                rating = SRS.get_srs_ratings(start_year=year, team=team)
+                record = Record.query.filter_by(year=year).join(
+                    Team).filter_by(name=team).first()
+                rating = SRS.query.filter_by(year=year).join(
+                    Team).filter_by(name=team).first()
 
                 srs_rating.scoring_margin += rating.scoring_margin
                 srs_rating.opponent_rating += rating.opponent_rating

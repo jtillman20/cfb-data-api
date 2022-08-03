@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Scoring
@@ -15,7 +13,7 @@ from utils import (
 
 class ScoringRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[Scoring, list[Scoring]]:
+    def get(self, side_of_ball: str) -> list[Scoring]:
         """
         GET request to get scoring offense or defense for the given years.
         If team is provided only get scoring data for that team.
@@ -24,8 +22,8 @@ class ScoringRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[Scoring, list[Scoring]]: Scoring data for all teams
-                or only scoring data for one team
+            list[Scoring]: Scoring data for all teams or only scoring
+                data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -43,9 +41,6 @@ class ScoringRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(scoring, Scoring):
-            return scoring
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, side_of_ball == 'offense']

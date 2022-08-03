@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Punting, PuntReturns, PuntReturnPlays
@@ -18,7 +16,7 @@ ASC_SORT_ATTRS = ['punts', 'punts_per_game', 'returns', 'returns_per_game',
 
 class PuntingRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[Punting, list[Punting]]:
+    def get(self, side_of_ball: str) -> list[Punting]:
         """
         GET request to get punting or opponent punting for the given
         years. If team is provided only get punting data for that team.
@@ -27,8 +25,8 @@ class PuntingRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[Punting, list[Punting]]: Punting data for all teams
-                or only punting data for one team
+            list[Punting]: Punting data for all teams or only punting
+                data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -47,16 +45,13 @@ class PuntingRoute(Resource):
             team=team
         )
 
-        if isinstance(punting, Punting):
-            return punting
-
         punting = sort(data=punting, attrs=attrs, reverses=reverses)
         return rank(data=punting, attr=sort_attr)
 
 
 class PuntReturnsRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[PuntReturns, list[PuntReturns]]:
+    def get(self, side_of_ball: str) -> list[PuntReturns]:
         """
         GET request to get punt returns or opponent punt returns for
         the given years. If team is provided only get punt return data
@@ -66,8 +61,8 @@ class PuntReturnsRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[PuntReturns, list[PuntReturns]]: Punt return data for
-                all teams or only punt return data for one team
+            list[PuntReturns]: Punt return data for all teams or only
+                punt return data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -85,9 +80,6 @@ class PuntReturnsRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(returns, Punting):
-            return returns
 
         returns = sort(data=returns, attrs=attrs, reverses=reverses)
         return rank(data=returns, attr=sort_attr)
@@ -139,8 +131,7 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
 
 class PuntReturnPlaysRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[PuntReturnPlays,
-                                              list[PuntReturnPlays]]:
+    def get(self, side_of_ball: str) -> list[PuntReturnPlays]:
         """
         GET request to get punt return plays or opponent punt return
         plays for the given years. If team is provided only get punt
@@ -150,9 +141,8 @@ class PuntReturnPlaysRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[PuntReturnPlays, list[PuntReturnPlays]]: Punt return
-                play data for all teams or only punt return play data
-                for one team
+            list[PuntReturnPlays]: Punt return play data for all teams
+                or only punt return play data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -166,9 +156,6 @@ class PuntReturnPlaysRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(return_plays, PuntReturnPlays):
-            return return_plays
 
         attrs = ['returns', sort_attr]
         reverses = [True, side_of_ball == 'offense']

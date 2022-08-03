@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -38,7 +37,7 @@ class FieldGoals(db.Model):
     @classmethod
     def get_field_goals(cls, side_of_ball: str, start_year: int,
                         end_year: int = None, team: str = None
-                        ) -> Union['FieldGoals', list['FieldGoals']]:
+                        ) -> list['FieldGoals']:
         """
         Get field goals or opponent field goals for qualifying teams
         for the given years. If team is provided, only get field goal
@@ -51,8 +50,8 @@ class FieldGoals(db.Model):
             team (str): Team for which to get field goal data
 
         Returns:
-            Union[FieldGoals, list[FieldGoals]]: Field goals or
-                opponent field goals for all teams or only for one team
+            list[FieldGoals]: Field goals or opponent field goals for
+                all teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -65,7 +64,7 @@ class FieldGoals(db.Model):
 
         if team is not None:
             field_goals = query.filter_by(name=team).all()
-            return sum(field_goals[1:], field_goals[0]) if field_goals else []
+            return [sum(field_goals[1:], field_goals[0])] if field_goals else []
 
         field_goals = {}
         for team_name in Team.get_qualifying_teams(
@@ -202,7 +201,7 @@ class PATs(db.Model):
 
     @classmethod
     def get_pats(cls, side_of_ball: str, start_year: int, end_year: int = None,
-                 team: str = None) -> Union['PATs', list['PATs']]:
+                 team: str = None) -> list['PATs']:
         """
         Get PATs or opponent PATs for qualifying teams for the given
         years. If team is provided, only get PAT data for that team.
@@ -214,8 +213,8 @@ class PATs(db.Model):
             team (str): Team for which to get PAT data
 
         Returns:
-            Union[PATs, list[PATs]]: PATs or opponent PATs for all
-                teams or only for one team
+            list[PATs]: PATs or opponent PATs for all teams or only for
+                one team
         """
         if end_year is None:
             end_year = start_year
@@ -228,7 +227,7 @@ class PATs(db.Model):
 
         if team is not None:
             pats = query.filter_by(name=team).all()
-            return sum(pats[1:], pats[0]) if pats else []
+            return [sum(pats[1:], pats[0])] if pats else []
 
         pats = {}
         for team_name in Team.get_qualifying_teams(

@@ -1,5 +1,4 @@
 from operator import attrgetter
-from typing import Union
 
 from app import db
 from scraper import CFBStatsScraper
@@ -34,7 +33,7 @@ class FourthDowns(db.Model):
     @classmethod
     def get_fourth_downs(cls, side_of_ball: str, start_year: int,
                          end_year: int = None, team: str = None
-                         ) -> Union['FourthDowns', list['FourthDowns']]:
+                         ) -> list['FourthDowns']:
         """
         Get fourth down offense or defense for qualifying teams for the
         given years. If team is provided, only get fourth down data for
@@ -47,8 +46,8 @@ class FourthDowns(db.Model):
             team (str): Team for which to get fourth down data
 
         Returns:
-            Union[FourthDowns, list[FourthDowns]]: Fourth down offense
-                or defense for all teams or only for one team
+            list[FourthDowns]: Fourth down offense or defense for all
+                teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -61,7 +60,8 @@ class FourthDowns(db.Model):
 
         if team is not None:
             fourth_downs = query.filter_by(name=team).all()
-            return sum(fourth_downs[1:], fourth_downs[0]) if fourth_downs else []
+            return ([sum(fourth_downs[1:], fourth_downs[0])]
+                    if fourth_downs else [])
 
         fourth_downs = {}
         for team_name in Team.get_qualifying_teams(
@@ -115,8 +115,11 @@ class FourthDowns(db.Model):
 
             for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                total = Total.get_total(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                total = Total.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 fourth_downs.append(cls(
                     team_id=team.id,
@@ -209,11 +212,10 @@ class RedZone(db.Model):
 
     @classmethod
     def get_red_zone(cls, side_of_ball: str, start_year: int,
-                     end_year: int = None, team: str = None
-                     ) -> Union['FourthDowns', list['FourthDowns']]:
+                     end_year: int = None, team: str = None) -> list['RedZone']:
         """
         Get red zone offense or defense for qualifying teams for the
-        given years. If team is provided, only get fourth down data for
+        given years. If team is provided, only get red zone data for
         that team.
 
         Args:
@@ -223,8 +225,8 @@ class RedZone(db.Model):
             team (str): Team for which to get red zone data
 
         Returns:
-            Union[RedZone, list[RedZone]]: Red zone offense
-                or defense for all teams or only for one team
+            list[RedZone]: Red zone offense or defense for all teams or
+                only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -237,7 +239,7 @@ class RedZone(db.Model):
 
         if team is not None:
             red_zone = query.filter_by(name=team).all()
-            return sum(red_zone[1:], red_zone[0]) if red_zone else []
+            return [sum(red_zone[1:], red_zone[0])] if red_zone else []
 
         red_zone = {}
         for team_name in Team.get_qualifying_teams(
@@ -374,7 +376,7 @@ class ThirdDowns(db.Model):
     @classmethod
     def get_third_downs(cls, side_of_ball: str, start_year: int,
                         end_year: int = None, team: str = None
-                        ) -> Union['ThirdDowns', list['ThirdDowns']]:
+                        ) -> list['ThirdDowns']:
         """
         Get third down offense or defense for qualifying teams for the
         given years. If team is provided, only get third down data for
@@ -387,8 +389,8 @@ class ThirdDowns(db.Model):
             team (str): Team for which to get third down data
 
         Returns:
-            Union[ThirdDowns, list[ThirdDowns]]: Third down offense or
-                defense for all teams or only for one team
+            list[ThirdDowns]: Third down offense or defense for all
+                teams or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -401,7 +403,7 @@ class ThirdDowns(db.Model):
 
         if team is not None:
             third_downs = query.filter_by(name=team).all()
-            return sum(third_downs[1:], third_downs[0]) if third_downs else []
+            return [sum(third_downs[1:], third_downs[0])] if third_downs else []
 
         third_downs = {}
         for team_name in Team.get_qualifying_teams(
@@ -455,8 +457,11 @@ class ThirdDowns(db.Model):
 
             for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                total = Total.get_total(
-                    side_of_ball=side_of_ball, start_year=year, team=team.name)
+                total = Total.query.filter_by(
+                    team_id=team.id,
+                    year=year,
+                    side_of_ball=side_of_ball,
+                ).first()
 
                 third_downs.append(cls(
                     team_id=team.id,

@@ -31,9 +31,7 @@ class TimeOfPossession(db.Model):
 
     @classmethod
     def get_time_of_possession(cls, start_year: int, end_year: int = None,
-                               team: str = None
-                               ) -> Union['TimeOfPossession',
-                                          list['TimeOfPossession']]:
+                               team: str = None) -> list['TimeOfPossession']:
         """
         Get time of possession for qualifying teams for the given years.
         If team is provided, only get time of possession data for that
@@ -47,8 +45,8 @@ class TimeOfPossession(db.Model):
             team (str): Team for which to get time of possession data
 
         Returns:
-            Union[TimeOfPossession, list[TimeOfPossession]]: Time of
-                possession for all teams or only for one team
+            list[TimeOfPossession]: Time of possession for all teams
+                or only for one team
         """
         if end_year is None:
             end_year = start_year
@@ -58,7 +56,7 @@ class TimeOfPossession(db.Model):
 
         if team is not None:
             time_of_possession = query.filter_by(name=team).all()
-            return (sum(time_of_possession[1:], time_of_possession[0])
+            return ([sum(time_of_possession[1:], time_of_possession[0])]
                     if time_of_possession else [])
 
         time_of_possession = {}
@@ -115,11 +113,11 @@ class TimeOfPossession(db.Model):
 
         for item in scraper.parse_html_data(html_content=html_content):
             team = Team.query.filter_by(name=item[1]).first()
-            total = Total.get_total(
+            total = Total.query.filter_by(
+                team_id=team.id,
+                year=year,
                 side_of_ball='offense',
-                start_year=year,
-                team=team.name
-            )
+            ).first()
             time = item[3].split(':')
 
             time_of_possession.append(cls(

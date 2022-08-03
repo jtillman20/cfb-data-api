@@ -14,6 +14,7 @@ class TeamRoute(Resource):
         Returns:
             list[Team]: All teams or teams filtered by conference
         """
-        year = get_year_param()
-        conference = get_optional_param(name='conference')
-        return Team.get_teams(year=year, conference=conference)
+        return Team.get_teams(
+            year=get_year_param(),
+            conference=get_optional_param(name='conference')
+        )

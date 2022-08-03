@@ -1,5 +1,3 @@
-from typing import Union
-
 from flask_restful import Resource
 
 from models import Total, ScrimmagePlays
@@ -15,7 +13,7 @@ from utils import (
 
 class TotalRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[Total, list[Total]]:
+    def get(self, side_of_ball: str) -> list[Total]:
         """
         GET request to get total offense or defense for the given years.
         If team is provided only get total data for that team.
@@ -24,8 +22,8 @@ class TotalRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[Total, list[Total]]: Total data for all teams
-                or only total data for one team
+            list[Total]: Total data for all teams or only total data
+                for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -43,9 +41,6 @@ class TotalRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(total, Total):
-            return total
 
         attrs = [secondary_attr, sort_attr]
         reverses = [secondary_reverse, side_of_ball == 'offense']
@@ -89,8 +84,7 @@ def secondary_sort(attr: str, side_of_ball: str) -> tuple:
 
 class ScrimmagePlaysRoute(Resource):
     @flask_response
-    def get(self, side_of_ball: str) -> Union[ScrimmagePlays,
-                                              list[ScrimmagePlays]]:
+    def get(self, side_of_ball: str) -> list[ScrimmagePlays]:
         """
         GET request to get scrimmage plays or opponent scrimmage plays
         for the given years. If team is provided only get scrimmage play
@@ -100,9 +94,8 @@ class ScrimmagePlaysRoute(Resource):
             side_of_ball (str): Offense or defense
 
         Returns:
-            Union[ScrimmagePlays, list[ScrimmagePlays]]: Scrimmage play
-                data for all teams or only scrimmage play data for one
-                team
+            list[ScrimmagePlays]: Scrimmage play data for all teams or
+                only scrimmage play data for one team
         """
         check_side_of_ball(value=side_of_ball)
 
@@ -116,9 +109,6 @@ class ScrimmagePlaysRoute(Resource):
             end_year=end_year,
             team=team
         )
-
-        if isinstance(scrimmage_plays, ScrimmagePlays):
-            return scrimmage_plays
 
         attrs = ['plays', sort_attr]
         reverses = [True, side_of_ball == 'offense']

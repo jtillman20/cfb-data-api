@@ -98,7 +98,7 @@ class APPoll(db.Model):
 
     @classmethod
     def get_ap_poll_data(cls, start_year: int, end_year: int = None,
-                         team: str = None) -> Union['APPoll', list['APPoll']]:
+                         team: str = None) -> list['APPoll']:
         """
         Get AP Poll data for the given years. If team is provided, then
         only get data for that team.
@@ -109,8 +109,8 @@ class APPoll(db.Model):
             team (str): Team for which to get poll data
 
         Returns:
-            Union[APPoll, list[APPoll]]: AP Poll data for all
-                teams or only poll data for one team
+            list[APPoll]: AP Poll data for all teams or only poll data
+                for one team
         """
         if end_year is None:
             end_year = start_year
@@ -120,7 +120,7 @@ class APPoll(db.Model):
 
         if team is not None:
             ap_poll = query.filter_by(name=team).all()
-            return sum(ap_poll[1:], ap_poll[0]) if ap_poll else []
+            return [sum(ap_poll[1:], ap_poll[0])] if ap_poll else []
 
         ap_poll = {}
         for team_name in Team.get_qualifying_teams(
@@ -365,7 +365,8 @@ class APPollRanking(db.Model):
             week = ranking[1]
 
             if week == final_week and year < 2010:
-                record = Record.get_records(start_year=year, team=team.name)
+                record = Record.query.filter_by(
+                    team_id=team.id, year=year).first()
                 wins = record.wins
                 losses = record.losses
                 ties = record.ties
