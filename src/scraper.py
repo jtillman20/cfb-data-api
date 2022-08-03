@@ -14,7 +14,7 @@ class SportsReferenceScraper(object):
     # Reference to how to store them in the database
     CONFERENCE_NAMES = {
         'ACC': 'Atlantic Coast',
-        'American': 'American Athletic',
+        'American': 'American',
         'BIAA': 'Border',
         'CUSA': 'Conference USA',
         'Ind': 'Independent',
@@ -23,15 +23,15 @@ class SportsReferenceScraper(object):
         'MWC': 'Mountain West',
         'PCC': 'Pacific Coast',
         'SEC': 'Southeastern',
-        'SWAC': 'Southwestern Athletic',
+        'SWAC': 'Southwestern',
         'SWC': 'Southwest',
-        'WAC': 'Western Athletic'
+        'WAC': 'Western'
     }
 
     TEAM_NAMES = {
         'Bowling Green State': 'Bowling Green',
-        'California-Santa Barbara': 'UCSB',
-        'Louisiana': 'Louisiana-Lafayette',
+        'California-Santa Barbara': 'UC Santa Barbara',
+        'Louisiana-Monroe': 'Louisiana Monroe',
         'Massachusetts': 'UMass',
         'Middle Tennessee State': 'Middle Tennessee',
         'Nevada-Las Vegas': 'UNLV',
@@ -415,6 +415,8 @@ class CFBStatsScraper(object):
 
     TEAM_NAMES = {
         'Hawai\'i': 'Hawaii',
+        'Louisiana-Lafayette': 'Louisiana',
+        'Louisiana-Monroe': 'Louisiana Monroe',
         'Massachusetts': 'UMass',
         'Miami (Florida)': 'Miami (FL)',
         'Miami (Ohio)': 'Miami (OH)',
