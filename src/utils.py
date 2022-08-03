@@ -7,6 +7,9 @@ from jsonpickle import encode
 
 from exceptions import BaseError, InvalidRequestError
 
+START_YEAR = 1973
+END_YEAR = 2021
+
 
 def check_side_of_ball(value: str) -> None:
     """
@@ -21,7 +24,7 @@ def check_side_of_ball(value: str) -> None:
     """
     if value not in ['offense', 'defense']:
         raise InvalidRequestError(
-            "Side of ball must be either 'offense' or 'defense'")
+            "'side_of_ball' must be either 'offense' or 'defense'")
 
 
 def flask_response(function) -> Response:
@@ -61,26 +64,28 @@ def flask_response(function) -> Response:
 
 def get_multiple_year_params() -> tuple:
     """
-    Get the required query parameter start_year and the optional query
-    parameter end_year from the flask request.
+    Get the required query parameter 'start_year' and the optional query
+    parameter 'end_year' from the flask request.
 
     Returns:
         tuple: Start year and end year
 
     Raises:
-        InvalidRequestError: The start_year query paramter is missing
-            or either the start_year or end_year query parameter has
-            an invalid value
+        InvalidRequestError: The 'start_year' query paramter is missing
+            or either the 'start_year' or 'end_year' query parameter
+            has an invalid value
     """
-    # TODO: Add validation for the start_year or end_year value
     try:
         start_year = int(request.args['start_year'])
     except KeyError:
-        raise InvalidRequestError(
-            'Start year is a required query parameter')
+        raise InvalidRequestError("'start_year' is a required query parameter")
     except ValueError:
         raise InvalidRequestError(
-            'Query parameter start year must be an integer')
+            "Query parameter 'start_year' must be an integer")
+
+    if not START_YEAR <= start_year <= END_YEAR:
+        raise InvalidRequestError(
+            f'Query paramter start_year must be between {START_YEAR} and {END_YEAR}')
 
     try:
         end_year = int(request.args['end_year'])
@@ -88,13 +93,16 @@ def get_multiple_year_params() -> tuple:
         end_year = None
     except ValueError:
         raise InvalidRequestError(
-            'Query parameter end year must be an integer')
+            "Query parameter 'end_year' must be an integer")
+
+    if not START_YEAR <= end_year <= END_YEAR:
+        raise InvalidRequestError(
+            f"Query parameter 'end_year' must be between {START_YEAR} and {END_YEAR}")
 
     return start_year, end_year
 
 
-def get_optional_param(name: str, default_value: str = None) -> \
-        Union[str, None]:
+def get_optional_param(name: str, default_value: str = None) -> Union[str, None]:
     """
     Get an optional query parameter from the flask request.
 
@@ -110,25 +118,31 @@ def get_optional_param(name: str, default_value: str = None) -> \
 
 def get_year_param() -> int:
     """
-    Get the required query param year from the flask request.
+    Get the required query param 'year' from the flask request.
 
     Returns:
-        int:
+        int: Year
 
     Raises:
-        InvalidRequestError:
+        InvalidRequestError: The 'year' query paramter is missing
+            or the 'year' query parameter has an invalid value
     """
     try:
-        return int(request.args['year'])
+        year = int(request.args['year'])
     except KeyError:
-        raise InvalidRequestError('Year is a required query parameter')
+        raise InvalidRequestError("'year' is a required query parameter")
     except ValueError:
-        raise InvalidRequestError('Query parameter year must be an integer')
+        raise InvalidRequestError("Query parameter 'year' must be an integer")
+
+    if not START_YEAR <= year <= END_YEAR:
+        raise InvalidRequestError(
+            f"Query paramter 'year' must be between {START_YEAR} and {END_YEAR}")
+    return year
 
 
 def rank(data: list[any], attr: str) -> list[any]:
     """
-    Add `rank` attribute to each object in the list based on the value
+    Add 'rank' attribute to each object in the list based on the value
     of the sorted attribute.
 
     Args:
@@ -136,7 +150,7 @@ def rank(data: list[any], attr: str) -> list[any]:
         attr (str): Attribute to sort by
 
     Returns:
-        list: Data with `rank` attribute added to each object
+        list: Data with 'rank' attribute added to each object
     """
     for index, team in enumerate(data):
         if not index:
@@ -172,14 +186,13 @@ def sort(data: list[any], attrs: list[str], reverses: list[bool]) -> list[any]:
         list: Sorted list
 
     Raises:
-        InvalidRequestError: An attribute in attrs is not a valid
+        InvalidRequestError: An attribute in 'attrs' is not a valid
             attribute to sort on the list of objects
     """
-    try:
-        for attr, reverse in zip(attrs, reverses):
+    for attr, reverse in zip(attrs, reverses):
+        try:
             data = sorted(data, key=attrgetter(attr), reverse=reverse)
-    except AttributeError:
-        attr = attr.replace('_', ' ')
-        raise InvalidRequestError(f'Cannot sort by attribute {attr}')
+        except AttributeError:
+            raise InvalidRequestError(f"Cannot sort by attribute '{attr}'")
 
     return data
