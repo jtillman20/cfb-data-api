@@ -190,8 +190,9 @@ class Fumbles(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'games': self.games,
@@ -210,8 +211,3 @@ class Fumbles(db.Model):
             'fumbles_forced_per_game': round(self.fumbles_forced_per_game, 2),
             'forced_fumble_pct': round(self.forced_fumble_pct, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

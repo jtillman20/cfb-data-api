@@ -156,8 +156,9 @@ class FourthDowns(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -167,11 +168,6 @@ class FourthDowns(db.Model):
             'conversion_pct': round(self.conversion_pct, 2),
             'play_pct': round(self.play_pct, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class RedZone(db.Model):
@@ -328,8 +324,9 @@ class RedZone(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -343,11 +340,6 @@ class RedZone(db.Model):
             'field_goal_pct': round(self.field_goal_pct, 2),
             'points_per_attempt': round(self.points_per_attempt, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class ThirdDowns(db.Model):
@@ -498,8 +490,9 @@ class ThirdDowns(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -509,8 +502,3 @@ class ThirdDowns(db.Model):
             'conversion_pct': round(self.conversion_pct, 2),
             'play_pct': round(self.play_pct, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

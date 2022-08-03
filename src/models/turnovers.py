@@ -167,8 +167,9 @@ class Turnovers(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'games': self.games,
@@ -183,8 +184,3 @@ class Turnovers(db.Model):
             'margin': self.margin,
             'margin_per_game': round(self.margin_per_game, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

@@ -174,8 +174,9 @@ class TimeOfPossession(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'games': self.games,
@@ -185,8 +186,3 @@ class TimeOfPossession(db.Model):
             'plays': self.plays,
             'seconds_per_play': round(self.seconds_per_play, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

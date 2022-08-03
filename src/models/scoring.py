@@ -212,8 +212,9 @@ class Scoring(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -222,8 +223,3 @@ class Scoring(db.Model):
             'points_per_game': round(self.points_per_game, 1),
             'relative_points_per_game': round(self.relative_points_per_game, 1)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

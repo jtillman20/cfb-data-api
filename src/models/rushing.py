@@ -263,8 +263,9 @@ class Rushing(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -281,11 +282,6 @@ class Rushing(db.Model):
                 self.relative_yards_per_attempt, 1),
             'relative_yards_per_game': round(self.relative_yards_per_game, 1)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class RushingPlays(db.Model):
@@ -501,8 +497,9 @@ class RushingPlays(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -526,8 +523,3 @@ class RushingPlays(db.Model):
             'ninety': self.ninety,
             'ninety_pct': round(self.ninety_pct, 2),
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

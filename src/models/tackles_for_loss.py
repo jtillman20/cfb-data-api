@@ -164,8 +164,9 @@ class TacklesForLoss(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -179,8 +180,3 @@ class TacklesForLoss(db.Model):
             'plays': self.plays,
             'tackle_for_loss_pct': round(self.tackle_for_loss_pct, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

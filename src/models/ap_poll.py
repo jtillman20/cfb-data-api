@@ -246,8 +246,9 @@ class APPoll(db.Model):
         avg_final = (round(self.avg_final, 2)
                      if self.avg_final is not None else self.avg_final)
 
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'year': self.year,
             'team': self.team.serialize(year=self.year),
             'weeks': self.weeks,
@@ -268,11 +269,6 @@ class APPoll(db.Model):
             'avg_final': avg_final,
             'score': self.score
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class APPollRanking(db.Model):

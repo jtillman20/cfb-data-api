@@ -164,8 +164,9 @@ class Kickoffs(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -180,11 +181,6 @@ class Kickoffs(db.Model):
             'onside': self.onside,
             'onside_pct': round(self.onside_pct, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class KickoffReturns(db.Model):
@@ -356,8 +352,9 @@ class KickoffReturns(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -371,13 +368,7 @@ class KickoffReturns(db.Model):
             'td_pct': round(self.td_pct, 2),
             'kickoffs': self.kickoffs,
             'return_pct': round(self.return_pct, 2)
-
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class KickoffReturnPlays(db.Model):
@@ -578,8 +569,9 @@ class KickoffReturnPlays(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -599,8 +591,3 @@ class KickoffReturnPlays(db.Model):
             'ninety': self.ninety,
             'ninety_pct': round(self.ninety_pct, 2),
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

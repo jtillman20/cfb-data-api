@@ -154,8 +154,9 @@ class Penalties(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -166,8 +167,3 @@ class Penalties(db.Model):
             'yards_per_game': round(self.yards_per_game, 1),
             'yards_per_penalty': round(self.yards_per_penalty, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

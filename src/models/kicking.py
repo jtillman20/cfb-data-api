@@ -152,8 +152,9 @@ class FieldGoals(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -164,11 +165,6 @@ class FieldGoals(db.Model):
             'field_goals_per_game': round(self.field_goals_per_game, 2),
             'pct': round(self.pct, 2),
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class PATs(db.Model):
@@ -311,8 +307,9 @@ class PATs(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -323,8 +320,3 @@ class PATs(db.Model):
             'pats_per_game': round(self.pats_per_game, 2),
             'pct': round(self.pct, 2),
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

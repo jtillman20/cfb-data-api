@@ -257,8 +257,9 @@ class SRS(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'srs': round(self.srs, 2),
@@ -267,11 +268,6 @@ class SRS(db.Model):
             'losses': self.losses,
             'ties': self.ties
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class ConferenceSRS(db.Model):
@@ -421,8 +417,9 @@ class ConferenceSRS(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'conference': self.conference.serialize(year=self.year),
             'year': self.year,
             'srs': round(self.srs, 2),
@@ -431,8 +428,3 @@ class ConferenceSRS(db.Model):
             'losses': self.losses,
             'ties': self.ties
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

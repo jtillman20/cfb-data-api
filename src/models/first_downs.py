@@ -182,8 +182,9 @@ class FirstDowns(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -198,8 +199,3 @@ class FirstDowns(db.Model):
             'penalty_pct': round(self.penalty_pct, 1),
             'plays_per_first_down': round(self.plays_per_first_down, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

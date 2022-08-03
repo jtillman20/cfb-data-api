@@ -306,8 +306,9 @@ class RPI(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'rpi': round(self.rpi, 4),
@@ -316,11 +317,6 @@ class RPI(db.Model):
             'losses': self.losses,
             'ties': self.ties
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class ConferenceRPI(db.Model):
@@ -600,8 +596,9 @@ class ConferenceRPI(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'conference': self.conference.serialize(year=self.year),
             'year': self.year,
             'rpi': round(self.rpi, 4),
@@ -610,8 +607,3 @@ class ConferenceRPI(db.Model):
             'losses': self.losses,
             'ties': self.ties
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

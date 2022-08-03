@@ -165,8 +165,9 @@ class Punting(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -178,11 +179,6 @@ class Punting(db.Model):
             'yards_per_punt': round(self.yards_per_punt, 2),
             'plays_per_punt': round(self.plays_per_punt, 2)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
 
 
 class PuntReturns(db.Model):
@@ -354,8 +350,9 @@ class PuntReturns(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -369,14 +366,7 @@ class PuntReturns(db.Model):
             'td_pct': round(self.td_pct, 2),
             'punts': self.punts,
             'return_pct': round(self.return_pct, 2)
-
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
-
 
 class PuntReturnPlays(db.Model):
     __tablename__ = 'punt_return_plays'
@@ -581,8 +571,9 @@ class PuntReturnPlays(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'side_of_ball': self.side_of_ball,
@@ -604,8 +595,3 @@ class PuntReturnPlays(db.Model):
             'ninety': self.ninety,
             'ninety_pct': round(self.ninety_pct, 2),
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data

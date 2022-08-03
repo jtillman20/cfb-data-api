@@ -161,8 +161,9 @@ class Record(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        data = {
+        return {
             'id': self.id,
+            'rank': self.rank,
             'team': self.team.serialize(year=self.year),
             'year': self.year,
             'games': self.games,
@@ -176,8 +177,3 @@ class Record(db.Model):
             'conference_ties': self.conference_ties,
             'conference_win_pct': round(self.conference_win_pct, 4)
         }
-
-        if hasattr(self, 'rank'):
-            data['rank'] = self.rank
-
-        return data
