@@ -57,18 +57,16 @@ class SRS(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
             ratings = query.filter_by(name=team).all()
-            return sum(ratings[1:], ratings[0])
+            return sum(ratings[1:], ratings[0]) if ratings else []
 
         ratings = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_rating = query.filter_by(name=team_name).all()
 
             if team_rating:
@@ -124,11 +122,9 @@ class SRS(db.Model):
         """
         max_margin = 35
         min_margin = 7
-
         srs_ratings = {}
-        teams = Team.get_teams(year=year)
 
-        for team in teams:
+        for team in Team.get_teams(year=year):
             record = Record.get_records(start_year=year, team=team.name)
             srs_rating = cls(
                 team_id=team.id,
@@ -150,11 +146,9 @@ class SRS(db.Model):
             losses=0,
             ties=0
         )
-
         fcs = srs_ratings['FCS']
-        games = Game.get_games(year=year)
 
-        for game in games:
+        for game in Game.get_games(year=year):
             home_team = game.home_team
             away_team = game.away_team
 
@@ -207,16 +201,13 @@ class SRS(db.Model):
         Args:
             year (int): Year to get strength of schedule
         """
-        srs_ratings = cls.query.filter_by(year=year).all()
-
-        for rating in srs_ratings:
+        for rating in cls.query.filter_by(year=year).all():
             # The team_id will be None for the rating that represents the
             # combined rating of FCS teams
             if rating.team_id is None:
                 rating.opponent_rating = 0
-                games = Game.get_fcs_games(year=year)
 
-                for game in games:
+                for game in Game.get_fcs_games(year=year):
                     away_team = Team.query.filter_by(
                         name=game.away_team).first()
                     if away_team is not None:
@@ -224,8 +215,8 @@ class SRS(db.Model):
                     else:
                         away_conference = None
 
-                    fbs_team = game.home_team if away_conference is None \
-                        else game.away_team
+                    fbs_team = (game.home_team if away_conference is None
+                                else game.away_team)
                     fbs_opponent = cls.query.filter_by(year=year).join(
                         Team).filter_by(name=fbs_team).first()
                     rating.opponent_rating += fbs_opponent.srs
@@ -233,11 +224,10 @@ class SRS(db.Model):
 
             team = rating.team.name
             rating.opponent_rating = 0
-            schedule = Game.get_games(year=year, team=team)
 
-            for game in schedule:
-                opponent_name = game.home_team if team == game.away_team \
-                    else game.away_team
+            for game in Game.get_games(year=year, team=team):
+                opponent_name = (game.home_team if team == game.away_team
+                                 else game.away_team)
                 opponent = cls.query.filter_by(year=year).join(
                     Team).filter_by(name=opponent_name).first()
 
@@ -334,18 +324,16 @@ class ConferenceSRS(db.Model):
         if end_year is None:
             end_year = start_year
 
-        conferences = Conference.get_qualifying_conferences(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Conference).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if conference is not None:
             ratings = query.filter(conference == Conference.name).all()
-            return sum(ratings[1:], ratings[0])
+            return sum(ratings[1:], ratings[0]) if ratings else []
 
         ratings = {}
-        for conference in conferences:
+        for conference in Conference.get_qualifying_conferences(
+                start_year=start_year, end_year=end_year):
             conference_rating = query.filter(
                 conference == Conference.name).all()
 
@@ -387,9 +375,7 @@ class ConferenceSRS(db.Model):
         Args:
             year (int): Year to add conference SRS ratings
         """
-        conferences = Conference.get_conferences(year=year)
-
-        for conference in conferences:
+        for conference in Conference.get_conferences(year=year):
             srs_rating = cls(
                 conference_id=conference.id,
                 year=year,
@@ -401,11 +387,9 @@ class ConferenceSRS(db.Model):
                 ties=0
             )
 
-            teams = conference.get_teams(year=year)
-            for team in teams:
+            for team in conference.get_teams(year=year):
                 record = Record.get_records(start_year=year, team=team)
-                rating = SRS.query.filter_by(year=year).join(Team).filter_by(
-                    name=team).first()
+                rating = SRS.get_srs_ratings(start_year=year, team=team)
 
                 srs_rating.scoring_margin += rating.scoring_margin
                 srs_rating.opponent_rating += rating.opponent_rating

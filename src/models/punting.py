@@ -49,7 +49,7 @@ class Punting(db.Model):
                     ) -> Union['Punting', list['Punting']]:
         """
         Get punting or opponent punting for qualifying teams for the
-        given years. If team is provided, only get punting  data for
+        given years. If team is provided, only get punting data for
         that team.
 
         Args:
@@ -65,9 +65,6 @@ class Punting(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -76,10 +73,11 @@ class Punting(db.Model):
 
         if team is not None:
             punting = query.filter_by(name=team).all()
-            return sum(punting[1:], punting[0])
+            return sum(punting[1:], punting[0]) if punting else []
 
         punting = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_punting = query.filter_by(name=team_name).all()
 
             if team_punting:
@@ -122,16 +120,13 @@ class Punting(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             punting = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='06')
-            punting_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in punting_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                opposite_side_of_ball = 'defense' \
-                    if side_of_ball == 'offense' else 'offense'
+                opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                         else 'offense')
                 total = Total.get_total(
                     side_of_ball=opposite_side_of_ball,
                     start_year=year,
@@ -257,9 +252,6 @@ class PuntReturns(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -268,10 +260,11 @@ class PuntReturns(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0])
+            return sum(returns[1:], returns[0]) if returns else []
 
         returns = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_returns = query.filter_by(name=team_name).all()
 
             if team_returns:
@@ -315,16 +308,13 @@ class PuntReturns(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             returns = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='04')
-            punt_return_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in punt_return_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                opposite_side_of_ball = 'defense' \
-                    if side_of_ball == 'offense' else 'offense'
+                opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                         else 'offense')
                 punting = Punting.get_punting(
                     side_of_ball=opposite_side_of_ball,
                     start_year=year,
@@ -480,9 +470,6 @@ class PuntReturnPlays(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -491,10 +478,11 @@ class PuntReturnPlays(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0])
+            return sum(returns[1:], returns[0]) if returns else []
 
         returns = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_returns = query.filter_by(name=team_name).all()
 
             if team_returns:
@@ -539,13 +527,10 @@ class PuntReturnPlays(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             punt_return_plays = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='33')
-            punt_return_play_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in punt_return_play_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
                 returns = PuntReturns.get_punt_returns(
                     side_of_ball=side_of_ball, start_year=year, team=team.name)

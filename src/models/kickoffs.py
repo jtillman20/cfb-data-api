@@ -66,9 +66,6 @@ class Kickoffs(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -77,10 +74,11 @@ class Kickoffs(db.Model):
 
         if team is not None:
             kickoffs = query.filter_by(name=team).all()
-            return sum(kickoffs[1:], kickoffs[0])
+            return sum(kickoffs[1:], kickoffs[0]) if kickoffs else []
 
         kickoffs = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_kickoffs = query.filter_by(name=team_name).all()
 
             if team_kickoffs:
@@ -123,12 +121,10 @@ class Kickoffs(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             kickoffs = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='29')
-            kickoff_data = scraper.parse_html_data(html_content=html_content)
 
-            for item in kickoff_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
 
                 kickoffs.append(cls(
@@ -257,9 +253,6 @@ class KickoffReturns(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -268,10 +261,11 @@ class KickoffReturns(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0])
+            return sum(returns[1:], returns[0]) if returns else []
 
         returns = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_returns = query.filter_by(name=team_name).all()
 
             if team_returns:
@@ -315,16 +309,13 @@ class KickoffReturns(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             returns = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='05')
-            kickoff_return_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in kickoff_return_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                opposite_side_of_ball = 'defense' \
-                    if side_of_ball == 'offense' else 'offense'
+                opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                         else 'offense')
                 kickoffs = Kickoffs.get_kickoffs(
                     side_of_ball=opposite_side_of_ball,
                     start_year=year,
@@ -475,9 +466,6 @@ class KickoffReturnPlays(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -486,10 +474,11 @@ class KickoffReturnPlays(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return sum(returns[1:], returns[0])
+            return sum(returns[1:], returns[0]) if returns else []
 
         returns = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_returns = query.filter_by(name=team_name).all()
 
             if team_returns:
@@ -536,13 +525,10 @@ class KickoffReturnPlays(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             kickoff_return_plays = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='34')
-            kickoff_return_play_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in kickoff_return_play_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
                 returns = KickoffReturns.get_kickoff_returns(
                     side_of_ball=side_of_ball, start_year=year, team=team.name)

@@ -74,8 +74,8 @@ class Rushing(db.Model):
     @property
     def relative_yards_per_attempt(self) -> float:
         if self.opponents_yards_per_attempt:
-            return (self.yards_per_attempt / self.opponents_yards_per_attempt) \
-                   * 100
+            return ((self.yards_per_attempt / self.opponents_yards_per_attempt)
+                    * 100)
         return 0.0
 
     @classmethod
@@ -100,9 +100,6 @@ class Rushing(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -111,10 +108,11 @@ class Rushing(db.Model):
 
         if team is not None:
             rushing = query.filter_by(name=team).all()
-            return sum(rushing[1:], rushing[0])
+            return sum(rushing[1:], rushing[0]) if rushing else []
 
         rushing = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_rushing = query.filter_by(name=team_name).all()
 
             if team_rushing:
@@ -154,16 +152,12 @@ class Rushing(db.Model):
         Args:
             year (int): Year to get rushing stats
         """
-        teams = Team.get_teams(year=year)
-
-        for team in teams:
+        for team in Team.get_teams(year=year):
             games = Game.get_games(year=year, team=team.name)
             game_stats = [game.stats[0] for game in games]
 
             for side_of_ball in ['offense', 'defense']:
-                attempts = 0
-                yards = 0
-                tds = 0
+                attempts, yards, tds = 0, 0, 0
 
                 for stats in game_stats:
                     home_team = stats.game.home_team
@@ -205,13 +199,10 @@ class Rushing(db.Model):
         Args:
             year (int): Year to add rushing stats
         """
-        rushing = cls.query.filter_by(year=year).all()
-
-        for team_rushing in rushing:
+        for team_rushing in cls.query.filter_by(year=year).all():
             team = team_rushing.team.name
-            schedule = Game.get_games(year=year, team=team)
 
-            for game in schedule:
+            for game in Game.get_games(year=year, team=team):
                 game_stats = game.stats[0]
 
                 if team == game.away_team:
@@ -228,12 +219,14 @@ class Rushing(db.Model):
 
                 if opponent_query.first() is not None:
                     side_of_ball = team_rushing.side_of_ball
-                    opposite_side_of_ball = 'defense' \
-                        if side_of_ball == 'offense' else 'offense'
+                    opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                             else 'offense')
 
-                    opponent_stats = cls.query.filter_by(
-                        year=year, side_of_ball=opposite_side_of_ball).join(
-                        Team).filter_by(name=opponent_name).first()
+                    opponent_stats = cls.get_rushing(
+                        side_of_ball=opposite_side_of_ball,
+                        start_year=year,
+                        team=opponent_name
+                    )
 
                     opponent_games = opponent_stats.games
                     team_rushing.opponents_games += opponent_games - 1
@@ -388,9 +381,6 @@ class RushingPlays(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -399,10 +389,12 @@ class RushingPlays(db.Model):
 
         if team is not None:
             rushing_plays = query.filter_by(name=team).all()
-            return sum(rushing_plays[1:], rushing_plays[0])
+            return (sum(rushing_plays[1:], rushing_plays[0])
+                    if rushing_plays else [])
 
         rushing_plays = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_rushing_plays = query.filter_by(name=team_name).all()
 
             if team_rushing_plays:
@@ -448,13 +440,10 @@ class RushingPlays(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             rushing_plays = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='31')
-            rushing_play_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in rushing_play_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
                 rushing = Rushing.get_rushing(
                     side_of_ball=side_of_ball, start_year=year, team=team.name)

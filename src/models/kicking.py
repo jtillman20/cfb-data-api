@@ -57,9 +57,6 @@ class FieldGoals(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -68,10 +65,11 @@ class FieldGoals(db.Model):
 
         if team is not None:
             field_goals = query.filter_by(name=team).all()
-            return sum(field_goals[1:], field_goals[0])
+            return sum(field_goals[1:], field_goals[0]) if field_goals else []
 
         field_goals = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_field_goals = query.filter_by(name=team_name).all()
 
             if team_field_goals:
@@ -116,13 +114,10 @@ class FieldGoals(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             field_goals = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='07')
-            field_goal_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in field_goal_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
 
                 field_goals.append(cls(
@@ -225,9 +220,6 @@ class PATs(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -236,10 +228,11 @@ class PATs(db.Model):
 
         if team is not None:
             pats = query.filter_by(name=team).all()
-            return sum(pats[1:], pats[0])
+            return sum(pats[1:], pats[0]) if pats else []
 
         pats = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_pats = query.filter_by(name=team_name).all()
 
             if team_pats:
@@ -282,12 +275,10 @@ class PATs(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             pats = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='08')
-            pat_data = scraper.parse_html_data(html_content=html_content)
 
-            for item in pat_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
 
                 pats.append(cls(

@@ -58,9 +58,6 @@ class Sacks(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -69,10 +66,11 @@ class Sacks(db.Model):
 
         if team is not None:
             sacks = query.filter_by(name=team).all()
-            return sum(sacks[1:], sacks[0])
+            return sum(sacks[1:], sacks[0]) if sacks else []
 
         sacks = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_sacks = query.filter_by(name=team_name).all()
 
             if team_sacks:
@@ -115,16 +113,13 @@ class Sacks(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             sacks = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='20')
-            sacks_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in sacks_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                opposite_side_of_ball = 'defense' \
-                    if side_of_ball == 'offense' else 'offense'
+                opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                         else 'offense')
                 passing = Passing.get_passing(
                     side_of_ball=opposite_side_of_ball,
                     start_year=year,

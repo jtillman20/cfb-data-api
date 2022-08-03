@@ -29,14 +29,14 @@ class Record(db.Model):
 
     @property
     def conference_games(self):
-        return self.conference_wins + self.conference_losses \
-               + self.conference_ties
+        return (self.conference_wins + self.conference_losses +
+                self.conference_ties)
 
     @property
     def conference_win_pct(self):
         if self.conference_games:
-            return (self.conference_wins + self.conference_ties * 0.5) \
-                   / self.conference_games
+            return ((self.conference_wins + self.conference_ties * 0.5) /
+                    self.conference_games)
         return 0.0
 
     @classmethod
@@ -58,18 +58,16 @@ class Record(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
             records = query.filter_by(name=team).all()
-            return sum(records[1:], records[0])
+            return sum(records[1:], records[0]) if records else []
 
         records = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_record = query.filter_by(name=team_name).all()
 
             if team_record:
@@ -108,9 +106,7 @@ class Record(db.Model):
         Args:
             year (int): Year to add records
         """
-        teams = Team.get_teams(year=year)
-
-        for team in teams:
+        for team in Team.get_teams(year=year):
             record = cls(
                 team_id=team.id,
                 year=year,

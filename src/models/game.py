@@ -96,9 +96,8 @@ class Game(db.Model):
             list[Game]: All games vs. FCS teams
         """
         games = []
-        all_games = cls.query.filter_by(year=year).all()
 
-        for game in all_games:
+        for game in cls.query.filter_by(year=year).all():
             home_team = Team.query.filter_by(name=game.home_team).first()
             away_team = Team.query.filter_by(name=game.away_team).first()
 
@@ -135,10 +134,9 @@ class Game(db.Model):
         for year in range(start_year, end_year + 1):
             print(f'Adding games for {year}')
             html_content = scraper.get_html_data(path=f'{year}-schedule.html')
-            game_data = scraper.parse_schedule_html_data(
-                html_content=html_content)
 
-            for game in game_data:
+            for game in scraper.parse_schedule_html_data(
+                    html_content=html_content):
                 db.session.add(cls(
                     year=year,
                     week=game[0],
@@ -209,8 +207,8 @@ class GameStats(db.Model):
 
     @property
     def home_first_downs(self) -> int:
-        return self.home_passing_first_downs + self.home_rushing_first_downs \
-               + self.home_penalty_first_downs
+        return (self.home_passing_first_downs + self.home_rushing_first_downs
+                + self.home_penalty_first_downs)
 
     @property
     def home_turnovers(self) -> int:
@@ -226,8 +224,8 @@ class GameStats(db.Model):
 
     @property
     def away_first_downs(self) -> int:
-        return self.away_passing_first_downs + self.away_rushing_first_downs \
-               + self.away_penalty_first_downs
+        return (self.away_passing_first_downs + self.away_rushing_first_downs
+                + self.away_penalty_first_downs)
 
     @property
     def away_turnovers(self) -> int:
@@ -251,9 +249,8 @@ class GameStats(db.Model):
 
         for year in range(start_year, end_year + 1):
             print(f'Adding game stats for {year}')
-            teams = Team.get_teams(year=year)
 
-            for team in teams:
+            for team in Team.get_teams(year=year):
                 html_content = scraper.get_game_log_html_data(
                     team=team.name, year=year)
                 offense_stats = scraper.parse_game_log_data(

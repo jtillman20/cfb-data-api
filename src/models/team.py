@@ -63,11 +63,9 @@ class Team(db.Model):
         Returns:
             list[Team]: All teams or teams filtered by conference
         """
-        teams = cls.query.all()
-
         if conference is not None:
             return [
-                team for team in teams
+                team for team in cls.query.all()
                 if any(
                     year in membership.years and
                     conference == membership.conference.name
@@ -76,7 +74,7 @@ class Team(db.Model):
             ]
 
         return [
-            team for team in teams
+            team for team in cls.query.all()
             if any(year in membership.years for membership in team.conferences)
         ]
 
@@ -95,10 +93,9 @@ class Team(db.Model):
             list[str]: Qualifying teams
         """
         min_years = (end_year - start_year + 1) / 2
-        teams = cls.get_teams(year=end_year)
         qualifying_teams = []
 
-        for team in teams:
+        for team in cls.get_teams(year=end_year):
             years = [
                 year for membership in team.conferences
                 for year in membership.years

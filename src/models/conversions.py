@@ -53,9 +53,6 @@ class FourthDowns(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -64,10 +61,11 @@ class FourthDowns(db.Model):
 
         if team is not None:
             fourth_downs = query.filter_by(name=team).all()
-            return sum(fourth_downs[1:], fourth_downs[0])
+            return sum(fourth_downs[1:], fourth_downs[0]) if fourth_downs else []
 
         fourth_downs = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_fourth_downs = query.filter_by(name=team_name).all()
 
             if team_fourth_downs:
@@ -112,13 +110,10 @@ class FourthDowns(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             fourth_downs = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='26')
-            fourth_down_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in fourth_down_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
                 total = Total.get_total(
                     side_of_ball=side_of_ball, start_year=year, team=team.name)
@@ -234,9 +229,6 @@ class RedZone(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -245,10 +237,11 @@ class RedZone(db.Model):
 
         if team is not None:
             red_zone = query.filter_by(name=team).all()
-            return sum(red_zone[1:], red_zone[0])
+            return sum(red_zone[1:], red_zone[0]) if red_zone else []
 
         red_zone = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_red_zone = query.filter_by(name=team_name).all()
 
             if team_red_zone:
@@ -291,13 +284,10 @@ class RedZone(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             red_zone = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='27')
-            red_zone_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in red_zone_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
 
                 red_zone.append(cls(
@@ -403,9 +393,6 @@ class ThirdDowns(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -414,10 +401,11 @@ class ThirdDowns(db.Model):
 
         if team is not None:
             third_downs = query.filter_by(name=team).all()
-            return sum(third_downs[1:], third_downs[0])
+            return sum(third_downs[1:], third_downs[0]) if third_downs else []
 
         third_downs = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_third_downs = query.filter_by(name=team_name).all()
 
             if team_third_downs:
@@ -462,13 +450,10 @@ class ThirdDowns(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             third_downs = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='25')
-            third_down_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in third_down_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
                 total = Total.get_total(
                     side_of_ball=side_of_ball, start_year=year, team=team.name)

@@ -67,18 +67,16 @@ class Turnovers(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
             turnovers = query.filter_by(name=team).all()
-            return sum(turnovers[1:], turnovers[0])
+            return sum(turnovers[1:], turnovers[0]) if turnovers else []
 
         turnovers = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_turnovers = query.filter_by(name=team_name).all()
 
             if team_turnovers:
@@ -120,16 +118,10 @@ class Turnovers(db.Model):
         Args:
             year (int): Year to get penalty stats
         """
-        teams = Team.get_teams(year=year)
-
-        for team in teams:
+        for team in Team.get_teams(year=year):
             games = Game.get_games(year=year, team=team.name)
             game_stats = [game.stats[0] for game in games]
-
-            ints = 0
-            fumbles = 0
-            opponent_ints = 0
-            opponent_fumbles = 0
+            ints, fumbles, opponent_ints, opponent_fumbles = 0, 0, 0, 0
 
             for stats in game_stats:
                 home_team = stats.game.home_team

@@ -75,7 +75,8 @@ class PassesDefended(db.Model):
 
         if team is not None:
             passes_defended = query.filter_by(name=team).all()
-            return sum(passes_defended[1:], passes_defended[0])
+            return (sum(passes_defended[1:], passes_defended[0])
+                    if passes_defended else [])
 
         passes_defended = {}
         for team_name in qualifying_teams:
@@ -120,15 +121,13 @@ class PassesDefended(db.Model):
         Args:
             year (int): Year to add passes defended stats
         """
-        scraper = CFBStatsScraper(year=year)
         passes_defended = []
-
+        scraper = CFBStatsScraper(year=year)
         html_content = scraper.get_html_data(
             side_of_ball='offense', category='23')
-        passes_defended_data = scraper.parse_html_data(
-            html_content=html_content)
 
-        for item in passes_defended_data:
+        for item in scraper.parse_html_data(
+                html_content=html_content):
             team = Team.query.filter_by(name=item[1]).first()
             passing = Passing.get_passing(
                 side_of_ball='defense',

@@ -56,9 +56,6 @@ class Scoring(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -67,10 +64,11 @@ class Scoring(db.Model):
 
         if team is not None:
             scoring = query.filter_by(name=team).all()
-            return sum(scoring[1:], scoring[0])
+            return sum(scoring[1:], scoring[0]) if scoring else []
 
         scoring = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_scoring = query.filter_by(name=team_name).all()
 
             if team_scoring:
@@ -111,7 +109,6 @@ class Scoring(db.Model):
             year (int): Year to add scoring stats
         """
         scoring = {}
-        teams = Team.get_teams(year=year)
 
         for side_of_ball in ['offense', 'defense']:
             scoring[side_of_ball] = {
@@ -124,14 +121,13 @@ class Scoring(db.Model):
                     opponents_points=0,
                     opponents_games=0
                 )
-                for team in teams
+                for team in Team.get_teams(year=year)
             }
 
         offense = scoring['offense']
         defense = scoring['defense']
-        games = Game.get_games(year=year)
 
-        for game in games:
+        for game in Game.get_games(year=year):
             home_team = game.home_team
             away_team = game.away_team
 
@@ -168,13 +164,10 @@ class Scoring(db.Model):
         Args:
             year (int): Year to get scoring stats
         """
-        scoring = cls.query.filter_by(year=year).all()
-
-        for team_scoring in scoring:
+        for team_scoring in cls.query.filter_by(year=year).all():
             team = team_scoring.team.name
-            schedule = Game.get_games(year=year, team=team)
 
-            for game in schedule:
+            for game in Game.get_games(year=year, team=team):
                 if team == game.away_team:
                     opponent_name = game.home_team
                     points = game.away_score
@@ -187,12 +180,13 @@ class Scoring(db.Model):
 
                 if opponent_query.first() is not None:
                     side_of_ball = team_scoring.side_of_ball
-                    opposite_side_of_ball = 'defense' \
-                        if side_of_ball == 'offense' else 'offense'
-
-                    opponent_scoring = cls.query.filter_by(
-                        year=year, side_of_ball=opposite_side_of_ball).join(
-                        Team).filter_by(name=opponent_name).first()
+                    opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                             else 'offense')
+                    opponent_scoring = cls.get_scoring(
+                        side_of_ball=opposite_side_of_ball,
+                        start_year=year,
+                        team=opponent_name
+                    )
 
                     opponent_points = opponent_scoring.points - points
                     team_scoring.opponents_points += opponent_points

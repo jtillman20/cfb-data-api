@@ -43,8 +43,8 @@ class RPI(db.Model):
 
     @property
     def sos(self) -> float:
-        return self.opponent_avg_win_pct * 0.55 + \
-               self.opponents_opponent_avg_win_pct * 0.45
+        return (self.opponent_avg_win_pct * 0.55 +
+                self.opponents_opponent_avg_win_pct * 0.45)
 
     @property
     def rpi(self) -> float:
@@ -69,18 +69,16 @@ class RPI(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
             ratings = query.filter_by(name=team).all()
-            return sum(ratings[1:], ratings[0])
+            return sum(ratings[1:], ratings[0]) if ratings else []
 
         ratings = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_rating = query.filter_by(name=team_name).all()
 
             if team_rating:
@@ -134,19 +132,8 @@ class RPI(db.Model):
             year (int): Year to get records
         """
         rpi_ratings = {}
-        teams = Team.get_teams(year=year)
 
-        # Add a combined rating for all FCS teams
-        rpi_ratings['FCS'] = cls(
-            year=year,
-            wins=0,
-            losses=0,
-            ties=0,
-            opponent_win_pct=0
-        )
-        fcs = rpi_ratings['FCS']
-
-        for team in teams:
+        for team in Team.get_teams(year=year):
             record = Record.get_records(start_year=year, team=team.name)
             rpi_rating = cls(
                 team_id=team.id,
@@ -160,17 +147,25 @@ class RPI(db.Model):
             )
             rpi_ratings[team.name] = rpi_rating
 
-        fcs_games = Game.get_fcs_games(year=year)
+        # Add a combined rating for all FCS teams
+        rpi_ratings['FCS'] = cls(
+            year=year,
+            wins=0,
+            losses=0,
+            ties=0,
+            opponent_win_pct=0
+        )
+        fcs = rpi_ratings['FCS']
 
-        for game in fcs_games:
+        for game in Game.get_fcs_games(year=year):
             away_team = Team.query.filter_by(name=game.away_team).first()
             if away_team is not None:
                 away_conference = away_team.get_conference(year=year)
             else:
                 away_conference = None
 
-            fbs_team = game.home_team if away_conference is None \
-                else game.away_team
+            fbs_team = (game.home_team if away_conference is None
+                        else game.away_team)
             result = game.determine_result(team=fbs_team)
 
             if result == 'win':
@@ -195,24 +190,18 @@ class RPI(db.Model):
         Args:
             year (int): Year to get strength of schedule
         """
-        rpi_ratings = cls.query.filter_by(year=year).all()
-
-        for rating in rpi_ratings:
+        for rating in cls.query.filter_by(year=year).all():
             # The team_id will be None for the rating that represents the
             # combined rating of FCS teams
             if rating.team_id is None:
-                games = Game.get_fcs_games(year=year)
-
-                for game in games:
+                for game in Game.get_fcs_games(year=year):
                     away_team = Team.query.filter_by(
                         name=game.away_team).first()
-                    if away_team is not None:
-                        away_conference = away_team.get_conference(year=year)
-                    else:
-                        away_conference = None
+                    away_conference = (away_team.get_conference(year=year)
+                                       if away_team is not None else None)
 
-                    fbs_team = game.home_team if away_conference is None \
-                        else game.away_team
+                    fbs_team = (game.home_team if away_conference is None
+                                else game.away_team)
                     fbs_opponent = cls.query.filter_by(year=year).join(
                         Team).filter_by(name=fbs_team).first()
 
@@ -233,12 +222,10 @@ class RPI(db.Model):
                 continue
 
             team = rating.team.name
-            schedule = Game.get_games(year=year, team=team)
-
-            for game in schedule:
+            for game in Game.get_games(year=year, team=team):
                 result = game.determine_result(team=team)
-                opponent_name = game.home_team if team == game.away_team \
-                    else game.away_team
+                opponent_name = (game.home_team if team == game.away_team
+                                 else game.away_team)
                 opponent = cls.query.filter_by(year=year).join(
                     Team).filter_by(name=opponent_name).first()
 
@@ -278,16 +265,13 @@ class RPI(db.Model):
         Args:
             year (int): Year to get opponent strength of schedule
         """
-        rpi_ratings = cls.query.filter_by(year=year).filter(
-            cls.team_id.is_not(None)).all()
-
-        for rating in rpi_ratings:
+        for rating in cls.query.filter_by(year=year).filter(
+                cls.team_id.is_not(None)).all():
             team = rating.team.name
-            schedule = Game.get_games(year=year, team=team)
 
-            for game in schedule:
-                opponent_name = game.home_team if team == game.away_team \
-                    else game.away_team
+            for game in Game.get_games(year=year, team=team):
+                opponent_name = (game.home_team if team == game.away_team
+                                 else game.away_team)
                 opponent = cls.query.filter_by(year=year).join(
                     Team).filter_by(name=opponent_name).first()
 
@@ -344,7 +328,7 @@ class RPI(db.Model):
 class ConferenceRPI(db.Model):
     __tablename__ = 'conference_rpi'
     id = db.Column(db.Integer, primary_key=True)
-    conference_id = db.Column(db.Integer, db.ForeignKey('conference.id'))
+    conference_id = db.Column(db.Integer, db.ForeignKey('conference.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     wins = db.Column(db.Integer, nullable=False)
     losses = db.Column(db.Integer, nullable=False)
@@ -377,8 +361,8 @@ class ConferenceRPI(db.Model):
 
     @property
     def sos(self) -> float:
-        return self.opponent_avg_win_pct * 0.55 + \
-               self.opponents_opponent_avg_win_pct * 0.45
+        return (self.opponent_avg_win_pct * 0.55 +
+                self.opponents_opponent_avg_win_pct * 0.45)
 
     @property
     def rpi(self) -> float:
@@ -404,18 +388,16 @@ class ConferenceRPI(db.Model):
         if end_year is None:
             end_year = start_year
 
-        conferences = Conference.get_qualifying_conferences(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Conference).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if conference is not None:
             ratings = query.filter(conference == Conference.name).all()
-            return sum(ratings[1:], ratings[0])
+            return sum(ratings[1:], ratings[0]) if ratings else []
 
         ratings = {}
-        for conference in conferences:
+        for conference in Conference.get_qualifying_conferences(
+                start_year=start_year, end_year=end_year):
             conference_rating = query.filter(
                 conference == Conference.name).all()
 
@@ -470,9 +452,7 @@ class ConferenceRPI(db.Model):
         Args:
             year (int): Year to get records
         """
-        conferences = Conference.get_conferences(year=year)
-
-        for conference in conferences:
+        for conference in Conference.get_conferences(year=year):
             rpi_rating = cls(
                 conference_id=conference.id,
                 year=year,
@@ -484,8 +464,7 @@ class ConferenceRPI(db.Model):
                 opponent_games=0
             )
 
-            teams = conference.get_teams(year=year)
-            for team in teams:
+            for team in conference.get_teams(year=year):
                 record = Record.get_records(start_year=year, team=team)
                 rpi_rating.wins += record.wins - record.conference_wins
                 rpi_rating.losses += record.losses - record.conference_losses
@@ -505,16 +484,12 @@ class ConferenceRPI(db.Model):
         Args:
             year (int): Year to get strength of schedule
         """
-        rpi_ratings = cls.query.filter_by(year=year).all()
-
-        for rating in rpi_ratings:
+        for rating in cls.query.filter_by(year=year).all():
             conference = rating.conference
             schedule = []
 
-            teams = conference.get_teams(year=year)
-            for team in teams:
-                games = Game.get_games(year=year, team=team)
-                for game in games:
+            for team in conference.get_teams(year=year):
+                for game in Game.get_games(year=year, team=team):
                     if not game.is_conference_game():
                         schedule.append(game)
 
@@ -529,10 +504,10 @@ class ConferenceRPI(db.Model):
                     team = game.away_team
 
                 result = game.determine_result(team=team)
-                opponent_name = game.home_team if team == game.away_team \
-                    else game.away_team
-                opponent = RPI.query.filter_by(year=year).join(
-                    Team).filter_by(name=opponent_name).first()
+                opponent_name = (game.home_team if team == game.away_team
+                                 else game.away_team)
+                opponent = RPI.get_rpi_ratings(
+                    start_year=year, team=opponent_name)
 
                 if opponent is not None:
                     games = opponent.games - 1
@@ -563,23 +538,19 @@ class ConferenceRPI(db.Model):
     @classmethod
     def add_opponents_opponent_win_pct(cls, year: int) -> None:
         """
-        Get the win percentage for every conference's non-fonerence
+        Get the win percentage for every conference's non-conference
         opponents' opponents for the given year as the opponent's
         strength of schedule part of the RPI rating formula.
 
         Args:
             year (int): Year to get opponent strength of schedule
         """
-        rpi_ratings = cls.query.filter_by(year=year).all()
-
-        for rating in rpi_ratings:
+        for rating in cls.query.filter_by(year=year).all():
             conference = rating.conference
             schedule = []
 
-            teams = conference.get_teams(year=year)
-            for team in teams:
-                games = Game.get_games(year=year, team=team)
-                for game in games:
+            for team in conference.get_teams(year=year):
+                for game in Game.get_games(year=year, team=team):
                     if not game.is_conference_game():
                         schedule.append(game)
 
@@ -593,10 +564,10 @@ class ConferenceRPI(db.Model):
                 else:
                     team = game.away_team
 
-                opponent_name = game.home_team if team == game.away_team \
-                    else game.away_team
-                opponent = RPI.query.filter_by(year=year).join(
-                    Team).filter_by(name=opponent_name).first()
+                opponent_name = (game.home_team if team == game.away_team
+                                 else game.away_team)
+                opponent = RPI.get_rpi_ratings(
+                    start_year=year, team=opponent_name)
 
                 if opponent is not None:
                     opponent_win_pct = opponent.opponent_win_pct

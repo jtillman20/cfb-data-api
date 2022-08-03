@@ -55,18 +55,16 @@ class Interceptions(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
             ints = query.filter_by(name=team).all()
-            return sum(ints[1:], ints[0])
+            return sum(ints[1:], ints[0]) if ints else []
 
         ints = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_ints = query.filter_by(name=team_name).all()
 
             if team_ints:
@@ -107,15 +105,12 @@ class Interceptions(db.Model):
         Args:
             year (int): Year to add interception stats
         """
-        scraper = CFBStatsScraper(year=year)
         interceptions = []
-
+        scraper = CFBStatsScraper(year=year)
         html_content = scraper.get_html_data(
             side_of_ball='offense', category='16')
-        interception_data = scraper.parse_html_data(
-            html_content=html_content)
 
-        for item in interception_data:
+        for item in scraper.parse_html_data(html_content=html_content):
             team = Team.query.filter_by(name=item[1]).first()
 
             interceptions.append(cls(

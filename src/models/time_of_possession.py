@@ -53,18 +53,17 @@ class TimeOfPossession(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
             time_of_possession = query.filter_by(name=team).all()
-            return sum(time_of_possession[1:], time_of_possession[0])
+            return (sum(time_of_possession[1:], time_of_possession[0])
+                    if time_of_possession else [])
 
         time_of_possession = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_time_of_possession = query.filter_by(name=team_name).all()
 
             if team_time_of_possession:
@@ -109,22 +108,18 @@ class TimeOfPossession(db.Model):
         Args:
             year (int): Year to add time of possession stats
         """
-        scraper = CFBStatsScraper(year=year)
         time_of_possession = []
-
+        scraper = CFBStatsScraper(year=year)
         html_content = scraper.get_html_data(
             side_of_ball='offense', category='15')
-        time_of_possession_data = scraper.parse_html_data(
-            html_content=html_content)
 
-        for item in time_of_possession_data:
+        for item in scraper.parse_html_data(html_content=html_content):
             team = Team.query.filter_by(name=item[1]).first()
             total = Total.get_total(
                 side_of_ball='offense',
                 start_year=year,
                 team=team.name
             )
-
             time = item[3].split(':')
 
             time_of_possession.append(cls(

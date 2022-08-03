@@ -34,7 +34,7 @@ class Conference(db.Model):
                                    end_year: int) -> list[str]:
         """
         Get conferences that qualify for records and stats for the given years.
-        The criteria is that the teams must be in FBS for the end year
+        The criteria are that the teams must be in FBS for the end year
         and at least 50% of the years.
 
         Args:
@@ -45,10 +45,9 @@ class Conference(db.Model):
             list[str]: Qualifying conferences
         """
         min_years = (end_year - start_year + 1) / 2
-        conferences = cls.query.all()
         qualifying_conferences = []
 
-        for conference in conferences:
+        for conference in cls.query.all():
             years = set([
                 year for membership in conference.teams
                 for year in membership.years
@@ -115,10 +114,9 @@ class ConferenceMembership(db.Model):
 
         for year in range(start_year, end_year + 1):
             html_content = scraper.get_html_data(path=f'{year}-standings.html')
-            team_conference_data = scraper.parse_standings_html_data(
-                html_content=html_content)
 
-            for team, conference in team_conference_data:
+            for team, conference in scraper.parse_standings_html_data(
+                    html_content=html_content):
                 teams.add(team)
                 conferences.add(conference)
 

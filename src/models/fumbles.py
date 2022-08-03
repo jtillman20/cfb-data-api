@@ -83,18 +83,16 @@ class Fumbles(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
-            passes_defended = query.filter_by(name=team).all()
-            return sum(passes_defended[1:], passes_defended[0])
+            fumbles = query.filter_by(name=team).all()
+            return sum(fumbles[1:], fumbles[0]) if fumbles else []
 
         fumbles = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_fumbles = query.filter_by(name=team_name).all()
 
             if team_fumbles:
@@ -151,12 +149,10 @@ class Fumbles(db.Model):
 
         for category in ['17', '18', '22']:
             side_of_ball = 'defense' if category == '18' else 'offense'
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category=category)
-            fumble_data = scraper.parse_html_data(html_content=html_content)
 
-            for item in fumble_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = item[1]
 
                 if category == '17':

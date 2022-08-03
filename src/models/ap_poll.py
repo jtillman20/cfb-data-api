@@ -115,18 +115,16 @@ class APPoll(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.year >= start_year, cls.year <= end_year)
 
         if team is not None:
             ap_poll = query.filter_by(name=team).all()
-            return sum(ap_poll[1:], ap_poll[0])
+            return sum(ap_poll[1:], ap_poll[0]) if ap_poll else []
 
         ap_poll = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_ap_poll = query.filter_by(name=team_name).all()
 
             if team_ap_poll:
@@ -168,9 +166,8 @@ class APPoll(db.Model):
             year (int): Year to add AP Poll rankings data
         """
         ap_poll = {}
-        rankings = APPollRanking.get_rankings(year=year)
 
-        for ranking in rankings:
+        for ranking in APPollRanking.get_rankings(year=year):
             team_name = ranking.team.name
             rank = ranking.rank
 
@@ -185,7 +182,6 @@ class APPoll(db.Model):
                     score=0
                 )
                 ap_poll[team_name] = team_ap_poll
-
             else:
                 team_ap_poll = ap_poll[team_name]
 
@@ -193,10 +189,8 @@ class APPoll(db.Model):
 
             if rank <= 10:
                 team_ap_poll.weeks_top_ten += 1
-
                 if rank <= 5:
                     team_ap_poll.weeks_top_five += 1
-
                     if rank == 1:
                         team_ap_poll.weeks_number_one += 1
 
@@ -247,10 +241,10 @@ class APPoll(db.Model):
         return self
 
     def __getstate__(self) -> dict:
-        avg_preseason = round(self.avg_preseason, 2) \
-            if self.avg_preseason is not None else self.avg_preseason
-        avg_final = round(self.avg_final, 2) \
-            if self.avg_final is not None else self.avg_final
+        avg_preseason = (round(self.avg_preseason, 2)
+                         if self.avg_preseason is not None else self.avg_preseason)
+        avg_final = (round(self.avg_final, 2)
+                     if self.avg_final is not None else self.avg_final)
 
         data = {
             'id': self.id,
@@ -362,11 +356,10 @@ class APPollRanking(db.Model):
         """
         rankings = []
         scraper = SportsReferenceScraper()
-
         html_content = scraper.get_html_data(path=f'{year}-polls.html')
-        ranking_data = scraper.parse_ap_rankings_data(html_content=html_content)
 
-        for ranking in ranking_data:
+        for ranking in scraper.parse_ap_rankings_data(
+                html_content=html_content):
             team = Team.query.filter_by(name=ranking[3]).first()
             final_week = ranking[0]
             week = ranking[1]

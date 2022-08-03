@@ -61,9 +61,6 @@ class TacklesForLoss(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -72,10 +69,11 @@ class TacklesForLoss(db.Model):
 
         if team is not None:
             tfl = query.filter_by(name=team).all()
-            return sum(tfl[1:], tfl[0])
+            return sum(tfl[1:], tfl[0]) if tfl else []
 
         tfl = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_tfl = query.filter_by(name=team_name).all()
 
             if team_tfl:
@@ -121,16 +119,13 @@ class TacklesForLoss(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             tfl = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='21')
-            tfl_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in tfl_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
-                opposite_side_of_ball = 'defense' \
-                    if side_of_ball == 'offense' else 'offense'
+                opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                         else 'offense')
                 total = Total.get_total(
                     side_of_ball=opposite_side_of_ball,
                     start_year=year,

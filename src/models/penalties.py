@@ -55,9 +55,6 @@ class Penalties(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -66,10 +63,11 @@ class Penalties(db.Model):
 
         if team is not None:
             penalties = query.filter_by(name=team).all()
-            return sum(penalties[1:], penalties[0])
+            return sum(penalties[1:], penalties[0]) if penalties else []
 
         penalties = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_penalties = query.filter_by(name=team_name).all()
 
             if team_penalties:
@@ -111,15 +109,12 @@ class Penalties(db.Model):
         Args:
             year (int): Year to get penalty stats
         """
-        teams = Team.get_teams(year=year)
-
-        for team in teams:
+        for team in Team.get_teams(year=year):
             games = Game.get_games(year=year, team=team.name)
             game_stats = [game.stats[0] for game in games]
 
             for side_of_ball in ['offense', 'defense']:
-                penalties = 0
-                yards = 0
+                penalties, yards = 0, 0
 
                 for stats in game_stats:
                     home_team = stats.game.home_team

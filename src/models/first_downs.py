@@ -74,9 +74,6 @@ class FirstDowns(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -85,10 +82,11 @@ class FirstDowns(db.Model):
 
         if team is not None:
             first_downs = query.filter_by(name=team).all()
-            return sum(first_downs[1:], first_downs[0])
+            return sum(first_downs[1:], first_downs[0]) if first_downs else []
 
         first_downs = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_first_downs = query.filter_by(name=team_name).all()
 
             if team_first_downs:
@@ -129,16 +127,12 @@ class FirstDowns(db.Model):
         Args:
             year (int): Year to add first down stats
         """
-        teams = Team.get_teams(year=year)
-
-        for team in teams:
+        for team in Team.get_teams(year=year):
             games = Game.get_games(year=year, team=team.name)
             game_stats = [game.stats[0] for game in games]
 
             for side_of_ball in ['offense', 'defense']:
-                passing = 0
-                rushing = 0
-                penalty = 0
+                passing, rushing, penalty = 0, 0, 0
 
                 for stats in game_stats:
                     home_team = stats.game.home_team

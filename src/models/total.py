@@ -89,9 +89,6 @@ class Total(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -100,10 +97,11 @@ class Total(db.Model):
 
         if team is not None:
             total = query.filter_by(name=team).all()
-            return sum(total[1:], total[0])
+            return sum(total[1:], total[0]) if total else []
 
         total = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_total = query.filter_by(name=team_name).all()
 
             if team_total:
@@ -143,15 +141,12 @@ class Total(db.Model):
         Args:
             year (int): Year to add total stats
         """
-        teams = Team.get_teams(year=year)
-
-        for team in teams:
+        for team in Team.get_teams(year=year):
             games = Game.get_games(year=year, team=team.name)
             game_stats = [game.stats[0] for game in games]
 
             for side_of_ball in ['offense', 'defense']:
-                plays = 0
-                yards = 0
+                plays, yards = 0, 0
 
                 for stats in game_stats:
                     home_team = stats.game.home_team
@@ -187,13 +182,10 @@ class Total(db.Model):
         Args:
             year (int): Year to get total stats
         """
-        total = cls.query.filter_by(year=year).all()
-
-        for team_total in total:
+        for team_total in cls.query.filter_by(year=year).all():
             team = team_total.team.name
-            schedule = Game.get_games(year=year, team=team)
 
-            for game in schedule:
+            for game in Game.get_games(year=year, team=team):
                 game_stats = game.stats[0]
 
                 if team == game.away_team:
@@ -210,12 +202,14 @@ class Total(db.Model):
 
                 if opponent_query.first() is not None:
                     side_of_ball = team_total.side_of_ball
-                    opposite_side_of_ball = 'defense' \
-                        if side_of_ball == 'offense' else 'offense'
+                    opposite_side_of_ball = ('defense' if side_of_ball == 'offense'
+                                             else 'offense')
 
-                    opponent_stats = cls.query.filter_by(
-                        year=year, side_of_ball=opposite_side_of_ball).join(
-                        Team).filter_by(name=opponent_name).first()
+                    opponent_stats = cls.get_total(
+                        side_of_ball=opposite_side_of_ball,
+                        start_year=year,
+                        team=opponent_name
+                    )
 
                     opponent_games = opponent_stats.games
                     team_total.opponents_games += opponent_games - 1
@@ -364,9 +358,6 @@ class ScrimmagePlays(db.Model):
         if end_year is None:
             end_year = start_year
 
-        qualifying_teams = Team.get_qualifying_teams(
-            start_year=start_year, end_year=end_year)
-
         query = cls.query.join(Team).filter(
             cls.side_of_ball == side_of_ball,
             cls.year >= start_year,
@@ -378,7 +369,8 @@ class ScrimmagePlays(db.Model):
             return sum(scrimmage_plays[1:], scrimmage_plays[0])
 
         scrimmage_plays = {}
-        for team_name in qualifying_teams:
+        for team_name in Team.get_qualifying_teams(
+                start_year=start_year, end_year=end_year):
             team_scrimmage_plays = query.filter_by(name=team_name).all()
 
             if team_scrimmage_plays:
@@ -425,13 +417,10 @@ class ScrimmagePlays(db.Model):
 
         for side_of_ball in ['offense', 'defense']:
             scrimmage_plays = []
-
             html_content = scraper.get_html_data(
                 side_of_ball=side_of_ball, category='30')
-            scrimmage_play_data = scraper.parse_html_data(
-                html_content=html_content)
 
-            for item in scrimmage_play_data:
+            for item in scraper.parse_html_data(html_content=html_content):
                 team = Team.query.filter_by(name=item[1]).first()
                 total = Total.get_total(
                     side_of_ball=side_of_ball, start_year=year, team=team.name)
