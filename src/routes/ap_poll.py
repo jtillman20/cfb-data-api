@@ -96,12 +96,18 @@ class APPollRankingRoute(Resource):
         """
         year = get_year_param()
         team = get_optional_param(name='team')
+        final_week = APPollRanking.get_final_week(year=year)
 
         try:
             week = int(request.args['week'])
         except (KeyError, TypeError):
             week = None
         except ValueError:
-            raise InvalidRequestError('Query parameter week must be an integer')
+            raise InvalidRequestError(
+                "Query parameter 'week' must be an integer")
+
+        if week and not 1 <= week <= final_week:
+            raise InvalidRequestError(
+                f"Query parameter 'week' must be between 1 and {final_week}")
 
         return APPollRanking.get_rankings(year=year, week=week, team=team)
