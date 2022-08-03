@@ -95,7 +95,7 @@ def get_multiple_year_params() -> tuple:
         raise InvalidRequestError(
             "Query parameter 'end_year' must be an integer")
 
-    if not START_YEAR <= end_year <= END_YEAR:
+    if end_year and not START_YEAR <= end_year <= END_YEAR:
         raise InvalidRequestError(
             f"Query parameter 'end_year' must be between {START_YEAR} and {END_YEAR}")
 
