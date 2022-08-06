@@ -63,6 +63,27 @@ class Game(db.Model):
 
         return home_conference == away_conference
 
+    def is_fcs_game(self) -> bool:
+        """
+        Determine if a game was played between FBS vs. FCS.
+
+        Returns:
+            bool: Whether the game was played between teams from the
+                same conference
+        """
+        home_team = Team.query.filter_by(name=self.home_team).first()
+        away_team = Team.query.filter_by(name=self.away_team).first()
+
+        for team in [home_team, away_team]:
+            if team is None:
+                return True
+            else:
+                conference = team.get_conference(year=self.year)
+                if conference is None:
+                    return True
+
+        return False
+
     @classmethod
     def get_games(cls, year: int, team: str = None) -> list['Game']:
         """
@@ -95,26 +116,23 @@ class Game(db.Model):
         Returns:
             list[Game]: All games vs. FCS teams
         """
-        games = []
+        return [game for game in cls.query.filter_by(year=year).all()
+                if game.is_fcs_game()]
 
-        for game in cls.query.filter_by(year=year).all():
-            home_team = Team.query.filter_by(name=game.home_team).first()
-            away_team = Team.query.filter_by(name=game.away_team).first()
+    @classmethod
+    def get_non_conference_games(cls, year: int):
+        """
+        Get games between teams from difference conferences for the
+        given year.
 
-            if home_team is not None:
-                home_conference = home_team.get_conference(year=year)
-            else:
-                home_conference = None
+        Args:
+            year (int): Year to get games
 
-            if away_team is not None:
-                away_conference = away_team.get_conference(year=year)
-            else:
-                away_conference = None
-
-            if home_conference is None or away_conference is None:
-                games.append(game)
-
-        return games
+        Returns:
+            list[Game]: All non-conference games
+        """
+        return [game for game in cls.get_games(year=year)
+                if not game.is_conference_game()]
 
     @classmethod
     def add_games(cls, start_year: int, end_year: int = None) -> None:
