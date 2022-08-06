@@ -75,8 +75,7 @@ class FourthDowns(db.Model):
         return [fourth_downs[team] for team in sorted(fourth_downs.keys())]
 
     @classmethod
-    def add_fourth_downs(cls, start_year: int = None,
-                         end_year: int = None) -> None:
+    def add_fourth_downs(cls, start_year: int, end_year: int = None) -> None:
         """
         Get fourth down offense and defense stats for all teams for the
         given years and add them to the database.
@@ -85,13 +84,9 @@ class FourthDowns(db.Model):
             start_year (int): Year to start adding fourth down stats
             end_year (int): Year to stop adding fourth down stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding fourth down stats for {year}')
@@ -248,7 +243,7 @@ class RedZone(db.Model):
         return [red_zone[team] for team in sorted(red_zone.keys())]
 
     @classmethod
-    def add_red_zone(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_red_zone(cls, start_year: int, end_year: int = None) -> None:
         """
         Get red zone offense and defense stats for all teams for the
         given years and add them to the database.
@@ -257,13 +252,9 @@ class RedZone(db.Model):
             start_year (int): Year to start adding red zone stats
             end_year (int): Year to stop adding red zone stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding red zone stats for {year}')
@@ -408,8 +399,7 @@ class ThirdDowns(db.Model):
         return [third_downs[team] for team in sorted(third_downs.keys())]
 
     @classmethod
-    def add_third_downs(cls, start_year: int = None,
-                        end_year: int = None) -> None:
+    def add_third_downs(cls, start_year: int, end_year: int = None) -> None:
         """
         Get third down offense and defense stats for all teams for the
         given years and add them to the database.
@@ -418,13 +408,9 @@ class ThirdDowns(db.Model):
             start_year (int): Year to start adding third down stats
             end_year (int): Year to stop adding third down stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding third down stats for {year}')

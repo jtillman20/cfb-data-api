@@ -111,7 +111,7 @@ class Total(db.Model):
         return [total[team] for team in sorted(total.keys())]
 
     @classmethod
-    def add_total(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_total(cls, start_year: int, end_year: int = None) -> None:
         """
         Get total offense and defense stats for all teams for the
         given years and add them to the database.
@@ -120,13 +120,9 @@ class Total(db.Model):
             start_year (int): Year to start adding total stats
             end_year (int): Year to stop adding total stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding total stats for {year}')
@@ -377,8 +373,7 @@ class ScrimmagePlays(db.Model):
                 sorted(scrimmage_plays.keys())]
 
     @classmethod
-    def add_scrimmage_plays(cls, start_year: int = None,
-                            end_year: int = None) -> None:
+    def add_scrimmage_plays(cls, start_year: int, end_year: int = None) -> None:
         """
         Get scrimmage plays and opponent scrimmage plays for all teams
         for the given years and add them to the database.
@@ -387,14 +382,9 @@ class ScrimmagePlays(db.Model):
             start_year (int): Year to start adding scrimmage play stats
             end_year (int): Year to stop adding scrimmage play stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            end_year = max([year.year for year in query])
-            years = range(2010, end_year + 1)
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding scrimmage play stats for {year}')

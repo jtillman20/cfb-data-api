@@ -134,8 +134,7 @@ class APPoll(db.Model):
         return [ap_poll[team] for team in sorted(ap_poll.keys())]
 
     @classmethod
-    def add_poll_data(cls, start_year: int = None,
-                      end_year: int = None) -> None:
+    def add_poll_data(cls, start_year: int, end_year: int = None) -> None:
         """
         Get AP Poll ranking data for every team in the rankings for
         each year and add them to the database.
@@ -144,14 +143,9 @@ class APPoll(db.Model):
             start_year (int): Year to start adding poll data
             end_year (int): Year to stop adding poll data
         """
-        if start_year is None:
-            query = APPollRanking.query.with_entities(
-                APPollRanking.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding AP Poll data for {year}')

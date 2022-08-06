@@ -4,7 +4,6 @@ from numpy import sum
 
 from app import db
 from scraper import CFBStatsScraper
-from .game import Game
 from .passing import Passing
 from .team import Team
 
@@ -80,7 +79,7 @@ class Sacks(db.Model):
         return [sacks[team] for team in sorted(sacks.keys())]
 
     @classmethod
-    def add_sacks(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_sacks(cls, start_year: int, end_year: int = None) -> None:
         """
         Get sack and opponent sack stats for all teams for the given
         years and add them to the database.
@@ -89,13 +88,9 @@ class Sacks(db.Model):
             start_year (int): Year to start adding sack stats
             end_year (int): Year to stop adding sack stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding sack stats for {year}')

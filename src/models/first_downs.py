@@ -95,8 +95,7 @@ class FirstDowns(db.Model):
         return [first_downs[team] for team in sorted(first_downs.keys())]
 
     @classmethod
-    def add_first_downs(cls, start_year: int = None,
-                        end_year: int = None) -> None:
+    def add_first_downs(cls, start_year: int, end_year: int = None) -> None:
         """
         Get first down offense and defense stats for all teams for the
         given years and add them to the database.
@@ -105,13 +104,9 @@ class FirstDowns(db.Model):
             start_year (int): Year to start adding first down stats
             end_year (int): Year to stop adding first down stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding first down stats for {year}')

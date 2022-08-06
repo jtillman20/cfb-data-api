@@ -76,7 +76,7 @@ class Scoring(db.Model):
         return [scoring[team] for team in sorted(scoring.keys())]
 
     @classmethod
-    def add_scoring(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_scoring(cls, start_year: int, end_year: int = None) -> None:
         """
         Get scoring offense and defense stats for all teams for the
         given years and add them to the database.
@@ -85,13 +85,9 @@ class Scoring(db.Model):
             start_year (int): Year to start adding scoring stats
             end_year (int): Year to stop adding scoring stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding scoring stats for {year}')

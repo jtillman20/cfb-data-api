@@ -4,7 +4,6 @@ from numpy import sum
 
 from app import db
 from scraper import CFBStatsScraper
-from .game import Game
 from .team import Team
 
 
@@ -79,8 +78,7 @@ class FieldGoals(db.Model):
         return [field_goals[team] for team in sorted(field_goals.keys())]
 
     @classmethod
-    def add_field_goals(cls, start_year: int = None,
-                        end_year: int = None) -> None:
+    def add_field_goals(cls, start_year: int, end_year: int = None) -> None:
         """
         Get field goal and opponent field goal stats for all teams for
         the given years and add them to the database.
@@ -89,13 +87,9 @@ class FieldGoals(db.Model):
             start_year (int): Year to start adding field goal stats
             end_year (int): Year to stop adding field goal stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding field goal stats for {year}')
@@ -237,7 +231,7 @@ class PATs(db.Model):
         return [pats[team] for team in sorted(pats.keys())]
 
     @classmethod
-    def add_pats(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_pats(cls, start_year: int, end_year: int = None) -> None:
         """
         Get PAT and opponent PAT stats for all teams for the given
         years and add them to the database.
@@ -246,13 +240,9 @@ class PATs(db.Model):
             start_year (int): Year to start adding PAT stats
             end_year (int): Year to stop adding PAT stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding PAT stats for {year}')

@@ -176,7 +176,7 @@ class Passing(db.Model):
         return [passing[team] for team in sorted(passing.keys())]
 
     @classmethod
-    def add_passing(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_passing(cls, start_year: int, end_year: int = None) -> None:
         """
         Get passing offense and defense stats for all teams for the
         given years and add them to the database.
@@ -185,13 +185,9 @@ class Passing(db.Model):
             start_year (int): Year to start adding passing stats
             end_year (int): Year to stop adding passing stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding passing stats for {year}')
@@ -492,8 +488,7 @@ class PassingPlays(db.Model):
         return [passing_plays[team] for team in sorted(passing_plays.keys())]
 
     @classmethod
-    def add_passing_plays(cls, start_year: int = None,
-                          end_year: int = None) -> None:
+    def add_passing_plays(cls, start_year: int, end_year: int = None) -> None:
         """
         Get passing plays and opponent passing plays for all teams
         for the given years and add them to the database.
@@ -502,14 +497,9 @@ class PassingPlays(db.Model):
             start_year (int): Year to start adding passing play stats
             end_year (int): Year to stop adding passing play stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            end_year = max([year.year for year in query])
-            years = range(2010, end_year + 1)
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding passing play stats for {year}')

@@ -4,7 +4,6 @@ from numpy import sum
 
 from app import db
 from scraper import CFBStatsScraper
-from .game import Game
 from .team import Team
 from .total import Total
 
@@ -86,7 +85,7 @@ class Punting(db.Model):
         return [punting[team] for team in sorted(punting.keys())]
 
     @classmethod
-    def add_punting(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_punting(cls, start_year: int, end_year: int = None) -> None:
         """
         Get punting and opponent punting stats for all teams for the
         given years and add them to the database.
@@ -95,13 +94,9 @@ class Punting(db.Model):
             start_year (int): Year to start adding punting stats
             end_year (int): Year to stop adding punting stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding punting stats for {year}')
@@ -268,8 +263,7 @@ class PuntReturns(db.Model):
         return [returns[team] for team in sorted(returns.keys())]
 
     @classmethod
-    def add_punt_returns(cls, start_year: int = None,
-                         end_year: int = None) -> None:
+    def add_punt_returns(cls, start_year: int, end_year: int = None) -> None:
         """
         Get punt return and opponent punt return stats for all teams
         for the given years and add them to the database.
@@ -278,13 +272,9 @@ class PuntReturns(db.Model):
             start_year (int): Year to start adding punt return stats
             end_year (int): Year to stop adding punt return stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding punt return stats for {year}')
@@ -478,7 +468,7 @@ class PuntReturnPlays(db.Model):
         return [returns[team] for team in sorted(returns.keys())]
 
     @classmethod
-    def add_punt_return_plays(cls, start_year: int = None,
+    def add_punt_return_plays(cls, start_year: int,
                               end_year: int = None) -> None:
         """
         Get punt return plays and opponent punt return plays for all
@@ -488,14 +478,9 @@ class PuntReturnPlays(db.Model):
             start_year (int): Year to start adding punt return play stats
             end_year (int): Year to stop adding punt return play stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            end_year = max([year.year for year in query])
-            years = range(2010, end_year + 1)
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding punt return play stats for {year}')

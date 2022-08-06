@@ -4,7 +4,6 @@ from numpy import sum
 
 from app import db
 from scraper import CFBStatsScraper
-from .game import Game
 from .team import Team
 from .total import Total
 
@@ -81,7 +80,7 @@ class TacklesForLoss(db.Model):
         return [tfl[team] for team in sorted(tfl.keys())]
 
     @classmethod
-    def add_tackles_for_loss(cls, start_year: int = None,
+    def add_tackles_for_loss(cls, start_year: int,
                              end_year: int = None) -> None:
         """
         Get tackles for loss and opponent tackles for loss stats for
@@ -93,13 +92,9 @@ class TacklesForLoss(db.Model):
             end_year (int): Year to stop adding tackles for loss
                 stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding tackles for loss stats for {year}')

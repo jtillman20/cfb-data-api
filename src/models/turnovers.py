@@ -84,8 +84,7 @@ class Turnovers(db.Model):
         return [turnovers[team] for team in sorted(turnovers.keys())]
 
     @classmethod
-    def add_turnovers(cls, start_year: int = None,
-                      end_year: int = None) -> None:
+    def add_turnovers(cls, start_year: int, end_year: int = None) -> None:
         """
         Get turnovers and opponent turnovers for all teams for the
         given years and add them to the database.
@@ -94,14 +93,9 @@ class Turnovers(db.Model):
             start_year (int): Year to start adding penalty stats
             end_year (int): Year to stop adding penalty stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            end_year = max([year.year for year in query])
-            years = range(2010, end_year + 1)
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding turnover stats for {year}')

@@ -4,7 +4,6 @@ from numpy import sum
 
 from app import db
 from scraper import CFBStatsScraper
-from .game import Game
 from .team import Team
 
 
@@ -88,7 +87,7 @@ class Kickoffs(db.Model):
         return [kickoffs[team] for team in sorted(kickoffs.keys())]
 
     @classmethod
-    def add_kickoffs(cls, start_year: int = None, end_year: int = None) -> None:
+    def add_kickoffs(cls, start_year: int, end_year: int = None) -> None:
         """
         Get kickoff and opponent kickoff stats for all teams for the
         given years and add them to the database.
@@ -97,13 +96,9 @@ class Kickoffs(db.Model):
             start_year (int): Year to start adding kickoff stats
             end_year (int): Year to stop adding kickoff stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding kickoff stats for {year}')
@@ -270,8 +265,7 @@ class KickoffReturns(db.Model):
         return [returns[team] for team in sorted(returns.keys())]
 
     @classmethod
-    def add_kickoff_returns(cls, start_year: int = None,
-                            end_year: int = None) -> None:
+    def add_kickoff_returns(cls, start_year: int, end_year: int = None) -> None:
         """
         Get kickoff return and opponent kickoff return stats for all
         teams for the given years and add them to the database.
@@ -280,13 +274,9 @@ class KickoffReturns(db.Model):
             start_year (int): Year to start adding kickoff return stats
             end_year (int): Year to stop adding kickoff return stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding kickoff return stats for {year}')
@@ -476,7 +466,7 @@ class KickoffReturnPlays(db.Model):
         return [returns[team] for team in sorted(returns.keys())]
 
     @classmethod
-    def add_kickoff_return_plays(cls, start_year: int = None,
+    def add_kickoff_return_plays(cls, start_year: int,
                                  end_year: int = None) -> None:
         """
         Get kickoff return plays and opponent kickoff return plays for
@@ -488,14 +478,9 @@ class KickoffReturnPlays(db.Model):
             end_year (int): Year to stop adding kickoff return play
                 stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            end_year = max([year.year for year in query])
-            years = range(2010, end_year + 1)
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding kickoff return play stats for {year}')

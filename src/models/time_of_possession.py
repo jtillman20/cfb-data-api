@@ -5,7 +5,6 @@ from numpy import sum
 
 from app import db
 from scraper import CFBStatsScraper
-from .game import Game
 from .team import Team
 from .total import Total
 
@@ -72,7 +71,7 @@ class TimeOfPossession(db.Model):
                 sorted(time_of_possession.keys())]
 
     @classmethod
-    def add_time_of_possession(cls, start_year: int = None,
+    def add_time_of_possession(cls, start_year: int,
                                end_year: int = None) -> None:
         """
         Get time of possession for all teams for the given years and add
@@ -84,14 +83,9 @@ class TimeOfPossession(db.Model):
             end_year (int): Year to stop adding time of possession
                 stats
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            end_year = max([year.year for year in query])
-            years = range(2010, end_year + 1)
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding time of possession stats for {year}')

@@ -69,8 +69,7 @@ class SRS(db.Model):
         return [ratings[team] for team in sorted(ratings.keys())]
 
     @classmethod
-    def add_srs_ratings(cls, start_year: int = None,
-                        end_year: int = None) -> None:
+    def add_srs_ratings(cls, start_year: int, end_year: int = None) -> None:
         """
         Get SRS ratings for all teams for every year and add them
         to the database.
@@ -79,13 +78,9 @@ class SRS(db.Model):
             start_year (int): Year to start adding ratings
             end_year (int): Year to stop adding ratings
         """
-        if start_year is None:
-            query = Game.query.with_entities(Game.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding SRS ratings for {year}')
@@ -313,8 +308,7 @@ class ConferenceSRS(db.Model):
         return [ratings[conference] for conference in sorted(ratings.keys())]
 
     @classmethod
-    def add_srs_ratings(cls, start_year: int = None,
-                        end_year: int = None) -> None:
+    def add_srs_ratings(cls, start_year: int, end_year: int = None) -> None:
         """
         Get SRS ratings for all conferences for every year and add
         them to the database.
@@ -323,13 +317,9 @@ class ConferenceSRS(db.Model):
             start_year (int): Year to start adding ratings
             end_year (int): Year to stop adding ratings
         """
-        if start_year is None:
-            query = SRS.query.with_entities(SRS.year).distinct()
-            years = [year.year for year in query]
-        else:
-            if end_year is None:
-                end_year = start_year
-            years = range(start_year, end_year + 1)
+        if end_year is None:
+            end_year = start_year
+        years = range(start_year, end_year + 1)
 
         for year in years:
             print(f'Adding conference SRS ratings for {year}')
