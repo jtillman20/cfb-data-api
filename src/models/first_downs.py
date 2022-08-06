@@ -1,3 +1,5 @@
+from numpy import sum
+
 from app import db
 from .game import Game
 from .team import Team
@@ -80,7 +82,7 @@ class FirstDowns(db.Model):
 
         if team is not None:
             first_downs = query.filter_by(name=team).all()
-            return [sum(first_downs[1:], first_downs[0])] if first_downs else []
+            return [sum(first_downs)] if first_downs else []
 
         first_downs = {}
         for team_name in Team.get_qualifying_teams(
@@ -88,8 +90,7 @@ class FirstDowns(db.Model):
             team_first_downs = query.filter_by(name=team_name).all()
 
             if team_first_downs:
-                first_downs[team_name] = sum(
-                    team_first_downs[1:], team_first_downs[0])
+                first_downs[team_name] = sum(team_first_downs)
 
         return [first_downs[team] for team in sorted(first_downs.keys())]
 

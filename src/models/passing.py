@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .first_downs import FirstDowns
@@ -161,7 +163,7 @@ class Passing(db.Model):
 
         if team is not None:
             passing = query.filter_by(name=team).all()
-            return [sum(passing[1:], passing[0])] if passing else []
+            return [sum(passing)] if passing else []
 
         passing = {}
         for team_name in Team.get_qualifying_teams(
@@ -169,7 +171,7 @@ class Passing(db.Model):
             team_passing = query.filter_by(name=team_name).all()
 
             if team_passing:
-                passing[team_name] = sum(team_passing[1:], team_passing[0])
+                passing[team_name] = sum(team_passing)
 
         return [passing[team] for team in sorted(passing.keys())]
 
@@ -450,7 +452,7 @@ class PassingPlays(db.Model):
     @classmethod
     def get_passing_plays(cls, side_of_ball: str, start_year: int,
                           end_year: int = None, team: str = None
-                        ) -> list['PassingPlays']:
+                          ) -> list['PassingPlays']:
         """
         Get passing plays or opponent passing plays for qualifying
         teams for the given years. If team is provided, only get
@@ -477,8 +479,7 @@ class PassingPlays(db.Model):
 
         if team is not None:
             passing_plays = query.filter_by(name=team).all()
-            return ([sum(passing_plays[1:], passing_plays[0])]
-                    if passing_plays else [])
+            return [sum(passing_plays)] if passing_plays else []
 
         passing_plays = {}
         for team_name in Team.get_qualifying_teams(
@@ -486,8 +487,7 @@ class PassingPlays(db.Model):
             team_passing_plays = query.filter_by(name=team_name).all()
 
             if team_passing_plays:
-                passing_plays[team_name] = sum(
-                    team_passing_plays[1:], team_passing_plays[0])
+                passing_plays[team_name] = sum(team_passing_plays)
 
         return [passing_plays[team] for team in sorted(passing_plays.keys())]
 

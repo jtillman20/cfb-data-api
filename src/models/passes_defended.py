@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -73,16 +75,14 @@ class PassesDefended(db.Model):
 
         if team is not None:
             passes_defended = query.filter_by(name=team).all()
-            return ([sum(passes_defended[1:], passes_defended[0])]
-                    if passes_defended else [])
+            return [sum(passes_defended)] if passes_defended else []
 
         passes_defended = {}
         for team_name in qualifying_teams:
             team_passes_defended = query.filter_by(name=team_name).all()
 
             if team_passes_defended:
-                passes_defended[team_name] = sum(
-                    team_passes_defended[1:], team_passes_defended[0])
+                passes_defended[team_name] = sum(team_passes_defended)
 
         return [passes_defended[team] for team in sorted(passes_defended.keys())]
 

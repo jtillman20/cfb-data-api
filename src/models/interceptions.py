@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -58,7 +60,7 @@ class Interceptions(db.Model):
 
         if team is not None:
             ints = query.filter_by(name=team).all()
-            return [sum(ints[1:], ints[0])] if ints else []
+            return [sum(ints)] if ints else []
 
         ints = {}
         for team_name in Team.get_qualifying_teams(
@@ -66,7 +68,7 @@ class Interceptions(db.Model):
             team_ints = query.filter_by(name=team_name).all()
 
             if team_ints:
-                ints[team_name] = sum(team_ints[1:], team_ints[0])
+                ints[team_name] = sum(team_ints)
 
         return [ints[team] for team in sorted(ints.keys())]
 

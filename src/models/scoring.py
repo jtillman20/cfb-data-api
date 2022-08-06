@@ -1,3 +1,5 @@
+from numpy import sum
+
 from app import db
 from .game import Game
 from .team import Team
@@ -61,7 +63,7 @@ class Scoring(db.Model):
 
         if team is not None:
             scoring = query.filter_by(name=team).all()
-            return [sum(scoring[1:], scoring[0])] if scoring else []
+            return [sum(scoring)] if scoring else []
 
         scoring = {}
         for team_name in Team.get_qualifying_teams(
@@ -69,7 +71,7 @@ class Scoring(db.Model):
             team_scoring = query.filter_by(name=team_name).all()
 
             if team_scoring:
-                scoring[team_name] = sum(team_scoring[1:], team_scoring[0])
+                scoring[team_name] = sum(team_scoring)
 
         return [scoring[team] for team in sorted(scoring.keys())]
 

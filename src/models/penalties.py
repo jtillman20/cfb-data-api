@@ -1,3 +1,5 @@
+from numpy import sum
+
 from app import db
 from .game import Game
 from .team import Team
@@ -61,7 +63,7 @@ class Penalties(db.Model):
 
         if team is not None:
             penalties = query.filter_by(name=team).all()
-            return [sum(penalties[1:], penalties[0])] if penalties else []
+            return [sum(penalties)] if penalties else []
 
         penalties = {}
         for team_name in Team.get_qualifying_teams(
@@ -69,8 +71,7 @@ class Penalties(db.Model):
             team_penalties = query.filter_by(name=team_name).all()
 
             if team_penalties:
-                penalties[team_name] = sum(
-                    team_penalties[1:], team_penalties[0])
+                penalties[team_name] = sum(team_penalties)
 
         return [penalties[team] for team in sorted(penalties.keys())]
 

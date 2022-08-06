@@ -1,3 +1,5 @@
+from numpy import sum
+
 from app import db
 from .game import Game
 from .team import Team
@@ -69,7 +71,7 @@ class Turnovers(db.Model):
 
         if team is not None:
             turnovers = query.filter_by(name=team).all()
-            return [sum(turnovers[1:], turnovers[0])] if turnovers else []
+            return [sum(turnovers)] if turnovers else []
 
         turnovers = {}
         for team_name in Team.get_qualifying_teams(
@@ -77,8 +79,7 @@ class Turnovers(db.Model):
             team_turnovers = query.filter_by(name=team_name).all()
 
             if team_turnovers:
-                turnovers[team_name] = sum(
-                    team_turnovers[1:], team_turnovers[0])
+                turnovers[team_name] = sum(team_turnovers)
 
         return [turnovers[team] for team in sorted(turnovers.keys())]
 

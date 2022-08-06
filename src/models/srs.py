@@ -1,3 +1,5 @@
+from numpy import sum
+
 from app import db
 from .conference import Conference
 from .game import Game
@@ -54,7 +56,7 @@ class SRS(db.Model):
 
         if team is not None:
             ratings = query.filter_by(name=team).all()
-            return [sum(ratings[1:], ratings[0])] if ratings else []
+            return [sum(ratings)] if ratings else []
 
         ratings = {}
         for team_name in Team.get_qualifying_teams(
@@ -62,7 +64,7 @@ class SRS(db.Model):
             team_rating = query.filter_by(name=team_name).all()
 
             if team_rating:
-                ratings[team_name] = sum(team_rating[1:], team_rating[0])
+                ratings[team_name] = sum(team_rating)
 
         return [ratings[team] for team in sorted(ratings.keys())]
 
@@ -297,7 +299,7 @@ class ConferenceSRS(db.Model):
 
         if conference is not None:
             ratings = query.filter(conference == Conference.name).all()
-            return [sum(ratings[1:], ratings[0])] if ratings else []
+            return [sum(ratings)] if ratings else []
 
         ratings = {}
         for conference in Conference.get_qualifying_conferences(
@@ -306,8 +308,7 @@ class ConferenceSRS(db.Model):
                 conference == Conference.name).all()
 
             if conference_rating:
-                ratings[conference] = sum(
-                    conference_rating[1:], conference_rating[0])
+                ratings[conference] = sum(conference_rating)
 
         return [ratings[conference] for conference in sorted(ratings.keys())]
 

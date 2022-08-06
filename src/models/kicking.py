@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -64,7 +66,7 @@ class FieldGoals(db.Model):
 
         if team is not None:
             field_goals = query.filter_by(name=team).all()
-            return [sum(field_goals[1:], field_goals[0])] if field_goals else []
+            return [sum(field_goals)] if field_goals else []
 
         field_goals = {}
         for team_name in Team.get_qualifying_teams(
@@ -72,8 +74,7 @@ class FieldGoals(db.Model):
             team_field_goals = query.filter_by(name=team_name).all()
 
             if team_field_goals:
-                field_goals[team_name] = sum(
-                    team_field_goals[1:], team_field_goals[0])
+                field_goals[team_name] = sum(team_field_goals)
 
         return [field_goals[team] for team in sorted(field_goals.keys())]
 
@@ -223,7 +224,7 @@ class PATs(db.Model):
 
         if team is not None:
             pats = query.filter_by(name=team).all()
-            return [sum(pats[1:], pats[0])] if pats else []
+            return [sum(pats)] if pats else []
 
         pats = {}
         for team_name in Team.get_qualifying_teams(
@@ -231,7 +232,7 @@ class PATs(db.Model):
             team_pats = query.filter_by(name=team_name).all()
 
             if team_pats:
-                pats[team_name] = sum(team_pats[1:], team_pats[0])
+                pats[team_name] = sum(team_pats)
 
         return [pats[team] for team in sorted(pats.keys())]
 

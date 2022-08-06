@@ -1,6 +1,7 @@
 from statistics import mean
 from typing import Union
 
+from numpy import sum
 from sqlalchemy_utils import ScalarListType
 
 from app import db
@@ -120,7 +121,7 @@ class APPoll(db.Model):
 
         if team is not None:
             ap_poll = query.filter_by(name=team).all()
-            return [sum(ap_poll[1:], ap_poll[0])] if ap_poll else []
+            return [sum(ap_poll)] if ap_poll else []
 
         ap_poll = {}
         for team_name in Team.get_qualifying_teams(
@@ -128,7 +129,7 @@ class APPoll(db.Model):
             team_ap_poll = query.filter_by(name=team_name).all()
 
             if team_ap_poll:
-                ap_poll[team_name] = sum(team_ap_poll[1:], team_ap_poll[0])
+                ap_poll[team_name] = sum(team_ap_poll)
 
         return [ap_poll[team] for team in sorted(ap_poll.keys())]
 

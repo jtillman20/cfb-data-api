@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -60,8 +62,7 @@ class FourthDowns(db.Model):
 
         if team is not None:
             fourth_downs = query.filter_by(name=team).all()
-            return ([sum(fourth_downs[1:], fourth_downs[0])]
-                    if fourth_downs else [])
+            return [sum(fourth_downs)] if fourth_downs else []
 
         fourth_downs = {}
         for team_name in Team.get_qualifying_teams(
@@ -69,8 +70,7 @@ class FourthDowns(db.Model):
             team_fourth_downs = query.filter_by(name=team_name).all()
 
             if team_fourth_downs:
-                fourth_downs[team_name] = sum(
-                    team_fourth_downs[1:], team_fourth_downs[0])
+                fourth_downs[team_name] = sum(team_fourth_downs)
 
         return [fourth_downs[team] for team in sorted(fourth_downs.keys())]
 
@@ -235,7 +235,7 @@ class RedZone(db.Model):
 
         if team is not None:
             red_zone = query.filter_by(name=team).all()
-            return [sum(red_zone[1:], red_zone[0])] if red_zone else []
+            return [sum(red_zone)] if red_zone else []
 
         red_zone = {}
         for team_name in Team.get_qualifying_teams(
@@ -243,7 +243,7 @@ class RedZone(db.Model):
             team_red_zone = query.filter_by(name=team_name).all()
 
             if team_red_zone:
-                red_zone[team_name] = sum(team_red_zone[1:], team_red_zone[0])
+                red_zone[team_name] = sum(team_red_zone)
 
         return [red_zone[team] for team in sorted(red_zone.keys())]
 
@@ -395,7 +395,7 @@ class ThirdDowns(db.Model):
 
         if team is not None:
             third_downs = query.filter_by(name=team).all()
-            return [sum(third_downs[1:], third_downs[0])] if third_downs else []
+            return [sum(third_downs)] if third_downs else []
 
         third_downs = {}
         for team_name in Team.get_qualifying_teams(
@@ -403,8 +403,7 @@ class ThirdDowns(db.Model):
             team_third_downs = query.filter_by(name=team_name).all()
 
             if team_third_downs:
-                third_downs[team_name] = sum(
-                    team_third_downs[1:], team_third_downs[0])
+                third_downs[team_name] = sum(team_third_downs)
 
         return [third_downs[team] for team in sorted(third_downs.keys())]
 

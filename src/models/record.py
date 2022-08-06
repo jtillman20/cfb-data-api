@@ -1,3 +1,5 @@
+from numpy import sum
+
 from app import db
 from .conference import Conference
 from .game import Game
@@ -65,7 +67,7 @@ class Record(db.Model):
 
         if team is not None:
             records = query.filter_by(name=team).all()
-            return [sum(records[1:], records[0])] if records else []
+            return [sum(records)] if records else []
 
         records = {}
         for team_name in Team.get_qualifying_teams(
@@ -73,7 +75,7 @@ class Record(db.Model):
             team_record = query.filter_by(name=team_name).all()
 
             if team_record:
-                records[team_name] = sum(team_record[1:], team_record[0])
+                records[team_name] = sum(team_record)
 
         return [records[team] for team in sorted(records.keys())]
 
@@ -250,7 +252,7 @@ class ConferenceRecord(db.Model):
 
         if conference is not None:
             records = query.filter_by(name=conference).all()
-            return [sum(records[1:], records[0])] if records else []
+            return [sum(records)] if records else []
 
         records = {}
         for conference in Conference.get_qualifying_conferences(
@@ -258,8 +260,7 @@ class ConferenceRecord(db.Model):
             conference_record = query.filter_by(name=conference).all()
 
             if conference_record:
-                records[conference] = sum(
-                    conference_record[1:], conference_record[0])
+                records[conference] = sum(conference_record)
 
         return [records[conference] for conference in sorted(records.keys())]
 

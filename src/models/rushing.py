@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .first_downs import FirstDowns
@@ -106,7 +108,7 @@ class Rushing(db.Model):
 
         if team is not None:
             rushing = query.filter_by(name=team).all()
-            return [sum(rushing[1:], rushing[0])] if rushing else []
+            return [sum(rushing)] if rushing else []
 
         rushing = {}
         for team_name in Team.get_qualifying_teams(
@@ -114,7 +116,7 @@ class Rushing(db.Model):
             team_rushing = query.filter_by(name=team_name).all()
 
             if team_rushing:
-                rushing[team_name] = sum(team_rushing[1:], team_rushing[0])
+                rushing[team_name] = sum(team_rushing)
 
         return [rushing[team] for team in sorted(rushing.keys())]
 
@@ -386,8 +388,7 @@ class RushingPlays(db.Model):
 
         if team is not None:
             rushing_plays = query.filter_by(name=team).all()
-            return ([sum(rushing_plays[1:], rushing_plays[0])]
-                    if rushing_plays else [])
+            return [sum(rushing_plays)] if rushing_plays else []
 
         rushing_plays = {}
         for team_name in Team.get_qualifying_teams(
@@ -395,8 +396,7 @@ class RushingPlays(db.Model):
             team_rushing_plays = query.filter_by(name=team_name).all()
 
             if team_rushing_plays:
-                rushing_plays[team_name] = sum(
-                    team_rushing_plays[1:], team_rushing_plays[0])
+                rushing_plays[team_name] = sum(team_rushing_plays)
 
         return [rushing_plays[team] for team in sorted(rushing_plays.keys())]
 

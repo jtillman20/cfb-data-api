@@ -1,3 +1,5 @@
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -86,7 +88,7 @@ class Fumbles(db.Model):
 
         if team is not None:
             fumbles = query.filter_by(name=team).all()
-            return [sum(fumbles[1:], fumbles[0])] if fumbles else []
+            return [sum(fumbles)] if fumbles else []
 
         fumbles = {}
         for team_name in Team.get_qualifying_teams(
@@ -94,7 +96,7 @@ class Fumbles(db.Model):
             team_fumbles = query.filter_by(name=team_name).all()
 
             if team_fumbles:
-                fumbles[team_name] = sum(team_fumbles[1:], team_fumbles[0])
+                fumbles[team_name] = sum(team_fumbles)
 
         return [fumbles[team] for team in sorted(fumbles.keys())]
 

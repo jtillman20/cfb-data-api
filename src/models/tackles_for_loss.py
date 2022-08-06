@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -66,7 +68,7 @@ class TacklesForLoss(db.Model):
 
         if team is not None:
             tfl = query.filter_by(name=team).all()
-            return [sum(tfl[1:], tfl[0])] if tfl else []
+            return [sum(tfl)] if tfl else []
 
         tfl = {}
         for team_name in Team.get_qualifying_teams(
@@ -74,7 +76,7 @@ class TacklesForLoss(db.Model):
             team_tfl = query.filter_by(name=team_name).all()
 
             if team_tfl:
-                tfl[team_name] = sum(team_tfl[1:], team_tfl[0])
+                tfl[team_name] = sum(team_tfl)
 
         return [tfl[team] for team in sorted(tfl.keys())]
 

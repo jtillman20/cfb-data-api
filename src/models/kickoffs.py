@@ -1,5 +1,7 @@
 from operator import attrgetter
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -73,7 +75,7 @@ class Kickoffs(db.Model):
 
         if team is not None:
             kickoffs = query.filter_by(name=team).all()
-            return [sum(kickoffs[1:], kickoffs[0])] if kickoffs else []
+            return [sum(kickoffs)] if kickoffs else []
 
         kickoffs = {}
         for team_name in Team.get_qualifying_teams(
@@ -81,7 +83,7 @@ class Kickoffs(db.Model):
             team_kickoffs = query.filter_by(name=team_name).all()
 
             if team_kickoffs:
-                kickoffs[team_name] = sum(team_kickoffs[1:], team_kickoffs[0])
+                kickoffs[team_name] = sum(team_kickoffs)
 
         return [kickoffs[team] for team in sorted(kickoffs.keys())]
 
@@ -255,7 +257,7 @@ class KickoffReturns(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return [sum(returns[1:], returns[0])] if returns else []
+            return [sum(returns)] if returns else []
 
         returns = {}
         for team_name in Team.get_qualifying_teams(
@@ -263,7 +265,7 @@ class KickoffReturns(db.Model):
             team_returns = query.filter_by(name=team_name).all()
 
             if team_returns:
-                returns[team_name] = sum(team_returns[1:], team_returns[0])
+                returns[team_name] = sum(team_returns)
 
         return [returns[team] for team in sorted(returns.keys())]
 
@@ -461,7 +463,7 @@ class KickoffReturnPlays(db.Model):
 
         if team is not None:
             returns = query.filter_by(name=team).all()
-            return [sum(returns[1:], returns[0])] if returns else []
+            return [sum(returns)] if returns else []
 
         returns = {}
         for team_name in Team.get_qualifying_teams(
@@ -469,7 +471,7 @@ class KickoffReturnPlays(db.Model):
             team_returns = query.filter_by(name=team_name).all()
 
             if team_returns:
-                returns[team_name] = sum(team_returns[1:], team_returns[0])
+                returns[team_name] = sum(team_returns)
 
         return [returns[team] for team in sorted(returns.keys())]
 

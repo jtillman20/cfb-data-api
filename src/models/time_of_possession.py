@@ -1,6 +1,8 @@
 from operator import attrgetter
 from typing import Union
 
+from numpy import sum
+
 from app import db
 from scraper import CFBStatsScraper
 from .game import Game
@@ -56,8 +58,7 @@ class TimeOfPossession(db.Model):
 
         if team is not None:
             time_of_possession = query.filter_by(name=team).all()
-            return ([sum(time_of_possession[1:], time_of_possession[0])]
-                    if time_of_possession else [])
+            return [sum(time_of_possession)] if time_of_possession else []
 
         time_of_possession = {}
         for team_name in Team.get_qualifying_teams(
@@ -65,8 +66,7 @@ class TimeOfPossession(db.Model):
             team_time_of_possession = query.filter_by(name=team_name).all()
 
             if team_time_of_possession:
-                time_of_possession[team_name] = sum(
-                    team_time_of_possession[1:], team_time_of_possession[0])
+                time_of_possession[team_name] = sum(team_time_of_possession)
 
         return [time_of_possession[team] for team in
                 sorted(time_of_possession.keys())]
