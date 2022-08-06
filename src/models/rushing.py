@@ -150,7 +150,7 @@ class Rushing(db.Model):
         """
         for team in Team.get_teams(year=year):
             games = Game.get_games(year=year, team=team.name)
-            game_stats = [game.stats[0] for game in games]
+            game_stats = [game.stats for game in games]
 
             for side_of_ball in ['offense', 'defense']:
                 attempts, yards, tds = 0, 0, 0
@@ -202,7 +202,7 @@ class Rushing(db.Model):
             team = team_rushing.team.name
 
             for game in Game.get_games(year=year, team=team):
-                game_stats = game.stats[0]
+                game_stats = game.stats
 
                 if team == game.away_team:
                     opponent_name = game.home_team

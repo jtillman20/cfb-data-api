@@ -123,7 +123,7 @@ class FirstDowns(db.Model):
         """
         for team in Team.get_teams(year=year):
             games = Game.get_games(year=year, team=team.name)
-            game_stats = [game.stats[0] for game in games]
+            game_stats = [game.stats for game in games]
 
             for side_of_ball in ['offense', 'defense']:
                 passing, rushing, penalty = 0, 0, 0
