@@ -7,7 +7,7 @@ from .team import Team
 class Record(db.Model):
     __tablename__ = 'record'
     id = db.Column(db.Integer, primary_key=True)
-    team_id = db.Column(db.Integer, db.ForeignKey('team.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     year = db.Column(db.Integer, nullable=False)
     wins = db.Column(db.Integer, nullable=False)
     losses = db.Column(db.Integer, nullable=False)
@@ -105,6 +105,8 @@ class Record(db.Model):
         Args:
             year (int): Year to add records
         """
+        fcs_wins, fcs_losses, fcs_ties = 0, 0, 0
+
         for team in Team.get_teams(year=year):
             record = cls(
                 team_id=team.id,
@@ -126,11 +128,17 @@ class Record(db.Model):
                     if game.is_conference_game():
                         record.conference_wins += 1
 
+                    if game.is_fcs_game():
+                        fcs_losses += 1
+
                 elif result == 'loss':
                     record.losses += 1
 
                     if game.is_conference_game():
                         record.conference_losses += 1
+
+                    if game.is_fcs_game():
+                        fcs_wins += 1
 
                 elif result == 'tie':
                     record.ties += 1
@@ -138,7 +146,21 @@ class Record(db.Model):
                     if game.is_conference_game():
                         record.conference_ties += 1
 
+                    if game.is_fcs_game():
+                        fcs_ties += 1
+
             db.session.add(record)
+
+        # Add a combined record for all FCS teams
+        db.session.add(cls(
+            year=year,
+            wins=fcs_wins,
+            losses=fcs_losses,
+            ties=fcs_ties,
+            conference_wins=0,
+            conference_losses=0,
+            conference_ties=0
+        ))
 
         db.session.commit()
 
