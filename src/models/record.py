@@ -213,6 +213,11 @@ class ConferenceRecord(db.Model):
     losses = db.Column(db.Integer, nullable=False)
     ties = db.Column(db.Integer, nullable=False)
 
+    rpi = db.relationship(
+        'ConferenceRPI', backref='record', lazy=True, uselist=False)
+    srs = db.relationship(
+        'ConferenceSRS', backref='record', lazy=True, uselist=False)
+
     @property
     def games(self) -> float:
         return self.wins + self.losses + self.ties
