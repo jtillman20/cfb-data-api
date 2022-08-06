@@ -200,6 +200,71 @@ class ConferenceRecord(db.Model):
             return (self.wins + self.ties * 0.5) / self.games
         return 0.0
 
+    @classmethod
+    def add_records(cls, start_year: int = None, end_year: int = None) -> None:
+        """
+        Get win-loss records for all conferences for every year and add
+        them to the database.
+
+        Args:
+            start_year (int): Year to start adding win-loss records
+            end_year (int): Year to stop adding win-loss records
+        """
+        if start_year is None:
+            query = Record.query.with_entities(Record.year).distinct()
+            years = [year.year for year in query]
+        else:
+            if end_year is None:
+                end_year = start_year
+            years = range(start_year, end_year + 1)
+
+        for year in years:
+            print(f'Adding conference records for {year}')
+            cls.add_records_for_one_year(year=year)
+
+    @classmethod
+    def add_records_for_one_year(cls, year: int) -> None:
+        """
+        Get win-loss records for all conferences for one year and add
+        them to the database.
+
+        Args:
+            year (int): Year to add conference SRS ratings
+        """
+        conference_record = {}
+
+        for conference in Conference.get_conferences(year=year):
+            conference_record[conference.name] = cls(
+                conference_id=conference.id,
+                year=year,
+                wins=0,
+                losses=0,
+                ties=0
+            )
+
+        for game in Game.get_non_conference_games(year=year):
+            home_team = Team.query.filter_by(name=game.home_team).first()
+            away_team = Team.query.filter_by(name=game.away_team).first()
+
+            for team in [home_team, away_team]:
+                if team is not None:
+                    conference = team.get_conference(year=year)
+
+                    if conference is not None:
+                        result = game.determine_result(team=team.name)
+
+                        if result == 'win':
+                            conference_record[conference].wins += 1
+                        elif result == 'loss':
+                            conference_record[conference].losses += 1
+                        elif result == 'tie':
+                            conference_record[conference].ties += 1
+
+        for record in conference_record.values():
+            db.session.add(record)
+
+        db.session.commit()
+
     def __add__(self, other: 'ConferenceRecord') -> 'ConferenceRecord':
         """
         Add two ConferenceRecord objects to combine multiple years of data.
