@@ -1,7 +1,7 @@
 from app import db
 from .conference import Conference
 from .game import Game
-from .record import Record
+from .record import ConferenceRecord, Record
 from .team import Team
 
 
@@ -10,27 +10,15 @@ class RPI(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     team_id = db.Column(db.Integer, db.ForeignKey('team.id'))
     year = db.Column(db.Integer, nullable=False)
-    wins = db.Column(db.Integer, nullable=False)
-    losses = db.Column(db.Integer, nullable=False)
-    ties = db.Column(db.Integer, nullable=False)
+    record_id = db.Column(db.Integer, db.ForeignKey('record.id'), nullable=False)
     opponent_win_pct = db.Column(db.Integer, nullable=False)
     opponents_opponent_win_pct = db.Column(db.Integer, nullable=True)
     opponent_games = db.Column(db.Integer, nullable=True)
 
     @property
-    def games(self) -> int:
-        return self.wins + self.losses + self.ties
-
-    @property
-    def win_pct(self) -> float:
-        if self.games:
-            return (self.wins + self.ties * 0.5) / self.games
-        return 0.0
-
-    @property
     def opponent_avg_win_pct(self) -> float:
-        if self.games:
-            return self.opponent_win_pct / self.games
+        if self.record.games:
+            return self.opponent_win_pct / self.record.games
         return 0.0
 
     @property
@@ -46,7 +34,7 @@ class RPI(db.Model):
 
     @property
     def rpi(self) -> float:
-        return self.win_pct * 0.35 + self.sos * 0.65
+        return self.record.win_pct * 0.35 + self.sos * 0.65
 
     @classmethod
     def get_rpi_ratings(cls, start_year: int, end_year: int = None,
@@ -136,9 +124,7 @@ class RPI(db.Model):
             rpi_rating = cls(
                 team_id=team.id,
                 year=year,
-                wins=record.wins,
-                losses=record.losses,
-                ties=record.ties,
+                record_id=record.id,
                 opponent_win_pct=0,
                 opponents_opponent_win_pct=0,
                 opponent_games=0
@@ -146,32 +132,13 @@ class RPI(db.Model):
             rpi_ratings[team.name] = rpi_rating
 
         # Add a combined rating for all FCS teams
+        fcs_record = Record.query.filter(
+            Record.year == year, Record.team_id.is_(None)).first()
         rpi_ratings['FCS'] = cls(
             year=year,
-            wins=0,
-            losses=0,
-            ties=0,
+            record_id=fcs_record.id,
             opponent_win_pct=0
         )
-        fcs = rpi_ratings['FCS']
-
-        for game in Game.get_fcs_games(year=year):
-            away_team = Team.query.filter_by(name=game.away_team).first()
-            if away_team is not None:
-                away_conference = away_team.get_conference(year=year)
-            else:
-                away_conference = None
-
-            fbs_team = (game.home_team if away_conference is None
-                        else game.away_team)
-            result = game.determine_result(team=fbs_team)
-
-            if result == 'win':
-                fcs.losses += 1
-            elif result == 'loss':
-                fcs.wins += 1
-            else:
-                fcs.ties += 1
 
         for rpi in rpi_ratings.values():
             db.session.add(rpi)
@@ -204,9 +171,9 @@ class RPI(db.Model):
                         Team).filter_by(name=fbs_team).first()
 
                     result = game.determine_result(team=fbs_team)
-                    games = fbs_opponent.games - 1
-                    wins = fbs_opponent.wins
-                    ties = fbs_opponent.ties
+                    games = fbs_opponent.record.games - 1
+                    wins = fbs_opponent.record.wins
+                    ties = fbs_opponent.record.ties
 
                     if result == 'win':
                         win_pct = (wins + ties * 0.5) / games
@@ -228,9 +195,9 @@ class RPI(db.Model):
                     Team).filter_by(name=opponent_name).first()
 
                 if opponent is not None:
-                    games = opponent.games - 1
-                    wins = opponent.wins
-                    ties = opponent.ties
+                    games = opponent.record.games - 1
+                    wins = opponent.record.wins
+                    ties = opponent.record.ties
 
                     if result == 'win':
                         win_pct = (wins + ties * 0.5) / games
@@ -239,17 +206,13 @@ class RPI(db.Model):
                     else:
                         win_pct = (wins + (ties - 1) * 0.5) / games
 
-                    opponent_win_pct = win_pct
                 else:
                     fcs_rating = cls.query.filter(
                         cls.team_id.is_(None), cls.year == year).first()
+                    win_pct = (fcs_rating.record.win_pct
+                               if fcs_rating.record.win_pct > 0.25 else 0.25)
 
-                    if fcs_rating.win_pct > 0.25:
-                        opponent_win_pct = fcs_rating.win_pct
-                    else:
-                        opponent_win_pct = 0.25
-
-                rating.opponent_win_pct += opponent_win_pct
+                rating.opponent_win_pct += win_pct
 
         db.session.commit()
 
@@ -274,15 +237,15 @@ class RPI(db.Model):
                     Team).filter_by(name=opponent_name).first()
 
                 if opponent is not None:
-                    opponent_win_pct = opponent.opponent_win_pct
-                    rating.opponent_games += opponent.games
+                    win_pct = opponent.opponent_win_pct
+                    rating.opponent_games += opponent.record.games
                 else:
                     fcs_rating = cls.query.filter(
                         cls.team_id.is_(None), cls.year == year).first()
-                    opponent_win_pct = fcs_rating.opponent_win_pct
-                    rating.opponent_games += fcs_rating.games
+                    win_pct = fcs_rating.opponent_win_pct
+                    rating.opponent_games += fcs_rating.record.games
 
-                rating.opponents_opponent_win_pct += opponent_win_pct
+                rating.opponents_opponent_win_pct += win_pct
 
         db.session.commit()
 
@@ -296,9 +259,7 @@ class RPI(db.Model):
         Returns:
             RPI: self
         """
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
+        self.record += other.record
         self.opponent_win_pct += other.opponent_win_pct
         self.opponents_opponent_win_pct += other.opponents_opponent_win_pct
         self.opponent_games += other.opponent_games
@@ -313,38 +274,28 @@ class RPI(db.Model):
             'year': self.year,
             'rpi': round(self.rpi, 4),
             'sos': round(self.sos, 4),
-            'wins': self.wins,
-            'losses': self.losses,
-            'ties': self.ties
+            'wins': self.record.wins,
+            'losses': self.record.losses,
+            'ties': self.record.ties
         }
 
 
 class ConferenceRPI(db.Model):
     __tablename__ = 'conference_rpi'
     id = db.Column(db.Integer, primary_key=True)
-    conference_id = db.Column(db.Integer, db.ForeignKey('conference.id'), nullable=False)
+    conference_id = db.Column(
+        db.Integer, db.ForeignKey('conference.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
-    wins = db.Column(db.Integer, nullable=False)
-    losses = db.Column(db.Integer, nullable=False)
-    ties = db.Column(db.Integer, nullable=False)
+    record_id = db.Column(
+        db.Integer, db.ForeignKey('conference_record.id'), nullable=False)
     opponent_win_pct = db.Column(db.Integer, nullable=False)
     opponents_opponent_win_pct = db.Column(db.Integer, nullable=True)
     opponent_games = db.Column(db.Integer, nullable=True)
 
     @property
-    def games(self) -> int:
-        return self.wins + self.losses + self.ties
-
-    @property
-    def win_pct(self) -> float:
-        if self.games:
-            return (self.wins + self.ties * 0.5) / self.games
-        return 0.0
-
-    @property
     def opponent_avg_win_pct(self) -> float:
-        if self.games:
-            return self.opponent_win_pct / self.games
+        if self.record.games:
+            return self.opponent_win_pct / self.record.games
         return 0.0
 
     @property
@@ -360,7 +311,7 @@ class ConferenceRPI(db.Model):
 
     @property
     def rpi(self) -> float:
-        return self.win_pct * 0.35 + self.sos * 0.65
+        return self.record.win_pct * 0.35 + self.sos * 0.65
 
     @classmethod
     def get_rpi_ratings(cls, start_year: int, end_year: int = None,
@@ -385,14 +336,13 @@ class ConferenceRPI(db.Model):
             cls.year >= start_year, cls.year <= end_year)
 
         if conference is not None:
-            ratings = query.filter(conference == Conference.name).all()
+            ratings = query.filter_by(name=conference).all()
             return [sum(ratings[1:], ratings[0])] if ratings else []
 
         ratings = {}
         for conference in Conference.get_qualifying_conferences(
                 start_year=start_year, end_year=end_year):
-            conference_rating = query.filter(
-                conference == Conference.name).all()
+            conference_rating = query.filter_by(name=conference).all()
 
             if conference_rating:
                 ratings[conference] = sum(
@@ -446,25 +396,16 @@ class ConferenceRPI(db.Model):
             year (int): Year to get records
         """
         for conference in Conference.get_conferences(year=year):
-            rpi_rating = cls(
+            record = ConferenceRecord.query.filter_by(
+                conference_id=conference.id, year=year).first()
+            db.session.add(cls(
                 conference_id=conference.id,
                 year=year,
-                wins=0,
-                losses=0,
-                ties=0,
+                record_id=record.id,
                 opponent_win_pct=0,
                 opponents_opponent_win_pct=0,
                 opponent_games=0
-            )
-
-            for team in conference.get_teams(year=year):
-                record = Record.query.filter_by(year=year).join(Team).filter_by(
-                    name=team).first()
-                rpi_rating.wins += record.wins - record.conference_wins
-                rpi_rating.losses += record.losses - record.conference_losses
-                rpi_rating.ties += record.ties - record.conference_ties
-
-            db.session.add(rpi_rating)
+            ))
 
         db.session.commit()
 
@@ -501,12 +442,12 @@ class ConferenceRPI(db.Model):
                 opponent_name = (game.home_team if team == game.away_team
                                  else game.away_team)
                 opponent = RPI.query.filter_by(year=year).join(Team).filter_by(
-                    team=opponent_name).first()
+                    name=opponent_name).first()
 
                 if opponent is not None:
-                    games = opponent.games - 1
-                    wins = opponent.wins
-                    ties = opponent.ties
+                    games = opponent.record.games - 1
+                    wins = opponent.record.wins
+                    ties = opponent.record.ties
 
                     if result == 'win':
                         win_pct = (wins + ties * 0.5) / games
@@ -515,17 +456,13 @@ class ConferenceRPI(db.Model):
                     else:
                         win_pct = (wins + (ties - 1) * 0.5) / games
 
-                    opponent_win_pct = win_pct
                 else:
                     fcs_rating = RPI.query.filter(
                         RPI.team_id.is_(None), RPI.year == year).first()
+                    win_pct = (fcs_rating.record.win_pct
+                               if fcs_rating.record.win_pct > 0.25 else 0.25)
 
-                    if fcs_rating.win_pct > 0.25:
-                        opponent_win_pct = fcs_rating.win_pct
-                    else:
-                        opponent_win_pct = 0.25
-
-                rating.opponent_win_pct += opponent_win_pct
+                rating.opponent_win_pct += win_pct
 
         db.session.commit()
 
@@ -564,15 +501,15 @@ class ConferenceRPI(db.Model):
                     Team).filter_by(name=opponent_name).first()
 
                 if opponent is not None:
-                    opponent_win_pct = opponent.opponent_win_pct
-                    rating.opponent_games += opponent.games
+                    win_pct = opponent.opponent_win_pct
+                    rating.opponent_games += opponent.record.games
                 else:
                     fcs_rating = RPI.query.filter(
                         RPI.team_id.is_(None), RPI.year == year).first()
-                    opponent_win_pct = fcs_rating.opponent_win_pct
-                    rating.opponent_games += fcs_rating.games
+                    win_pct = fcs_rating.opponent_win_pct
+                    rating.opponent_games += fcs_rating.record.games
 
-                rating.opponents_opponent_win_pct += opponent_win_pct
+                rating.opponents_opponent_win_pct += win_pct
 
         db.session.commit()
 
@@ -586,9 +523,7 @@ class ConferenceRPI(db.Model):
         Returns:
             RPI: self
         """
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
+        self.record += other.record
         self.opponent_win_pct += other.opponent_win_pct
         self.opponents_opponent_win_pct += other.opponents_opponent_win_pct
         self.opponent_games += other.opponent_games
@@ -603,7 +538,7 @@ class ConferenceRPI(db.Model):
             'year': self.year,
             'rpi': round(self.rpi, 4),
             'sos': round(self.sos, 4),
-            'wins': self.wins,
-            'losses': self.losses,
-            'ties': self.ties
+            'wins': self.record.wins,
+            'losses': self.record.losses,
+            'ties': self.record.ties
         }

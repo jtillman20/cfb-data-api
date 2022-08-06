@@ -1,7 +1,7 @@
 from app import db
 from .conference import Conference
 from .game import Game
-from .record import Record
+from .record import ConferenceRecord, Record
 from .team import Team
 
 
@@ -12,29 +12,23 @@ class SRS(db.Model):
     year = db.Column(db.Integer, nullable=False)
     scoring_margin = db.Column(db.Integer, nullable=False)
     opponent_rating = db.Column(db.Integer, nullable=False)
-    wins = db.Column(db.Integer, nullable=False)
-    losses = db.Column(db.Integer, nullable=False)
-    ties = db.Column(db.Integer, nullable=False)
+    record_id = db.Column(db.Integer, db.ForeignKey('record.id'), nullable=False)
 
     @property
     def avg_scoring_margin(self) -> float:
-        if self.games:
-            return self.scoring_margin / self.games
+        if self.record.games:
+            return self.scoring_margin / self.record.games
         return 0.0
 
     @property
     def sos(self) -> float:
-        if self.games:
-            return self.opponent_rating / self.games
+        if self.record.games:
+            return self.opponent_rating / self.record.games
         return 0.0
 
     @property
     def srs(self) -> float:
         return self.avg_scoring_margin + self.sos
-
-    @property
-    def games(self) -> int:
-        return self.wins + self.losses + self.ties
 
     @classmethod
     def get_srs_ratings(cls, start_year: int, end_year: int = None,
@@ -123,34 +117,30 @@ class SRS(db.Model):
         srs_ratings = {}
 
         for team in Team.get_teams(year=year):
-            record = Record.query.filter_by(team=team.id, year=year).first()
+            record = Record.query.filter_by(team_id=team.id, year=year).first()
             srs_rating = cls(
                 team_id=team.id,
                 year=year,
                 scoring_margin=0,
                 opponent_rating=0,
-                wins=record.wins,
-                losses=record.losses,
-                ties=record.ties
+                record_id=record.id
             )
             srs_ratings[team.name] = srs_rating
 
         # Add a combined rating for all FCS teams
+        fcs_record = Record.query.filter(
+            Record.year == year, Record.team_id.is_(None)).first()
         srs_ratings['FCS'] = cls(
             year=year,
             scoring_margin=0,
             opponent_rating=0,
-            wins=0,
-            losses=0,
-            ties=0
+            record_id=fcs_record.id
         )
         fcs = srs_ratings['FCS']
 
         for game in Game.get_games(year=year):
             home_team = game.home_team
             away_team = game.away_team
-
-            result = game.determine_result(team=home_team)
             margin = game.home_score - game.away_score
 
             if margin > max_margin:
@@ -167,24 +157,10 @@ class SRS(db.Model):
             else:
                 fcs.scoring_margin += margin
 
-                if result == 'win':
-                    fcs.wins += 1
-                elif result == 'loss':
-                    fcs.losses += 1
-                elif result == 'tie':
-                    fcs.ties += 1
-
             if away_team in srs_ratings:
                 srs_ratings[away_team].scoring_margin -= margin
             else:
                 fcs.scoring_margin -= margin
-
-                if result == 'win':
-                    fcs.losses += 1
-                elif result == 'loss':
-                    fcs.wins += 1
-                elif result == 'tie':
-                    fcs.ties += 1
 
         for srs in srs_ratings.values():
             db.session.add(srs)
@@ -218,6 +194,7 @@ class SRS(db.Model):
                     fbs_opponent = cls.query.filter_by(year=year).join(
                         Team).filter_by(name=fbs_team).first()
                     rating.opponent_rating += fbs_opponent.srs
+
                 continue
 
             team = rating.team.name
@@ -250,9 +227,7 @@ class SRS(db.Model):
         """
         self.scoring_margin += other.scoring_margin
         self.opponent_rating += other.opponent_rating
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
+        self.record += other.record
 
         return self
 
@@ -264,23 +239,23 @@ class SRS(db.Model):
             'year': self.year,
             'srs': round(self.srs, 2),
             'sos': round(self.sos, 2),
-            'wins': self.wins,
-            'losses': self.losses,
-            'ties': self.ties
+            'wins': self.record.wins,
+            'losses': self.record.losses,
+            'ties': self.record.ties
         }
 
 
 class ConferenceSRS(db.Model):
     __tablename__ = 'conference_srs'
     id = db.Column(db.Integer, primary_key=True)
-    conference_id = db.Column(db.Integer, db.ForeignKey('conference.id'), nullable=False)
+    conference_id = db.Column(
+        db.Integer, db.ForeignKey('conference.id'), nullable=False)
     year = db.Column(db.Integer, nullable=False)
     scoring_margin = db.Column(db.Integer, nullable=False)
     opponent_rating = db.Column(db.Integer, nullable=False)
     games = db.Column(db.Integer, nullable=True)
-    wins = db.Column(db.Integer, nullable=True)
-    losses = db.Column(db.Integer, nullable=True)
-    ties = db.Column(db.Integer, nullable=True)
+    record_id = db.Column(
+        db.Integer, db.ForeignKey('conference_record.id'), nullable=False)
 
     @property
     def avg_scoring_margin(self) -> float:
@@ -369,29 +344,24 @@ class ConferenceSRS(db.Model):
             year (int): Year to add conference SRS ratings
         """
         for conference in Conference.get_conferences(year=year):
+            record = ConferenceRecord.query.filter_by(
+                conference_id=conference.id, year=year).first()
             srs_rating = cls(
                 conference_id=conference.id,
                 year=year,
                 scoring_margin=0,
                 opponent_rating=0,
                 games=0,
-                wins=0,
-                losses=0,
-                ties=0
+                record_id=record.id
             )
 
             for team in conference.get_teams(year=year):
-                record = Record.query.filter_by(year=year).join(
-                    Team).filter_by(name=team).first()
                 rating = SRS.query.filter_by(year=year).join(
                     Team).filter_by(name=team).first()
 
                 srs_rating.scoring_margin += rating.scoring_margin
                 srs_rating.opponent_rating += rating.opponent_rating
-                srs_rating.games += rating.games
-                srs_rating.wins += rating.wins - record.conference_wins
-                srs_rating.losses += rating.losses - record.conference_losses
-                srs_rating.ties += rating.ties - record.conference_ties
+                srs_rating.games += rating.record.games
 
             db.session.add(srs_rating)
 
@@ -410,9 +380,7 @@ class ConferenceSRS(db.Model):
         self.scoring_margin += other.scoring_margin
         self.opponent_rating += other.opponent_rating
         self.games += other.games
-        self.wins += other.wins
-        self.losses += other.losses
-        self.ties += other.ties
+        self.record += other.record
 
         return self
 
@@ -424,7 +392,7 @@ class ConferenceSRS(db.Model):
             'year': self.year,
             'srs': round(self.srs, 2),
             'sos': round(self.sos, 2),
-            'wins': self.wins,
-            'losses': self.losses,
-            'ties': self.ties
+            'wins': self.record.wins,
+            'losses': self.record.losses,
+            'ties': self.record.ties
         }
