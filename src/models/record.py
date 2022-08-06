@@ -1,4 +1,5 @@
 from app import db
+from .conference import Conference
 from .game import Game
 from .team import Team
 
@@ -176,4 +177,55 @@ class Record(db.Model):
             'conference_losses': self.conference_losses,
             'conference_ties': self.conference_ties,
             'conference_win_pct': round(self.conference_win_pct, 4)
+        }
+
+
+class ConferenceRecord(db.Model):
+    __tablename__ = 'conference_record'
+    id = db.Column(db.Integer, primary_key=True)
+    conference_id = db.Column(
+        db.Integer, db.ForeignKey('conference.id'), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    wins = db.Column(db.Integer, nullable=False)
+    losses = db.Column(db.Integer, nullable=False)
+    ties = db.Column(db.Integer, nullable=False)
+
+    @property
+    def games(self) -> float:
+        return self.wins + self.losses + self.ties
+
+    @property
+    def win_pct(self) -> float:
+        if self.games:
+            return (self.wins + self.ties * 0.5) / self.games
+        return 0.0
+
+    def __add__(self, other: 'ConferenceRecord') -> 'ConferenceRecord':
+        """
+        Add two ConferenceRecord objects to combine multiple years of data.
+
+        Args:
+            other (ConferenceRecord): Data about a conference's
+                non-conferencewin-loss record
+
+        Returns:
+            ConferenceRecord: self
+        """
+        self.wins += other.wins
+        self.losses += other.losses
+        self.ties += other.ties
+
+        return self
+
+    def __getstate__(self) -> dict:
+        return {
+            'id': self.id,
+            'rank': self.rank,
+            'team': self.team.serialize(year=self.year),
+            'year': self.year,
+            'games': self.games,
+            'wins': self.wins,
+            'losses': self.losses,
+            'ties': self.ties,
+            'win_pct': round(self.win_pct, 4)
         }

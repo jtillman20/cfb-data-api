@@ -11,7 +11,7 @@ from .passes_defended import PassesDefended
 from .passing import Passing, PassingPlays
 from .penalties import Penalties
 from .punting import Punting, PuntReturns, PuntReturnPlays
-from .record import Record
+from .record import ConferenceRecord, Record
 from .rpi import ConferenceRPI, RPI
 from .rushing import Rushing, RushingPlays
 from .sacks import Sacks
