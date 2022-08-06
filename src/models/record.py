@@ -201,6 +201,44 @@ class ConferenceRecord(db.Model):
         return 0.0
 
     @classmethod
+    def get_records(cls, start_year: int, end_year: int = None,
+                    conference: str = None) -> list['ConferenceRecord']:
+        """
+        Get win-loss records for qualifying conferences for the given
+        years. If conference is provided, only get records for that
+        conference.
+
+        Args:
+            start_year (int): Year to start getting win-loss records
+            end_year (int): Year to stop getting win-loss records
+            conference (str): Conference for which to get win-loss record
+
+        Returns:
+            list[Record]: Win-loss records for qualifying teams or only
+                the win-loss records for one team
+        """
+        if end_year is None:
+            end_year = start_year
+
+        query = cls.query.join(Conference).filter(
+            cls.year >= start_year, cls.year <= end_year)
+
+        if conference is not None:
+            records = query.filter_by(name=conference).all()
+            return [sum(records[1:], records[0])] if records else []
+
+        records = {}
+        for conference in Conference.get_qualifying_conferences(
+                start_year=start_year, end_year=end_year):
+            conference_record = query.filter_by(name=conference).all()
+
+            if conference_record:
+                records[conference] = sum(
+                    conference_record[1:], conference_record[0])
+
+        return [records[conference] for conference in sorted(records.keys())]
+
+    @classmethod
     def add_records(cls, start_year: int = None, end_year: int = None) -> None:
         """
         Get win-loss records for all conferences for every year and add
